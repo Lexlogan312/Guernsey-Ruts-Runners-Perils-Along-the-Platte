@@ -1,4 +1,14 @@
 import java.util.Scanner;
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class Market {
     private Player player;
@@ -8,6 +18,20 @@ public class Market {
     private static final int WAGON_PART_PRICE = 20;
     private static final int MEDICINE_PRICE = 15;
     private static final int AMMUNITION_PRICE = 2;
+    
+    // GUI Components
+    private JLabel moneyLabel;
+    private JTextField[] quantityFields;
+    private JLabel[] totalCostLabels;
+    private JLabel[] currentInventoryLabels;
+    private JLabel insufficientSuppliesLabel;
+
+    // Colors - match EnhancedGUI
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
+    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
 
     public Market(Player player, Inventory inventory) {
         this.player = player;
@@ -185,5 +209,307 @@ public class Market {
 
     private boolean canStartJourney() {
         return inventory.getOxen() >= 2 && inventory.getFood() >= 200 && inventory.getWagonParts() >= 3 && inventory.getMedicine() >= 2;
+    }
+
+    /**
+     * Creates a market panel for the GUI
+     */
+    public JPanel createMarketPanel() {
+        // Initialize GUI components
+        quantityFields = new JTextField[5];
+        totalCostLabels = new JLabel[5];
+        currentInventoryLabels = new JLabel[5];
+        
+        // Main panel
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBackground(BACKGROUND_COLOR);
+        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        
+        // Title and money label
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(BACKGROUND_COLOR);
+        
+        JLabel titleLabel = new JLabel("General Store - Purchase Supplies");
+        titleLabel.setFont(FontManager.WESTERN_FONT_TITLE);
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setForeground(TEXT_COLOR);
+        topPanel.add(titleLabel, BorderLayout.NORTH);
+        
+        moneyLabel = new JLabel("Available Funds: $" + player.getMoney(), SwingConstants.CENTER);
+        moneyLabel.setFont(FontManager.getBoldWesternFont(16));
+        moneyLabel.setForeground(TEXT_COLOR);
+        topPanel.add(moneyLabel, BorderLayout.CENTER);
+        
+        JTextArea introText = new JTextArea(
+            "Before departing, you'll need to purchase supplies for your journey. " +
+            "Choose wisely, as your survival depends on having adequate provisions. " +
+            "You should aim to have at least 2 oxen, 200 pounds of food, 3 wagon parts, and 2 medicine."
+        );
+        introText.setFont(FontManager.getWesternFont(14));
+        introText.setForeground(TEXT_COLOR);
+        introText.setBackground(PANEL_COLOR);
+        introText.setLineWrap(true);
+        introText.setWrapStyleWord(true);
+        introText.setEditable(false);
+        introText.setBorder(new EmptyBorder(10, 10, 10, 10));
+        topPanel.add(introText, BorderLayout.SOUTH);
+        
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+        
+        // Create shopping panel with GridBagLayout for items
+        JPanel shoppingPanel = new JPanel(new GridBagLayout());
+        shoppingPanel.setBackground(PANEL_COLOR);
+        shoppingPanel.setBorder(new CompoundBorder(
+            new LineBorder(ACCENT_COLOR, 2),
+            new EmptyBorder(15, 15, 15, 15)
+        ));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Column headers
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        addStyledLabel(shoppingPanel, "Item", gbc, true);
+        
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.CENTER;
+        addStyledLabel(shoppingPanel, "Price", gbc, true);
+        
+        gbc.gridx = 2;
+        addStyledLabel(shoppingPanel, "Quantity", gbc, true);
+        
+        gbc.gridx = 3;
+        addStyledLabel(shoppingPanel, "Total Cost", gbc, true);
+        
+        gbc.gridx = 4;
+        addStyledLabel(shoppingPanel, "Current", gbc, true);
+        
+        gbc.gridx = 5;
+        addStyledLabel(shoppingPanel, "Buy", gbc, true);
+        
+        // Add item rows
+        String[] items = {"Oxen", "Food (pounds)", "Wagon Parts", "Medicine", "Ammunition (boxes)"};
+        int[] prices = {OXEN_PRICE, FOOD_PRICE, WAGON_PART_PRICE, MEDICINE_PRICE, AMMUNITION_PRICE};
+        
+        for (int i = 0; i < items.length; i++) {
+            gbc.gridy = i + 1;
+            
+            // Item name
+            gbc.gridx = 0;
+            gbc.anchor = GridBagConstraints.WEST;
+            addStyledLabel(shoppingPanel, items[i], gbc, false);
+            
+            // Price
+            gbc.gridx = 1;
+            gbc.anchor = GridBagConstraints.CENTER;
+            addStyledLabel(shoppingPanel, "$" + prices[i], gbc, false);
+            
+            // Quantity field
+            gbc.gridx = 2;
+            quantityFields[i] = new JTextField("0", 5);
+            quantityFields[i].setFont(FontManager.getWesternFont(14));
+            quantityFields[i].setHorizontalAlignment(SwingConstants.CENTER);
+            
+            final int itemIndex = i;
+            quantityFields[i].addActionListener(e -> updateTotalCost(itemIndex));
+            quantityFields[i].getDocument().addDocumentListener(new DocumentListener() {
+                @Override
+                public void insertUpdate(DocumentEvent e) {
+                    updateTotalCost(itemIndex);
+                }
+                
+                @Override
+                public void removeUpdate(DocumentEvent e) {
+                    updateTotalCost(itemIndex);
+                }
+                
+                @Override
+                public void changedUpdate(DocumentEvent e) {
+                    updateTotalCost(itemIndex);
+                }
+            });
+            
+            shoppingPanel.add(quantityFields[i], gbc);
+            
+            // Total cost label
+            gbc.gridx = 3;
+            totalCostLabels[i] = new JLabel("$0", SwingConstants.CENTER);
+            totalCostLabels[i].setFont(FontManager.getWesternFont(14));
+            totalCostLabels[i].setForeground(TEXT_COLOR);
+            shoppingPanel.add(totalCostLabels[i], gbc);
+            
+            // Current inventory
+            gbc.gridx = 4;
+            currentInventoryLabels[i] = new JLabel(getCurrentInventory(i), SwingConstants.CENTER);
+            currentInventoryLabels[i].setFont(FontManager.getWesternFont(14));
+            currentInventoryLabels[i].setForeground(TEXT_COLOR);
+            shoppingPanel.add(currentInventoryLabels[i], gbc);
+            
+            // Buy button
+            gbc.gridx = 5;
+            JButton buyButton = createStyledButton("Buy");
+            buyButton.addActionListener(e -> buyItem(itemIndex));
+            
+            shoppingPanel.add(buyButton, gbc);
+        }
+        
+        // Add insufficient supplies warning label (initially invisible)
+        gbc.gridx = 0;
+        gbc.gridy = items.length + 1;
+        gbc.gridwidth = 6;
+        insufficientSuppliesLabel = new JLabel(
+            "You need at least 2 oxen, 200 pounds of food, 3 wagon parts, and 2 medicine.", 
+            SwingConstants.CENTER
+        );
+        insufficientSuppliesLabel.setFont(FontManager.getBoldWesternFont(14));
+        insufficientSuppliesLabel.setForeground(Color.RED);
+        insufficientSuppliesLabel.setVisible(false);
+        shoppingPanel.add(insufficientSuppliesLabel, gbc);
+        
+        mainPanel.add(new JScrollPane(shoppingPanel), BorderLayout.CENTER);
+        
+        // Bottom button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(BACKGROUND_COLOR);
+        
+        JButton finishButton = createStyledButton("Begin Journey");
+        finishButton.addActionListener(e -> {
+            if (canStartJourney()) {
+                Window win = SwingUtilities.getWindowAncestor(mainPanel);
+                if (win instanceof JDialog) {
+                    ((JDialog) win).dispose();
+                }
+            } else {
+                insufficientSuppliesLabel.setVisible(true);
+            }
+        });
+        
+        buttonPanel.add(finishButton);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return mainPanel;
+    }
+    
+    /**
+     * Updates the total cost label when quantity changes
+     */
+    private void updateTotalCost(int itemIndex) {
+        try {
+            int quantity = Integer.parseInt(quantityFields[itemIndex].getText());
+            int price = getItemPrice(itemIndex);
+            int total = quantity * price;
+            totalCostLabels[itemIndex].setText("$" + total);
+        } catch (NumberFormatException e) {
+            totalCostLabels[itemIndex].setText("$0");
+        }
+    }
+    
+    /**
+     * Gets the price for an item based on index
+     */
+    private int getItemPrice(int index) {
+        switch (index) {
+            case 0: return OXEN_PRICE;
+            case 1: return FOOD_PRICE;
+            case 2: return WAGON_PART_PRICE;
+            case 3: return MEDICINE_PRICE;
+            case 4: return AMMUNITION_PRICE;
+            default: return 0;
+        }
+    }
+    
+    /**
+     * Gets current inventory amount based on index
+     */
+    private String getCurrentInventory(int index) {
+        switch (index) {
+            case 0: return String.valueOf(inventory.getOxen());
+            case 1: return String.valueOf(inventory.getFood());
+            case 2: return String.valueOf(inventory.getWagonParts());
+            case 3: return String.valueOf(inventory.getMedicine());
+            case 4: return String.valueOf(inventory.getAmmunition());
+            default: return "0";
+        }
+    }
+    
+    /**
+     * Buy an item and update inventory and money
+     */
+    private void buyItem(int itemIndex) {
+        try {
+            int quantity = Integer.parseInt(quantityFields[itemIndex].getText());
+            if (quantity <= 0) return;
+            
+            int price = getItemPrice(itemIndex);
+            int totalCost = quantity * price;
+            
+            if (totalCost > player.getMoney()) {
+                JOptionPane.showMessageDialog(null, 
+                    "You don't have enough money for that purchase!",
+                    "Insufficient Funds", 
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            // Deduct money
+            player.spendMoney(totalCost);
+            
+            // Update inventory based on item type
+            switch (itemIndex) {
+                case 0: inventory.addOxen(quantity); break;
+                case 1: inventory.addFood(quantity); break;
+                case 2: inventory.addWagonParts(quantity); break;
+                case 3: inventory.addMedicine(quantity); break;
+                case 4: inventory.addAmmunition(quantity * 20); break; // 20 rounds per box
+            }
+            
+            // Update displays
+            moneyLabel.setText("Available Funds: $" + player.getMoney());
+            currentInventoryLabels[itemIndex].setText(getCurrentInventory(itemIndex));
+            quantityFields[itemIndex].setText("0");
+            totalCostLabels[itemIndex].setText("$0");
+            
+            // Check if they now have enough supplies
+            if (canStartJourney()) {
+                insufficientSuppliesLabel.setVisible(false);
+            }
+            
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, 
+                "Please enter a valid number for quantity.",
+                "Invalid Input", 
+                JOptionPane.WARNING_MESSAGE);
+        }
+    }
+    
+    /**
+     * Add a styled label to the panel
+     */
+    private void addStyledLabel(JPanel panel, String text, GridBagConstraints gbc, boolean isHeader) {
+        JLabel label = new JLabel(text);
+        label.setFont(isHeader ? 
+            FontManager.getBoldWesternFont(14) : 
+            FontManager.getWesternFont(14));
+        label.setForeground(isHeader ? HEADER_COLOR : TEXT_COLOR);
+        panel.add(label, gbc);
+    }
+    
+    /**
+     * Create a styled button
+     */
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(FontManager.getBoldWesternFont(14));
+        button.setForeground(TEXT_COLOR);
+        button.setBackground(PANEL_COLOR);
+        button.setFocusPainted(false);
+        button.setBorder(new CompoundBorder(
+            new LineBorder(ACCENT_COLOR, 2),
+            new EmptyBorder(5, 10, 5, 10)
+        ));
+        return button;
     }
 }
