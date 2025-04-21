@@ -25,7 +25,15 @@ public class GUI extends JPanel {
 		quitButton = new JButton();
 		outputTextScrollPane = new JScrollPane();
 		outputTextArea = new JTextArea();
-		mapPanel = new JPanel();
+		mapPanel = new JPanel() {
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				ImageIcon icon = new ImageIcon(getClass().getResource("/resources/images/Oregon Trail Blank Map.png"));
+				Image img = icon.getImage();
+				g.drawImage(img, 0, 0, getWidth(), getHeight(), this);
+			}
+		};
 		dateTextField = new JTextField();
 		daysTextField = new JTextField();
 		locationTextField = new JTextField();
