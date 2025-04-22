@@ -7,7 +7,12 @@ import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 
 /**
@@ -45,7 +50,10 @@ public class EnhancedGUI extends JPanel {
     private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
     private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
     private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
-    
+
+    //ArrayList
+    private final List<Rectangle> drawnLabelBounds = new ArrayList<>(); // Arraylist for Map Spacing Checker
+
     /**
      * Constructor
      */
@@ -359,12 +367,29 @@ public class EnhancedGUI extends JPanel {
      */
     private class MapPanel extends JPanel {
         private Image mapImage;
+        private Map map = gameController.getMap();
         private HashMap<String, Point> landmarkPositions = new HashMap<>();
         private String currentLocation = "";
-        
+        private BufferedImage bufferedMap; // For double buffering
+        private int distanceTraveled = 0;
+        private int totalDistance = 0;
+        private boolean showTooltip = false;
+        private String tooltipText = "";
+        private Point tooltipPosition = new Point(0, 0);
+        private final Color TRAIL_COLOR = new Color(139, 69, 19, 180); // Brown semi-transparent
+        private final Color COMPLETED_TRAIL_COLOR = new Color(165, 42, 42, 200); // Darker brown for completed path
+        private final Font LANDMARK_FONT = FontManager.getBoldWesternFont(12f);
+        private final Font MAP_FONT = new Font("SanSerif", Font.BOLD, 12);
+        private final Color LANDMARK_TEXT_SHADOW = new Color(0, 0, 0, 160);
+
         public MapPanel() {
             setBackground(PANEL_COLOR);
-            
+            setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createEmptyBorder(10, 10, 10, 10),
+                    BorderFactory.createLineBorder(new Color(101, 67, 33), 2)
+            ));
+            setPreferredSize(new Dimension(640, 480)); // Set preferred size for map
+
             // Load map image
             try {
                 ImageIcon icon = new ImageIcon(getClass().getResource("/resources/images/Oregon Trail Blank Map.png"));
@@ -372,33 +397,250 @@ public class EnhancedGUI extends JPanel {
             } catch (Exception e) {
                 System.err.println("Error loading map image: " + e.getMessage());
             }
+
+            // Add mouse motion listener for tooltips
+            addMouseMotionListener(new MouseAdapter() {
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    checkLandmarkHover(e.getPoint());
+                }
+            });
         }
-        
+
         /**
          * Updates the map display with current game state
          */
         public void updateMap(Map gameMap) {
             if (gameMap == null) return;
-            
+
             currentLocation = gameMap.getCurrentLocation();
-            
+
+            // Get distance traveled - need to find the landmark by looping through them
+            List<Landmark> landmarks = gameMap.getLandmarks();
+            for (Landmark lm : landmarks) {
+                if (lm.getName().equals(currentLocation)) {
+                    distanceTraveled = lm.getDistance();
+                    break;
+                }
+            }
+
             // Clear existing landmarks
             landmarkPositions.clear();
-            
+
             // Calculate positions for landmarks along the trail
-            // These would be approximate positions on the map image
             calculateLandmarkPositions(gameMap);
-            
+
+            // Create the buffered image for double buffering
+            if (getWidth() > 0 && getHeight() > 0) {
+                bufferedMap = createBufferedMapImage(gameMap);
+            }
+
             // Repaint the map
             repaint();
         }
-        
+
+        /**
+         * Creates a buffered image of the map for smoother rendering
+         */
+        private BufferedImage createBufferedMapImage(Map gameMap) {
+            BufferedImage buffer = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = buffer.createGraphics();
+
+            // Enable antialiasing
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+            // Draw background map
+            if (mapImage != null) {
+                g2d.drawImage(mapImage, 0, 0, getWidth(), getHeight(), this);
+            } else {
+                // Fallback if image fails to load
+                g2d.setColor(new Color(240, 230, 200)); // Sandy color
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+            }
+
+            // Draw trail paths
+            drawTrailPaths(g2d, gameMap);
+
+            // Draw landmarks
+            drawLandmarks(g2d);
+
+            g2d.dispose();
+            return buffer;
+        }
+
+        /**
+         * Draws the trail paths on the map
+         */
+        private void drawTrailPaths(Graphics2D g2d, Map gameMap) {
+            if (gameMap == null || landmarkPositions.isEmpty()) return;
+
+            // Get trail choice
+            int trailChoice = 1; // Default to Oregon Trail
+            if (gameController.getTrail() != null) {
+                if (gameController.getTrail().equals("California")) {
+                    trailChoice = 2;
+                } else if (gameController.getTrail().equals("Mormon")) {
+                    trailChoice = 3;
+                }
+            }
+
+            // Get ordered list of landmarks
+            List<Landmark> landmarks = gameMap.getLandmarks();
+            if (landmarks.isEmpty()) return;
+
+            // Set up for trail drawing
+            g2d.setStroke(new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+
+            // Draw trail path
+            Point prevPoint = null;
+            for (Landmark landmark : landmarks) {
+                Point currentPoint = landmarkPositions.get(landmark.getName());
+                if (currentPoint != null) {
+                    if (prevPoint != null) {
+                        // Determine if this segment has been traveled
+                        boolean segmentCompleted = landmark.getDistance() <= distanceTraveled;
+                        g2d.setColor(segmentCompleted ? COMPLETED_TRAIL_COLOR : TRAIL_COLOR);
+
+                        // Draw trail segment
+                        g2d.drawLine(prevPoint.x, prevPoint.y, currentPoint.x, currentPoint.y);
+                    }
+                    prevPoint = currentPoint;
+                }
+            }
+
+            // Draw progress indicator
+            totalDistance = landmarks.get(landmarks.size()-1).getDistance();
+            int distanceTraveled = gameMap.getDistanceTraveled();
+
+            float progressRatio = totalDistance > 0 ?  (float) distanceTraveled / (float) totalDistance : 0f;
+            progressRatio = Math.min(progressRatio, 1.0f);
+
+            int progressBarWidth = 200;
+            int progressBarHeight = 20;
+            int x = getWidth() - progressBarWidth - 20;
+            int y = getHeight() - progressBarHeight - 20;
+
+            // Draw progress bar background
+            g2d.setColor(new Color(0, 0, 0, 100));
+            g2d.fillRect(x-2, y-2, progressBarWidth+4, progressBarHeight+4);
+
+            // Draw progress bar
+            g2d.setColor(new Color(255, 255, 255, 180));
+            g2d.fillRect(x, y, progressBarWidth, progressBarHeight);
+
+            // Draw progress
+            g2d.setColor(new Color(0, 128, 0, 220));
+            g2d.fillRect(x, y, (int)(progressBarWidth * progressRatio), progressBarHeight);
+
+            // Draw progress text
+            g2d.setColor(Color.BLACK);
+            g2d.setFont(FontManager.getBoldWesternFont(12f));
+            String progressText = distanceTraveled + " / " + totalDistance + " miles";
+            FontMetrics fm = g2d.getFontMetrics();
+            g2d.drawString(progressText,
+                    x + (progressBarWidth - fm.stringWidth(progressText))/2,
+                    y + progressBarHeight/2 + fm.getAscent()/2);
+
+            // Draw trail name
+            String trailName = "";
+            switch (trailChoice) {
+                case 1: trailName = "Oregon Trail"; break;
+                case 2: trailName = "California Trail"; break;
+                case 3: trailName = "Mormon Trail"; break;
+            }
+
+            g2d.setFont(FontManager.getBoldWesternFont(16f));
+            g2d.setColor(new Color(50, 30, 10));
+            g2d.drawString(trailName, 20, 30);
+        }
+
+        /**
+         * Draws landmarks on the map
+         */
+        private void drawLandmarks(Graphics2D g2d) {
+            int index = 0;
+
+            for (Entry<String, Point> entry : landmarkPositions.entrySet()) {
+                String landmarkName = entry.getKey();
+                Point position = entry.getValue();
+                boolean isCurrentLocation = landmarkName.equals(currentLocation);
+
+                // Draw landmark
+                if (isCurrentLocation) {
+                    drawWagonIcon(g2d, position.x, position.y);
+                    g2d.setColor(new Color(255, 215, 0, 150));
+                    g2d.fillOval(position.x - 17, position.y - 17, 34, 34);
+                } else {
+                    g2d.setColor(new Color(120, 60, 0));
+                    g2d.fillOval(position.x - 5, position.y - 5, 10, 10);
+                    g2d.setColor(new Color(0, 0, 0, 100));
+                    g2d.drawOval(position.x - 5, position.y - 5, 10, 10);
+                }
+
+                drawLandmarkName(g2d, landmarkName, position, isCurrentLocation, index);
+                index++;
+            }
+        }
+
+        /**
+         * Draws landmark name with improved readability
+         */
+        private void drawLandmarkName(Graphics2D g2d, String landmarkName, Point position, boolean isCurrentLocation, int index) {
+            g2d.setFont(MAP_FONT);
+            FontMetrics fm = g2d.getFontMetrics();
+            int textWidth = fm.stringWidth(landmarkName);
+            int textHeight = fm.getHeight();
+            int ascent = fm.getAscent();
+
+            int textX = position.x - textWidth / 2;
+
+            // Alternate: even = above, odd = below
+            int labelOffset = 25;
+            int textY = (index % 2 == 0)
+                    ? position.y - labelOffset
+                    : position.y + labelOffset;
+
+            // Draw dotted line from text to dot
+            Stroke oldStroke = g2d.getStroke();
+            g2d.setColor(Color.GRAY);
+            g2d.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2}, 0));
+            g2d.drawLine(position.x, position.y, position.x, textY - (index % 2 == 0 ? 2 : -textHeight + 2));
+            g2d.setStroke(oldStroke);
+
+            // Text shadow
+            g2d.setColor(LANDMARK_TEXT_SHADOW);
+            g2d.drawString(landmarkName, textX + 1, textY + 1);
+
+            // Main text
+            g2d.setColor(isCurrentLocation ? new Color(139, 0, 0) : TEXT_COLOR);
+            g2d.drawString(landmarkName, textX, textY);
+        }
+
+        /**
+         * Draws a wagon icon at the current location
+         */
+        private void drawWagonIcon(Graphics2D g, int x, int y) {
+            try {
+                // Load wagon icon
+                ImageIcon icon = new ImageIcon(getClass().getResource("/resources/images/Wagon Icon.png"));
+                Image wagonImage = icon.getImage();
+
+                // Draw wagon icon
+                g.drawImage(wagonImage, x - 15, y - 15, 30, 30, this);
+            } catch (Exception e) {
+                // Fallback to simple circle if image fails to load
+                g.setColor(Color.RED);
+                g.fillOval(x - 8, y - 8, 16, 16);
+            }
+        }
+
         /**
          * Calculates landmark positions on the map
          */
         private void calculateLandmarkPositions(Map gameMap) {
             if (gameMap == null) return;
-            
+
             // Get trail choice to determine path
             int trailChoice = 1; // Default to Oregon Trail
             if (gameController.getTrail() != null) {
@@ -408,96 +650,212 @@ public class EnhancedGUI extends JPanel {
                     trailChoice = 3;
                 }
             }
-            
+
             // Map dimensions
             int mapWidth = getWidth();
             int mapHeight = getHeight();
-            
-            // Approximate positions for the landmarks on the trail
-            // Would need to be adjusted based on actual map image
-            java.util.List<Landmark> landmarks = gameMap.getLandmarks();
-            int totalDistance = landmarks.get(landmarks.size()-1).getDistance();
-            
+
+            // Padding to avoid edge placement
+            int paddingX = mapWidth / 10;
+            int paddingY = mapHeight / 10;
+            int usableWidth = mapWidth - (2 * paddingX);
+            int usableHeight = mapHeight - (2 * paddingY);
+
+            // Get landmarks
+            List<Landmark> landmarks = gameMap.getLandmarks();
+            if (landmarks.isEmpty()) return;
+
+            totalDistance = landmarks.get(landmarks.size()-1).getDistance();
+
+            // Create control points for each trail path (for more realistic curves)
+            List<Point> controlPoints = createTrailControlPoints(trailChoice, paddingX, paddingY, usableWidth, usableHeight);
+            int numSegments = controlPoints.size() - 1;
+
             for (Landmark landmark : landmarks) {
                 String name = landmark.getName();
                 int distance = landmark.getDistance();
-                
+
                 // Calculate position based on trail and distance
                 float progress = (float)distance / totalDistance;
-                
-                int x = 0;
-                int y = 0;
-                
-                if (trailChoice == 1) { // Oregon Trail
-                    // Simplified trail path approximation
-                    x = (int)(100 + progress * (mapWidth - 200));
-                    y = (int)(mapHeight/2 - progress * 50);
-                } else if (trailChoice == 2) { // California Trail
-                    // Simplified California trail path
-                    x = (int)(100 + progress * (mapWidth - 200));
-                    y = (int)(mapHeight/2 + progress * 30);
-                } else { // Mormon Trail
-                    // Simplified Mormon trail path
-                    x = (int)(150 + progress * (mapWidth - 250));
-                    y = (int)(mapHeight/2 - 20 + progress * 10);
-                }
-                
+
+                // Find which segment of the path this landmark falls on
+                int segmentIndex = (int)(progress * numSegments);
+                if (segmentIndex >= numSegments) segmentIndex = numSegments - 1;
+
+                // Calculate position within segment
+                float segmentProgress = (progress * numSegments) - segmentIndex;
+
+                Point start = controlPoints.get(segmentIndex);
+                Point end = controlPoints.get(segmentIndex + 1);
+
+                // Linear interpolation between points
+                int x = (int)(start.x + (end.x - start.x) * segmentProgress);
+                int y = (int)(start.y + (end.y - start.y) * segmentProgress);
+
                 landmarkPositions.put(name, new Point(x, y));
             }
         }
-        
+
+        /**
+         * Creates control points for trail paths
+         */
+        private List<Point> createTrailControlPoints(int trailChoice, int paddingX, int paddingY, int usableWidth, int usableHeight) {
+            List<Point> points = new ArrayList<>();
+            int mapWidth = getWidth();
+            int mapHeight = getHeight();
+
+            // Starting point (Independence, Missouri)
+            Point start = new Point(paddingX, mapHeight / 2);
+            points.add(start);
+
+            switch (trailChoice) {
+                case 1: // Oregon Trail - curves northwest
+                    points.add(new Point(paddingX + (usableWidth / 4), mapHeight / 2 - (usableHeight / 12)));
+                    points.add(new Point(paddingX + (usableWidth / 2), mapHeight / 2 - (usableHeight / 6)));
+                    points.add(new Point(paddingX + (int)(usableWidth * 0.75), mapHeight / 2 - (usableHeight / 4)));
+                    points.add(new Point(mapWidth - paddingX, paddingY + (usableHeight / 3))); // Oregon end point
+                    break;
+
+                case 2: // California Trail - splits and goes southwest
+                    points.add(new Point(paddingX + (usableWidth / 4), mapHeight / 2 - (usableHeight / 12)));
+                    points.add(new Point(paddingX + (usableWidth / 2), mapHeight / 2 - (usableHeight / 8)));
+                    points.add(new Point(paddingX + (int)(usableWidth * 0.6), mapHeight / 2)); // Split point
+                    points.add(new Point(paddingX + (int)(usableWidth * 0.75), mapHeight / 2 + (usableHeight / 6)));
+                    points.add(new Point(mapWidth - paddingX, mapHeight - paddingY - (usableHeight / 3))); // California end point
+                    break;
+
+                case 3: // Mormon Trail - stays more central
+                    points.add(new Point(paddingX + (usableWidth / 4), mapHeight / 2 - (usableHeight / 20)));
+                    points.add(new Point(paddingX + (usableWidth / 2), mapHeight / 2));
+                    points.add(new Point(paddingX + (int)(usableWidth * 0.75), mapHeight / 2 + (usableHeight / 20)));
+                    points.add(new Point(mapWidth - paddingX - (usableWidth / 4), mapHeight / 2)); // Utah end point
+                    break;
+            }
+
+            return points;
+        }
+
+        /**
+         * Checks if mouse is hovering over a landmark
+         */
+        private void checkLandmarkHover(Point mousePoint) {
+            showTooltip = false;
+
+            for (Entry<String, Point> entry : landmarkPositions.entrySet()) {
+                Point landmarkPos = entry.getValue();
+                // Check if mouse is within 15 pixels of landmark
+                if (mousePoint.distance(landmarkPos) <= 15) {
+                    showTooltip = true;
+                    tooltipText = entry.getKey();
+                    tooltipPosition = landmarkPos;
+
+                    // Get additional landmark info if available
+                    Map gameMap = gameController.getMap();
+                    if (gameMap != null) {
+                        List<Landmark> landmarks = gameMap.getLandmarks();
+                        for (Landmark landmark : landmarks) {
+                            if (landmark.getName().equals(entry.getKey())) {
+                                tooltipText += " (" + map.getDistanceTraveled() + " miles)";
+                                // Add landmark info if it has a description method
+                                if (landmark.getDescription() != null && !landmark.getDescription().isEmpty()) {
+                                    tooltipText += "\n" + landmark.getDescription();
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    repaint();
+                    break;
+                }
+            }
+
+            if (!showTooltip) {
+                repaint();
+            }
+        }
+
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            
-            // Draw the map image
-            if (mapImage != null) {
-                g.drawImage(mapImage, 0, 0, getWidth(), getHeight(), this);
-            }
-            
-            // Draw landmarks
             Graphics2D g2d = (Graphics2D) g;
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            
-            // Draw all landmarks
-            for (Entry<String, Point> entry : landmarkPositions.entrySet()) {
-                String landmarkName = entry.getKey();
-                Point position = entry.getValue();
-                
-                boolean isCurrentLocation = landmarkName.equals(currentLocation);
-                
-                // Draw landmark
-                if (isCurrentLocation) {
-                    // Current location - draw wagon icon
-                    drawWagonIcon(g2d, position.x, position.y);
-                } else {
-                    // Other landmarks - draw dots
-                    g2d.setColor(new Color(120, 60, 0));
-                    g2d.fillOval(position.x - 5, position.y - 5, 10, 10);
+
+            // Create buffered image if needed
+            if (bufferedMap == null || bufferedMap.getWidth() != getWidth() || bufferedMap.getHeight() != getHeight()) {
+                if (getWidth() > 0 && getHeight() > 0) {
+                    Map gameMap = gameController.getMap();
+                    if (gameMap != null) {
+                        calculateLandmarkPositions(gameMap);
+                        bufferedMap = createBufferedMapImage(gameMap);
+                    }
                 }
-                
-                // Draw landmark name
-                g2d.setColor(TEXT_COLOR);
-                g2d.setFont(FontManager.getWesternFont(10f));
-                g2d.drawString(landmarkName, position.x - 5, position.y + 20);
+            }
+
+            // Draw the buffered map
+            if (bufferedMap != null) {
+                g2d.drawImage(bufferedMap, 0, 0, this);
+            }
+
+            // Draw tooltip if needed
+            if (showTooltip) {
+                drawTooltip(g2d, tooltipText, tooltipPosition);
             }
         }
-        
+
         /**
-         * Draws a small wagon icon at the current location
+         * Draws a tooltip with landmark information
          */
-        private void drawWagonIcon(Graphics2D g, int x, int y) {
-            try {
-                // Load wagon icon
-                ImageIcon icon = new ImageIcon(getClass().getResource("/resources/images/Wagon Icon.png"));
-                Image wagonImage = icon.getImage();
-                
-                // Draw wagon icon
-                g.drawImage(wagonImage, x - 15, y - 15, 30, 30, this);
-            } catch (Exception e) {
-                // Fallback to simple circle if image fails to load
-                g.setColor(Color.RED);
-                g.fillOval(x - 8, y - 8, 16, 16);
+        private void drawTooltip(Graphics2D g2d, String text, Point position) {
+            // Enable antialiasing
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+            // Prepare tooltip text
+            String[] lines = text.split("\n");
+            g2d.setFont(FontManager.getWesternFont(12f));
+            FontMetrics fm = g2d.getFontMetrics();
+
+            // Calculate tooltip dimensions
+            int maxWidth = 0;
+            for (String line : lines) {
+                int width = fm.stringWidth(line);
+                if (width > maxWidth) maxWidth = width;
+            }
+
+            int padding = 8;
+            int tooltipWidth = maxWidth + (padding * 2);
+            int lineHeight = fm.getHeight();
+            int tooltipHeight = (lineHeight * lines.length) + (padding * 2);
+
+            // Calculate tooltip position, ensuring it stays within the map bounds
+            int x = position.x + 20;
+            int y = position.y - 10;
+
+            // Adjust if tooltip would go off the edge
+            if (x + tooltipWidth > getWidth()) {
+                x = position.x - tooltipWidth - 10;
+            }
+            if (y + tooltipHeight > getHeight()) {
+                y = position.y - tooltipHeight - 10;
+            }
+
+            // Draw tooltip background with shadow
+            g2d.setColor(new Color(0, 0, 0, 100));
+            g2d.fillRoundRect(x+2, y+2, tooltipWidth, tooltipHeight, 10, 10);
+
+            g2d.setColor(new Color(250, 240, 220, 240));
+            g2d.fillRoundRect(x, y, tooltipWidth, tooltipHeight, 10, 10);
+
+            g2d.setColor(new Color(139, 69, 19));
+            g2d.drawRoundRect(x, y, tooltipWidth, tooltipHeight, 10, 10);
+
+            // Draw text
+            g2d.setColor(Color.BLACK);
+            int textY = y + padding + fm.getAscent();
+
+            for (String line : lines) {
+                g2d.drawString(line, x + padding, textY);
+                textY += lineHeight;
             }
         }
     }

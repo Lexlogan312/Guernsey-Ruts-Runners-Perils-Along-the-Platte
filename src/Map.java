@@ -158,4 +158,8 @@ public class Map {
     public int getCurrentLandmarkIndex() {
         return this.currentLandmarkIndex;
     }
+
+    public Landmark getCurrentLandmark(int location) {
+        return this.landmarks.get(location);
+    }
 }
