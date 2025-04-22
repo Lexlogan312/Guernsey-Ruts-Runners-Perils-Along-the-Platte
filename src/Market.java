@@ -19,6 +19,14 @@ public class Market {
     private static final int MEDICINE_PRICE = 15;
     private static final int AMMUNITION_PRICE = 2;
     
+    // Food options with their weights (pounds per unit)
+    private static final String[] FOOD_TYPES = {
+        "Flour", "Bacon", "Dried Beans", "Rice", "Coffee", "Sugar", "Dried Fruit", "Hardtack"
+    };
+    private static final int[] FOOD_WEIGHTS = {
+        25, 15, 10, 5, 2, 5, 2, 20
+    };
+    
     // GUI Components
     private JLabel moneyLabel;
     private JTextField[] quantityFields;
@@ -454,16 +462,27 @@ public class Market {
                 return;
             }
             
-            // Deduct money
-            player.spendMoney(totalCost);
-            
-            // Update inventory based on item type
-            switch (itemIndex) {
-                case 0: inventory.addOxen(quantity); break;
-                case 1: inventory.addFood(quantity); break;
-                case 2: inventory.addWagonParts(quantity); break;
-                case 3: inventory.addMedicine(quantity); break;
-                case 4: inventory.addAmmunition(quantity * 20); break; // 20 rounds per box
+            // If buying food, show a dialog to select food types
+            if (itemIndex == 1) { // Food index is 1
+                int totalFoodPounds = showFoodSelectionDialog(quantity);
+                if (totalFoodPounds <= 0) {
+                    return; // User canceled the selection
+                }
+                
+                // Only deduct money and add food if the user completed the selection
+                player.spendMoney(totalCost);
+                inventory.addFood(totalFoodPounds);
+            } else {
+                // Deduct money for non-food items
+                player.spendMoney(totalCost);
+                
+                // Update inventory based on item type
+                switch (itemIndex) {
+                    case 0: inventory.addOxen(quantity); break;
+                    case 2: inventory.addWagonParts(quantity); break;
+                    case 3: inventory.addMedicine(quantity); break;
+                    case 4: inventory.addAmmunition(quantity * 20); break; // 20 rounds per box
+                }
             }
             
             // Update displays
@@ -483,6 +502,240 @@ public class Market {
                 "Invalid Input", 
                 JOptionPane.WARNING_MESSAGE);
         }
+    }
+    
+    /**
+     * Shows a dialog for selecting different types of food
+     * @param totalPoundsToBuy The total pounds of food to purchase
+     * @return The actual total pounds purchased, or 0 if canceled
+     */
+    private int showFoodSelectionDialog(int totalPoundsToBuy) {
+        // Create a dialog for food selection
+        Window parentWindow = SwingUtilities.getWindowAncestor(moneyLabel);
+        JDialog foodDialog;
+        
+        if (parentWindow instanceof Frame) {
+            foodDialog = new JDialog((Frame) parentWindow, "Food Selection", true);
+        } else if (parentWindow instanceof Dialog) {
+            foodDialog = new JDialog((Dialog) parentWindow, "Food Selection", true);
+        } else {
+            foodDialog = new JDialog();
+            foodDialog.setTitle("Food Selection");
+            foodDialog.setModal(true);
+        }
+        
+        foodDialog.setLayout(new BorderLayout(10, 10));
+        foodDialog.getContentPane().setBackground(BACKGROUND_COLOR);
+        
+        // Create a panel for the food options
+        JPanel foodPanel = new JPanel(new GridBagLayout());
+        foodPanel.setBackground(PANEL_COLOR);
+        foodPanel.setBorder(new CompoundBorder(
+            new LineBorder(ACCENT_COLOR, 2),
+            new EmptyBorder(15, 15, 15, 15)
+        ));
+        
+        // Create a description label
+        JLabel descLabel = new JLabel("Select food types to purchase (" + totalPoundsToBuy + " pounds total):");
+        descLabel.setFont(FontManager.getBoldWesternFont(14));
+        descLabel.setForeground(TEXT_COLOR);
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 3;
+        gbc.insets = new Insets(5, 5, 15, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+        foodPanel.add(descLabel, gbc);
+        
+        // Column headers
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        gbc.gridx = 0;
+        JLabel foodTypeHeader = new JLabel("Food Type");
+        foodTypeHeader.setFont(FontManager.getBoldWesternFont(14));
+        foodTypeHeader.setForeground(HEADER_COLOR);
+        foodPanel.add(foodTypeHeader, gbc);
+        
+        gbc.gridx = 1;
+        JLabel weightHeader = new JLabel("Weight per Unit");
+        weightHeader.setFont(FontManager.getBoldWesternFont(14));
+        weightHeader.setForeground(HEADER_COLOR);
+        foodPanel.add(weightHeader, gbc);
+        
+        gbc.gridx = 2;
+        JLabel quantityHeader = new JLabel("Quantity");
+        quantityHeader.setFont(FontManager.getBoldWesternFont(14));
+        quantityHeader.setForeground(HEADER_COLOR);
+        foodPanel.add(quantityHeader, gbc);
+        
+        // Create an array of spinners for each food type
+        JSpinner[] foodSpinners = new JSpinner[FOOD_TYPES.length];
+        
+        for (int i = 0; i < FOOD_TYPES.length; i++) {
+            gbc.gridy = i + 2;
+            
+            // Food type
+            gbc.gridx = 0;
+            JLabel foodLabel = new JLabel(FOOD_TYPES[i]);
+            foodLabel.setFont(FontManager.getWesternFont(14));
+            foodLabel.setForeground(TEXT_COLOR);
+            foodPanel.add(foodLabel, gbc);
+            
+            // Weight per unit
+            gbc.gridx = 1;
+            JLabel weightLabel = new JLabel(FOOD_WEIGHTS[i] + " lbs");
+            weightLabel.setFont(FontManager.getWesternFont(14));
+            weightLabel.setForeground(TEXT_COLOR);
+            foodPanel.add(weightLabel, gbc);
+            
+            // Quantity spinner
+            gbc.gridx = 2;
+            SpinnerNumberModel model = new SpinnerNumberModel(0, 0, 100, 1);
+            foodSpinners[i] = new JSpinner(model);
+            foodSpinners[i].setFont(FontManager.getWesternFont(14));
+            foodPanel.add(foodSpinners[i], gbc);
+        }
+        
+        // Create a status panel with bold borders to make it more visible
+        JPanel statusPanel = new JPanel(new GridLayout(2, 1, 5, 5));
+        statusPanel.setBackground(PANEL_COLOR);
+        statusPanel.setBorder(new CompoundBorder(
+            new LineBorder(ACCENT_COLOR, 1),
+            new EmptyBorder(10, 10, 10, 10)
+        ));
+        
+        JLabel allocatedLabel = new JLabel("Allocated: 0 / " + totalPoundsToBuy + " pounds");
+        allocatedLabel.setFont(FontManager.getBoldWesternFont(14));
+        allocatedLabel.setForeground(TEXT_COLOR);
+        allocatedLabel.setBorder(new EmptyBorder(5, 0, 5, 0));
+        
+        JLabel remainingLabel = new JLabel("Remaining to allocate: " + totalPoundsToBuy + " pounds");
+        remainingLabel.setFont(FontManager.getBoldWesternFont(14));
+        remainingLabel.setForeground(TEXT_COLOR);
+        remainingLabel.setBorder(new EmptyBorder(5, 0, 5, 0));
+        
+        statusPanel.add(allocatedLabel);
+        statusPanel.add(remainingLabel);
+        
+        // Add the status panel to the food panel
+        gbc.gridx = 0;
+        gbc.gridy = FOOD_TYPES.length + 2;
+        gbc.gridwidth = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(15, 5, 5, 5);
+        foodPanel.add(statusPanel, gbc);
+        
+        // Create a button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(BACKGROUND_COLOR);
+        
+        JButton confirmButton = createStyledButton("Confirm Purchase");
+        JButton cancelButton = createStyledButton("Cancel");
+        
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(confirmButton);
+        
+        // Add a listener to update the total allocated when spinners change
+        for (int i = 0; i < foodSpinners.length; i++) {
+            final int index = i;
+            foodSpinners[i].addChangeListener(e -> {
+                int totalAllocated = 0;
+                for (int j = 0; j < foodSpinners.length; j++) {
+                    int spinnerValue = (int) foodSpinners[j].getValue();
+                    totalAllocated += spinnerValue * FOOD_WEIGHTS[j];
+                }
+                int remaining = totalPoundsToBuy - totalAllocated;
+                
+                allocatedLabel.setText("Allocated: " + totalAllocated + " / " + totalPoundsToBuy + " pounds");
+                remainingLabel.setText("Remaining to allocate: " + remaining + " pounds");
+                
+                if (remaining < 0) {
+                    remainingLabel.setForeground(Color.RED);
+                } else {
+                    remainingLabel.setForeground(TEXT_COLOR);
+                }
+                
+                // Enable confirm button if the allocation is valid
+                // Now we allow fewer pounds than requested, but not more
+                confirmButton.setEnabled(totalAllocated > 0 && totalAllocated <= totalPoundsToBuy);
+            });
+        }
+        
+        // Add action listeners to buttons
+        final int[] result = {0}; // To store the result (total pounds purchased)
+        
+        confirmButton.addActionListener(e -> {
+            int totalAllocated = 0;
+            StringBuilder purchaseSummary = new StringBuilder("You purchased:\n");
+            
+            for (int i = 0; i < foodSpinners.length; i++) {
+                int quantity = (int) foodSpinners[i].getValue();
+                if (quantity > 0) {
+                    int pounds = quantity * FOOD_WEIGHTS[i];
+                    totalAllocated += pounds;
+                    purchaseSummary.append("- ")
+                                  .append(quantity)
+                                  .append(" units of ")
+                                  .append(FOOD_TYPES[i])
+                                  .append(" (")
+                                  .append(pounds)
+                                  .append(" lbs)\n");
+                }
+            }
+            
+            // Calculate any refund if they bought less than originally requested
+            int refundPounds = totalPoundsToBuy - totalAllocated;
+            if (refundPounds > 0) {
+                int refundAmount = refundPounds * FOOD_PRICE;
+                player.addMoney(refundAmount);
+                purchaseSummary.append("\nRefund for unused pounds: $").append(refundAmount);
+            }
+            
+            if (totalAllocated <= totalPoundsToBuy && totalAllocated > 0) {
+                result[0] = totalAllocated;
+                JOptionPane.showMessageDialog(foodDialog, 
+                    purchaseSummary.toString(), 
+                    "Purchase Complete", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                foodDialog.dispose();
+            } else if (totalAllocated > totalPoundsToBuy) {
+                JOptionPane.showMessageDialog(foodDialog,
+                    "You've allocated more than " + totalPoundsToBuy + " pounds of food.",
+                    "Too Much Food",
+                    JOptionPane.WARNING_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(foodDialog,
+                    "Please allocate at least some food.",
+                    "No Food Selected",
+                    JOptionPane.WARNING_MESSAGE);
+            }
+        });
+        
+        cancelButton.addActionListener(e -> {
+            result[0] = 0;
+            foodDialog.dispose();
+        });
+        
+        // Initially disable the confirm button until a valid amount is allocated
+        confirmButton.setEnabled(false);
+        
+        // Add components to the dialog
+        JScrollPane scrollPane = new JScrollPane(foodPanel);
+        scrollPane.setBorder(null);
+        
+        foodDialog.add(scrollPane, BorderLayout.CENTER);
+        foodDialog.add(buttonPanel, BorderLayout.SOUTH);
+        
+        // Set dialog properties
+        foodDialog.setSize(500, 600);
+        foodDialog.setLocationRelativeTo(parentWindow);
+        foodDialog.setVisible(true);
+        
+        // Return the total pounds purchased, or 0 if canceled
+        return result[0];
     }
     
     /**

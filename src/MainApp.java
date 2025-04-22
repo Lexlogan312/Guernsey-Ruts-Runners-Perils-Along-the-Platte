@@ -40,7 +40,7 @@ public class MainApp {
         frame.getContentPane().add(gameGUI);
         
         // Set frame size and center on screen
-        frame.setSize(1080, 720);
+        frame.setSize(1200, 800);
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         
@@ -54,8 +54,26 @@ public class MainApp {
         // After startup dialog is closed, visit the market (blocks until closed)
         gameController.visitMarket();
         
+        // Show the Fort Kearny journey dialog
+        FortKearnyDialog fortKearnyDialog = new FortKearnyDialog(frame, gameController);
+        fortKearnyDialog.setVisible(true);
+        
         // Simulate journey to Fort Kearny (first main landmark)
         gameController.journeyToFortKearny();
+        
+        // Make sure the UI is updated to show Fort Kearny as the current location
+        gameController.updateGameState();
+        // Additional update to ensure the map refreshes
+        gameGUI.updateGameState();
+        
+        // Show journey summary dialog
+        TravelSummaryDialog summaryDialog = new TravelSummaryDialog(
+            frame, 
+            gameController.getJourneyEvents(),
+            gameController.getTime().getTotalDays(),
+            gameController.getMap().getDistanceTraveled()
+        );
+        summaryDialog.setVisible(true);
         
         // Finally, show the main game frame
         frame.setVisible(true);

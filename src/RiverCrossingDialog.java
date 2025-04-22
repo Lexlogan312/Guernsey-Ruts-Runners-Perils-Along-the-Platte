@@ -97,22 +97,42 @@ public class RiverCrossingDialog extends JDialog {
             new EmptyBorder(10, 10, 10, 10)
         ));
         
-        // Option buttons
+        // Option buttons with direct ActionListener implementations
         JButton fordButton = createOptionButton("Ford the river (wade across)", 
             "Attempt to walk the wagon through the river. Safest for shallow rivers.", 
-            e -> fordRiver());
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    fordRiver();
+                }
+            });
         
         JButton caulkButton = createOptionButton("Caulk the wagon and float across", 
             "Seal the wagon with pitch and float across. Better for deeper rivers.", 
-            e -> caulkAndFloat());
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    caulkAndFloat();
+                }
+            });
         
         JButton ferryButton = createOptionButton("Use a ferry ($10)", 
             "Pay for a safe crossing if you have enough money.", 
-            e -> useFerry());
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    useFerry();
+                }
+            });
         
         JButton waitButton = createOptionButton("Wait a day and see if conditions improve", 
             "Delay your journey but possibly get better crossing conditions.", 
-            e -> waitForBetterConditions());
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    waitForBetterConditions();
+                }
+            });
         
         optionsPanel.add(fordButton);
         optionsPanel.add(caulkButton);
@@ -160,26 +180,24 @@ public class RiverCrossingDialog extends JDialog {
      * Creates an option button with description
      */
     private JButton createOptionButton(String title, String description, ActionListener action) {
-        JButton button = new JButton();
-        button.setLayout(new BorderLayout());
+        // Use a regular button with HTML formatting instead of a complex layout
+        String htmlText = "<html><div style='text-align: center;'>" +
+                          "<b style='font-size: 14px;'>" + title + "</b><br>" +
+                          "<span style='font-size: 12px;'>" + description + "</span>" +
+                          "</div></html>";
+        
+        JButton button = new JButton(htmlText);
         button.setBackground(PANEL_COLOR);
         button.setForeground(TEXT_COLOR);
+        button.setFont(FontManager.getWesternFont(14f));
         button.setBorder(new CompoundBorder(
             new LineBorder(ACCENT_COLOR, 2),
             new EmptyBorder(10, 10, 10, 10)
         ));
+        button.setHorizontalAlignment(SwingConstants.CENTER);
+        button.setFocusPainted(false);
         
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(FontManager.getBoldWesternFont(14f));
-        titleLabel.setForeground(TEXT_COLOR);
-        
-        JLabel descLabel = new JLabel(description);
-        descLabel.setFont(FontManager.getWesternFont(12f));
-        descLabel.setForeground(TEXT_COLOR);
-        
-        button.add(titleLabel, BorderLayout.NORTH);
-        button.add(descLabel, BorderLayout.CENTER);
-        
+        // Add action listener directly to the button
         button.addActionListener(action);
         
         return button;

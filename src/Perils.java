@@ -1,11 +1,15 @@
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.function.Consumer;
 
 public class Perils {
     private Player player;
     private Inventory inventory;
     private Weather weather;
     private Random random;
+    
+    // Add a listener callback for messages
+    private Consumer<String> messageListener;
 
     // Arrays of possible events
     private ArrayList<String> diseases;
@@ -20,8 +24,27 @@ public class Perils {
         this.inventory = inventory;
         this.weather = weather;
         this.random = new Random();
-
+        this.messageListener = s -> System.out.println(s); // Default to System.out
+        
         initializeEvents();
+    }
+    
+    /**
+     * Set a message listener to handle notifications instead of System.out
+     */
+    public void setMessageListener(Consumer<String> listener) {
+        this.messageListener = listener;
+    }
+    
+    /**
+     * Show a message through the listener or System.out
+     */
+    private void showMessage(String message) {
+        if (messageListener != null) {
+            messageListener.accept(message);
+        } else {
+            System.out.println(message);
+        }
     }
 
     private void initializeEvents() {
@@ -108,7 +131,7 @@ public class Perils {
     }
 
     private void generateDiseaseEvent() {
-        System.out.println("\n=== HEALTH PROBLEM ===");
+        showMessage("\n=== HEALTH PROBLEM ===");
 
         // Determine who gets sick
         boolean isPlayer = random.nextBoolean();
@@ -125,7 +148,7 @@ public class Perils {
         // Select random disease
         String disease = diseases.get(random.nextInt(diseases.size()));
 
-        System.out.println(victim + " has come down with " + disease + ".");
+        showMessage(victim + " has come down with " + disease + ".");
 
         // Health impact
         int healthImpact = 10 + random.nextInt(20); // 10-30 health impact
@@ -133,21 +156,21 @@ public class Perils {
         // If it's a family member, less direct impact on player
         if (!isPlayer) {
             healthImpact = 5 + random.nextInt(10); // 5-15 health impact
-            System.out.println("Caring for " + victim + " is draining your energy.");
+            showMessage("Caring for " + victim + " is draining your energy.");
         }
 
         // Check if medicine is available
         if (inventory.getMedicine() > 0) {
-            System.out.println("You use 1 medicine to treat the " + disease + ".");
+            showMessage("You use 1 medicine to treat the " + disease + ".");
             inventory.useMedicine(1);
             healthImpact /= 2; // Medicine cuts health impact in half
         } else {
-            System.out.println("You have no medicine to treat the " + disease + ".");
+            showMessage("You have no medicine to treat the " + disease + ".");
         }
 
         // Apply health impact
         player.decreaseHealth(healthImpact);
-        System.out.println("Health decreased by " + healthImpact + " points.");
+        showMessage("Health decreased by " + healthImpact + " points.");
 
         // Small chance of death if health is already low
         if (isPlayer && player.getHealth() < 20 && random.nextDouble() < 0.2) {
@@ -157,7 +180,7 @@ public class Perils {
     }
 
     private void generateInjuryEvent() {
-        System.out.println("\n=== INJURY ===");
+        showMessage("\n=== INJURY ===");
 
         // Determine who gets injured
         boolean isPlayer = random.nextBoolean();
@@ -174,7 +197,7 @@ public class Perils {
         // Select random injury
         String injury = injuries.get(random.nextInt(injuries.size()));
 
-        System.out.println(victim + " has suffered a " + injury + ".");
+        showMessage(victim + " has suffered a " + injury + ".");
 
         // Health impact
         int healthImpact = 15 + random.nextInt(20); // 15-35 health impact
@@ -182,49 +205,49 @@ public class Perils {
         // If it's a family member, less direct impact on player
         if (!isPlayer) {
             healthImpact = 5 + random.nextInt(10); // 5-15 health impact
-            System.out.println("Caring for " + victim + " slows your travel.");
+            showMessage("Caring for " + victim + " slows your travel.");
         }
 
         // Check if medicine is available
         if (inventory.getMedicine() > 0) {
-            System.out.println("You use 1 medicine to treat the " + injury + ".");
+            showMessage("You use 1 medicine to treat the " + injury + ".");
             inventory.useMedicine(1);
             healthImpact /= 2; // Medicine cuts health impact in half
         } else {
-            System.out.println("You have no medicine to treat the " + injury + ".");
+            showMessage("You have no medicine to treat the " + injury + ".");
         }
 
         // Apply health impact
         player.decreaseHealth(healthImpact);
-        System.out.println("Health decreased by " + healthImpact + " points.");
+        showMessage("Health decreased by " + healthImpact + " points.");
     }
 
     private void generateWagonProblem() {
-        System.out.println("\n=== WAGON PROBLEM ===");
+        showMessage("\n=== WAGON PROBLEM ===");
 
         // Select random wagon problem
         String problem = wagonProblems.get(random.nextInt(wagonProblems.size()));
 
-        System.out.println("Your wagon has a " + problem + ".");
+        showMessage("Your wagon has a " + problem + ".");
 
         // Check if wagon parts are available
         if (inventory.getWagonParts() > 0) {
-            System.out.println("You use 1 wagon part to fix the problem.");
+            showMessage("You use 1 wagon part to fix the problem.");
             inventory.useWagonParts(1);
-            System.out.println("The repair takes some time, but you're able to continue.");
+            showMessage("The repair takes some time, but you're able to continue.");
         } else {
-            System.out.println("You have no wagon parts to make repairs!");
-            System.out.println("You'll have to improvise a solution, which takes time and energy.");
+            showMessage("You have no wagon parts to make repairs!");
+            showMessage("You'll have to improvise a solution, which takes time and energy.");
 
             // Health impact from working hard to fix wagon without parts
             int healthImpact = 5 + random.nextInt(10); // 5-15 health impact
             player.decreaseHealth(healthImpact);
-            System.out.println("Health decreased by " + healthImpact + " points from the hard labor.");
+            showMessage("Health decreased by " + healthImpact + " points from the hard labor.");
 
             // Chance of permanent wagon damage
             if (random.nextDouble() < 0.3) {
-                System.out.println("Your makeshift repair isn't as good as it should be.");
-                System.out.println("Your wagon will now move a bit slower on the trail.");
+                showMessage("Your makeshift repair isn't as good as it should be.");
+                showMessage("Your wagon will now move a bit slower on the trail.");
                 // This effect is simulated in the oxen health factor
                 inventory.decreaseOxenHealth(10);
             }
@@ -232,18 +255,18 @@ public class Perils {
     }
 
     private void generatePositiveEvent() {
-        System.out.println("\n=== GOOD FORTUNE ===");
+        showMessage("\n=== GOOD FORTUNE ===");
 
         // Select random positive event
         String event = positiveEvents.get(random.nextInt(positiveEvents.size()));
 
-        System.out.println("Good news! You " + event + ".");
+        showMessage("Good news! You " + event + ".");
 
         // Apply positive effect
         if (event.contains("berries")) {
             int foodGained = 5 + random.nextInt(10); // 5-15 pounds of food
             inventory.addFood(foodGained);
-            System.out.println("You add " + foodGained + " pounds of food to your supplies.");
+            showMessage("You add " + foodGained + " pounds of food to your supplies.");
         } else if (event.contains("abandoned wagon")) {
             // Random assortment of supplies
             int foodGained = 10 + random.nextInt(30); // 10-40 pounds of food
@@ -254,19 +277,19 @@ public class Perils {
             inventory.addWagonParts(partsGained);
             inventory.addMedicine(medicineGained);
 
-            System.out.println("You salvage:");
-            System.out.println("- " + foodGained + " pounds of food");
-            if (partsGained > 0) System.out.println("- " + partsGained + " wagon parts");
-            if (medicineGained > 0) System.out.println("- " + medicineGained + " medicine");
+            showMessage("You salvage:");
+            showMessage("- " + foodGained + " pounds of food");
+            if (partsGained > 0) showMessage("- " + partsGained + " wagon parts");
+            if (medicineGained > 0) showMessage("- " + medicineGained + " medicine");
         } else if (event.contains("Native Americans")) {
             int foodGained = 15 + random.nextInt(15); // 15-30 pounds of food
             inventory.addFood(foodGained);
-            System.out.println("They share " + foodGained + " pounds of food with you.");
-            System.out.println("They also show you a better route, saving you time.");
+            showMessage("They share " + foodGained + " pounds of food with you.");
+            showMessage("They also show you a better route, saving you time.");
         } else if (event.contains("water source")) {
-            System.out.println("Everyone in your party feels refreshed.");
+            showMessage("Everyone in your party feels refreshed.");
             player.increaseHealth(10);
-            System.out.println("Health increased by 10 points.");
+            showMessage("Health increased by 10 points.");
         } else if (event.contains("hunting")) {
             int foodGained = 25 + random.nextInt(50); // 25-75 pounds of food
             int ammoUsed = 1 + random.nextInt(3); // 1-3 ammunition used
@@ -274,173 +297,193 @@ public class Perils {
             if (inventory.getAmmunition() >= ammoUsed) {
                 inventory.useAmmunition(ammoUsed);
                 inventory.addFood(foodGained);
-                System.out.println("You use " + ammoUsed + " ammunition and get " + foodGained + " pounds of food.");
+                showMessage("You use " + ammoUsed + " ammunition and get " + foodGained + " pounds of food.");
             } else {
-                System.out.println("Unfortunately, you don't have enough ammunition to hunt properly.");
-                foodGained /= 3; // Much less food without ammo
+                showMessage("Unfortunately, you don't have enough ammunition to hunt effectively.");
+                foodGained = 5 + random.nextInt(10); // Much less food without ammunition
                 inventory.addFood(foodGained);
-                System.out.println("You manage to trap a few small animals for " + foodGained + " pounds of food.");
+                showMessage("You manage to gather " + foodGained + " pounds of food instead.");
             }
         }
     }
 
     private void generateWeatherEvent() {
-        System.out.println("\n=== WEATHER EVENT ===");
+        showMessage("\n=== WEATHER EVENT ===");
 
         // Select random weather event
         String event = weatherEvents.get(random.nextInt(weatherEvents.size()));
 
-        System.out.println("A " + event + " moves through the area.");
+        showMessage(event);
 
-        // Different effects based on weather
-        if (event.contains("hailstorm")) {
-            System.out.println("The hail pelts your wagon and oxen.");
-            inventory.decreaseOxenHealth(10);
-            System.out.println("Oxen health decreased by 10 points.");
-
-            if (random.nextDouble() < 0.2) {
-                int foodLost = 5 + random.nextInt(10); // 5-15 pounds of food
-                inventory.consumeFood(foodLost);
-                System.out.println("Some of your food was damaged, losing " + foodLost + " pounds.");
-            }
-        } else if (event.contains("thunderstorm")) {
-            System.out.println("The strong winds and rain drench everything.");
-            int healthLost = 5 + random.nextInt(5); // 5-10 health points
-            player.decreaseHealth(healthLost);
-            System.out.println("Health decreased by " + healthLost + " points from exposure.");
-
+        // Apply weather effect
+        if (event.contains("rain")) {
+            // Rain slows travel but may help find water
+            inventory.decreaseOxenHealth(5); // Muddy conditions strain animals
+            showMessage("The rain slows your travel but provides fresh drinking water.");
+            
+            // Food loss chance
             if (random.nextDouble() < 0.3) {
-                System.out.println("The winds damaged your wagon cover.");
-                if (inventory.getWagonParts() > 0) {
-                    System.out.println("You use 1 wagon part to repair it.");
-                    inventory.useWagonParts(1);
-                } else {
-                    int foodLost = 10 + random.nextInt(20); // 10-30 pounds of food
-                    inventory.consumeFood(foodLost);
-                    System.out.println("Without repairs, " + foodLost + " pounds of food was spoiled by rain.");
-                }
-            }
-        } else if (event.contains("fog")) {
-            System.out.println("The fog makes it impossible to see the trail clearly.");
-            System.out.println("You have to slow down significantly to avoid getting lost.");
-            // Travel impact handled in main game loop by weather system
-        } else if (event.contains("snowfall")) {
-            System.out.println("The unexpected snow makes travel difficult.");
-            int healthLost = 5 + random.nextInt(10); // 5-15 health points
-            player.decreaseHealth(healthLost);
-            System.out.println("Health decreased by " + healthLost + " points from the cold.");
-            inventory.decreaseOxenHealth(5);
-            System.out.println("Oxen health decreased by 5 points.");
-        } else if (event.contains("dust")) {
-            System.out.println("The dust gets everywhere, in your food and water.");
-            int healthLost = 3 + random.nextInt(7); // 3-10 health points
-            player.decreaseHealth(healthLost);
-            System.out.println("Health decreased by " + healthLost + " points from dust inhalation.");
-
-            if (random.nextDouble() < 0.4) {
-                int foodLost = 5 + random.nextInt(5); // 5-10 pounds of food
+                int foodLost = 5 + random.nextInt(15); // 5-20 pounds
                 inventory.consumeFood(foodLost);
-                System.out.println(foodLost + " pounds of food is ruined by the dust.");
+                showMessage("Some of your food got wet and spoiled. You lost " + foodLost + " pounds of food.");
+            }
+        } else if (event.contains("snow")) {
+            // Snow significantly slows travel
+            inventory.decreaseOxenHealth(10);
+            player.decreaseHealth(5);
+            showMessage("The severe cold affects everyone's health and slows travel considerably.");
+            
+            // Food consumption increases
+            int extraFood = player.getFamilySize();
+            if (inventory.getFood() >= extraFood) {
+                inventory.consumeFood(extraFood);
+                showMessage("The cold weather makes everyone hungrier. You consume " + extraFood + " extra pounds of food.");
+            } else {
+                player.decreaseHealth(3);
+                showMessage("You don't have enough extra food for the cold weather. Everyone suffers a bit more.");
+            }
+        } else if (event.contains("lightning")) {
+            // Lightning has a chance to damage supplies or wagon
+            boolean wagonDamage = random.nextDouble() < 0.4;
+            
+            if (wagonDamage) {
+                showMessage("A lightning strike damages your wagon!");
+                
+                if (inventory.getWagonParts() > 0) {
+                    inventory.useWagonParts(1);
+                    showMessage("You use 1 wagon part to repair the damage.");
+                } else {
+                    showMessage("You have no spare parts to properly repair your wagon.");
+                    inventory.decreaseOxenHealth(15);
+                    showMessage("Your makeshift repairs will slow your travel significantly.");
+                }
+            } else {
+                // Just a scare
+                showMessage("The storm passes without causing serious harm.");
+            }
+        } else if (event.contains("hail")) {
+            // Hail can damage food supplies
+            int foodLost = 10 + random.nextInt(20); // 10-30 pounds
+            inventory.consumeFood(foodLost);
+            showMessage("Hail damages some of your supplies. You lost " + foodLost + " pounds of food.");
+            
+            // Small chance of injury
+            if (random.nextDouble() < 0.2) {
+                player.decreaseHealth(5);
+                showMessage("The hail causes minor injuries to members of your party.");
+            }
+        } else if (event.contains("drought")) {
+            // Drought affects health more than supplies
+            player.decreaseHealth(7);
+            showMessage("The drought leaves everyone dehydrated and weakened.");
+            showMessage("You'll need to find water soon or health will continue to decline.");
+        } else if (event.contains("fog")) {
+            // Fog mostly just slows travel and creates risk
+            showMessage("The fog makes travel treacherous. You proceed with caution.");
+            
+            // Small chance of wagon accident
+            if (random.nextDouble() < 0.2) {
+                showMessage("In the fog, your wagon hits a rock and sustains damage.");
+                
+                if (inventory.getWagonParts() > 0) {
+                    inventory.useWagonParts(1);
+                    showMessage("You use 1 wagon part to repair the damage.");
+                } else {
+                    showMessage("You have no spare parts to properly repair your wagon.");
+                    inventory.decreaseOxenHealth(10);
+                }
             }
         }
     }
 
     private void generateAnimalEvent() {
-        System.out.println("\n=== ANIMAL ENCOUNTER ===");
+        showMessage("\n=== ANIMAL ENCOUNTER ===");
 
         // Select random animal event
         String event = animalEvents.get(random.nextInt(animalEvents.size()));
 
-        System.out.println("There's a " + event + "!");
+        showMessage(event);
 
-        // Different effects based on animal
-        if (event.contains("snake")) {
-            if (random.nextDouble() < 0.3) {
-                System.out.println("The snake bites " + player.getName() + "!");
-                int healthLost = 15 + random.nextInt(15); // 15-30 health points
-
-                if (inventory.getMedicine() > 0) {
-                    System.out.println("You use 1 medicine to treat the bite.");
-                    inventory.useMedicine(1);
-                    healthLost /= 2;
-                } else {
-                    System.out.println("You have no medicine to treat the snakebite!");
-                }
-
-                player.decreaseHealth(healthLost);
-                System.out.println("Health decreased by " + healthLost + " points.");
-            } else {
-                System.out.println("You manage to avoid the snake. That was close!");
-            }
-        } else if (event.contains("wolf")) {
-            System.out.println("The wolves are eyeing your oxen.");
-
-            if (inventory.getAmmunition() >= 2) {
-                System.out.println("You fire 2 shots to scare them away.");
+        // Apply effect based on animal type
+        if (event.contains("buffalo")) {
+            // Buffalo could be food or danger
+            boolean canHunt = inventory.getAmmunition() >= 3;
+            
+            if (canHunt && random.nextDouble() < 0.6) {
+                int ammoUsed = 3;
+                inventory.useAmmunition(ammoUsed);
+                
+                int foodGained = 200 + random.nextInt(300); // 200-500 pounds
+                inventory.addFood(foodGained);
+                
+                showMessage("You successfully hunt a buffalo, using " + ammoUsed + " ammunition.");
+                showMessage("You gain " + foodGained + " pounds of food! That should last a while.");
+            } else if (canHunt) {
                 inventory.useAmmunition(2);
-                System.out.println("The wolves flee into the wilderness.");
+                showMessage("You try to hunt the buffalo, using 2 ammunition, but it escapes.");
             } else {
-                System.out.println("Without ammunition to scare them, the wolves attack your oxen!");
-                int oxenDamage = 15 + random.nextInt(15); // 15-30 oxen health
-                inventory.decreaseOxenHealth(oxenDamage);
-                System.out.println("Oxen health decreased by " + oxenDamage + " points.");
-
+                showMessage("Without ammunition, you can only watch as the buffalo herd passes by.");
+                
+                // Small chance of stampede
                 if (random.nextDouble() < 0.2) {
-                    System.out.println("One of your oxen is killed by the wolves!");
-                    if (inventory.getOxen() > 0) {
-                        inventory.addOxen(-1); // Lose an ox
+                    showMessage("A buffalo gets too close to your wagon and startles your oxen!");
+                    inventory.decreaseOxenHealth(10);
+                    
+                    int foodLost = 10 + random.nextInt(20); // 10-30 pounds
+                    if (inventory.getFood() > foodLost) {
+                        inventory.consumeFood(foodLost);
+                        showMessage("In the chaos, you lose " + foodLost + " pounds of food.");
                     }
                 }
             }
         } else if (event.contains("bears")) {
-            System.out.println("Bears have gotten into your food supply!");
-            int foodLost = 20 + random.nextInt(30); // 20-50 pounds of food
-            inventory.consumeFood(foodLost);
-            System.out.println("You lose " + foodLost + " pounds of food.");
-
-            if (inventory.getAmmunition() >= 3) {
-                System.out.println("You fire 3 shots to drive the bears away.");
+            // Bears are dangerous - ammunition helps
+            boolean hasAmmo = inventory.getAmmunition() >= 3;
+            
+            if (hasAmmo) {
                 inventory.useAmmunition(3);
-
-                if (random.nextDouble() < 0.4) {
-                    System.out.println("You manage to hit one of the bears!");
-                    int foodGained = 40 + random.nextInt(60); // 40-100 pounds of food
+                showMessage("You fire shots to scare away the bears, using 3 ammunition.");
+                
+                // Small chance to hunt
+                if (random.nextDouble() < 0.3) {
+                    int foodGained = 100 + random.nextInt(100); // 100-200 pounds
                     inventory.addFood(foodGained);
-                    System.out.println("You butcher the bear for " + foodGained + " pounds of food.");
+                    showMessage("You manage to kill a bear, gaining " + foodGained + " pounds of food!");
                 }
-            }
-        } else if (event.contains("oxen spooked")) {
-            System.out.println("Your oxen are frightened and trying to run!");
-
-            if (random.nextDouble() < 0.4) {
-                System.out.println("You lose control of the wagon!");
-                int wagonDamage = random.nextInt(2); // 0-1 wagon parts
-                if (wagonDamage > 0) {
-                    System.out.println("The wagon is damaged in the chaos.");
-
-                    if (inventory.getWagonParts() >= wagonDamage) {
-                        System.out.println("You use " + wagonDamage + " wagon parts for repairs.");
-                        inventory.useWagonParts(wagonDamage);
-                    } else {
-                        System.out.println("You don't have enough parts for a proper repair.");
-                        inventory.decreaseOxenHealth(10);
-                        System.out.println("Oxen health decreased by 10 points from the strain of pulling a damaged wagon.");
+            } else {
+                // No ammunition - health impact
+                int healthLoss = 10 + random.nextInt(15); // 10-25 health
+                player.decreaseHealth(healthLoss);
+                showMessage("Without ammunition, you have to hide and wait for the bears to leave.");
+                showMessage("The encounter leaves everyone shaken and costs valuable time.");
+                showMessage("Health decreased by " + healthLoss + " points from stress and lost time.");
+                
+                // Food loss possible
+                if (random.nextDouble() < 0.5) {
+                    int foodLost = 20 + random.nextInt(30); // 20-50 pounds
+                    if (inventory.getFood() > foodLost) {
+                        inventory.consumeFood(foodLost);
+                        showMessage("The bears get into your food supplies! You lose " + foodLost + " pounds of food.");
                     }
                 }
-
-                int healthLost = 5 + random.nextInt(10); // 5-15 health points
-                player.decreaseHealth(healthLost);
-                System.out.println("You're battered during the incident. Health decreased by " + healthLost + " points.");
-            } else {
-                System.out.println("You manage to calm the oxen before any damage is done.");
             }
-        } else if (event.contains("insects")) {
-            System.out.println("The air is filled with biting insects!");
-            int healthLost = 5 + random.nextInt(5); // 5-10 health points
-            player.decreaseHealth(healthLost);
-            System.out.println("Everyone is bitten and uncomfortable. Health decreased by " + healthLost + " points.");
-            inventory.decreaseOxenHealth(5);
-            System.out.println("Oxen health decreased by 5 points.");
+        } else if (event.contains("wolves")) {
+            // Wolves are a threat to oxen more than people
+            boolean hasAmmo = inventory.getAmmunition() >= 2;
+            
+            if (hasAmmo) {
+                inventory.useAmmunition(2);
+                showMessage("You fire shots to scare away the wolves, using 2 ammunition.");
+            } else {
+                // No ammunition - oxen health impact
+                inventory.decreaseOxenHealth(15);
+                showMessage("Without ammunition, you struggle to protect your oxen from the wolves.");
+                showMessage("Your oxen are injured and exhausted from the encounter.");
+                
+                // Small health impact to player
+                player.decreaseHealth(5);
+                showMessage("The stress of the situation affects everyone's health.");
+            }
         }
     }
 } 

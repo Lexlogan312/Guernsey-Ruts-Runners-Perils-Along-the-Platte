@@ -122,6 +122,12 @@ public class StartupDialog extends JDialog {
                 if (validateCurrentTab(index)) {
                     tabbedPane.setSelectedIndex(index + 1);
                 }
+            } else {
+                // If on the last tab, behave like the Begin Journey button
+                if (validateAllTabs()) {
+                    saveSettings();
+                    dispose();
+                }
             }
         });
         
