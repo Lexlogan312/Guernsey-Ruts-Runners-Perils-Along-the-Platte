@@ -58,7 +58,7 @@ public class Map {
         } else if (this.trailChoice == 3) {
             this.landmarks.add(new Landmark("Nauvoo, Illinois", 0, "Nauvoo was the home of the early Latter-day Saints community. Persecution forced their migration west in 1846."));
             this.landmarks.add(new Landmark("Sugar Creek", 8, "The first major encampment after leaving Nauvoo. Here, Mormons organized their wagons before heading west."));
-            this.landmarks.add(new Landmark("Richardson’s Point", 60, "A campsite where early migrants waited out bad weather. Several pioneers were buried here."));
+            this.landmarks.add(new Landmark("Richardson's Point", 60, "A campsite where early migrants waited out bad weather. Several pioneers were buried here."));
             this.landmarks.add(new Landmark("Chariton River Crossing", 100, "A challenging river ford in southern Iowa, notorious for mud and flooding."));
             this.landmarks.add(new Landmark("Garden Grove", 135, "One of the first way stations built by pioneers to support later companies with food and shelter."));
             this.landmarks.add(new Landmark("Mount Pisgah", 185, "Another semi-permanent settlement where crops were planted and weary travelers rested."));
@@ -161,5 +161,21 @@ public class Map {
 
     public Landmark getCurrentLandmark(int location) {
         return this.landmarks.get(location);
+    }
+
+    /**
+     * Sets the current location by landmark name
+     * @param landmarkName The name of the landmark to set as current
+     * @return true if landmark found and set, false otherwise
+     */
+    public boolean setCurrentLocation(String landmarkName) {
+        for (int i = 0; i < landmarks.size(); i++) {
+            if (landmarks.get(i).getName().equals(landmarkName)) {
+                currentLandmarkIndex = i;
+                distanceTraveled = landmarks.get(i).getDistance();
+                return true;
+            }
+        }
+        return false;
     }
 }

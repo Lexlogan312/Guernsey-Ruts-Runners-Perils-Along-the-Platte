@@ -1,4 +1,6 @@
 import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 
 public class FontManager {
@@ -11,8 +13,56 @@ public class FontManager {
      */
     public static void loadCustomFonts() {
         try {
-            InputStream is = FontManager.class.getResourceAsStream("/resources/fonts/western.ttf");
-            Font baseFont = Font.createFont(Font.TRUETYPE_FONT, is);
+            // Try multiple methods to load the font
+            Font baseFont = null;
+            Exception lastException = null;
+            
+            // Try method 1: direct file path
+            try {
+                File fontFile = new File("resources/fonts/Kirsty Rg.otf");
+                if (fontFile.exists()) {
+                    baseFont = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+                    System.out.println("Font loaded using direct file path");
+                }
+            } catch (Exception e) {
+                lastException = e;
+                System.err.println("Failed to load font using direct file path: " + e.getMessage());
+            }
+            
+            // Try method 2: absolute path
+            if (baseFont == null) {
+                try {
+                    String fontPath = System.getProperty("user.dir") + "/resources/fonts/Kirsty Rg.otf";
+                    File fontFile = new File(fontPath);
+                    if (fontFile.exists()) {
+                        baseFont = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+                        System.out.println("Font loaded using absolute path: " + fontPath);
+                    }
+                } catch (Exception e) {
+                    lastException = e;
+                    System.err.println("Failed to load font using absolute path: " + e.getMessage());
+                }
+            }
+            
+            // Try method 3: resource stream (original method)
+            if (baseFont == null) {
+                try {
+                    InputStream is = FontManager.class.getResourceAsStream("/resources/fonts/Kirsty Rg.otf");
+                    if (is != null) {
+                        baseFont = Font.createFont(Font.TRUETYPE_FONT, is);
+                        System.out.println("Font loaded using resource stream");
+                    }
+                } catch (Exception e) {
+                    lastException = e;
+                    System.err.println("Failed to load font using resource stream: " + e.getMessage());
+                }
+            }
+            
+            // If all methods failed, throw the last exception
+            if (baseFont == null) {
+                throw lastException != null ? lastException : 
+                    new Exception("Could not find font file using any method");
+            }
             
             // Create different sizes and styles
             WESTERN_FONT = baseFont.deriveFont(Font.PLAIN, 14f);

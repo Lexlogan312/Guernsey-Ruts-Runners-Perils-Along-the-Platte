@@ -1,7 +1,10 @@
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.awt.Frame;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 /**
  * GameController acts as an intermediary between the GUI and the game logic
@@ -25,13 +28,24 @@ public class GameController {
     private boolean gameStarted = false;
     private boolean isGameRunning = true;
     
+    // Event tracking
+    private ArrayList<String> journeyEvents = new ArrayList<>();
+    
     // Listeners
     private ArrayList<Consumer<String>> messageListeners = new ArrayList<>();
     private ArrayList<Runnable> gameStateListeners = new ArrayList<>();
     
     public GameController() {
-        // Initialize empty inventory to prevent null pointers
+        player = new Player("Player", "Male");
         inventory = new Inventory();
+        time = new Time(1848, 3); // Default to March 1848
+        weather = new Weather(time.getMonth(), "Start");
+        map = new Map(1); // Default to Oregon Trail
+        hunting = new Hunting(inventory);
+        perils = new Perils(player, inventory, weather);
+        
+        // Set the message listener for Perils class to use our notification system
+        perils.setMessageListener(this::notifyListeners);
     }
     
     /**
@@ -185,14 +199,23 @@ public class GameController {
             return;
         }
         
-        int fortKearnyDistance = 0;
+        // Clear previous journey events
+        journeyEvents.clear();
         
-        // Find Fort Kearny's distance
+        int fortKearnyDistance = 0;
+        Landmark fortKearnyLandmark = null;
+        List<Landmark> landmarksPassed = new ArrayList<>();
+        
+        // Find Fort Kearny's distance and collect landmarks along the way
         for (int i = 0; i < map.getLandmarks().size(); i++) {
             Landmark landmark = map.getLandmarks().get(i);
             if (landmark.getName().contains("Fort Kearny")) {
                 fortKearnyDistance = landmark.getDistance();
+                fortKearnyLandmark = landmark;
+                landmarksPassed.add(landmark);
                 break;
+            } else if (landmark.getDistance() < fortKearnyDistance) {
+                landmarksPassed.add(landmark);
             }
         }
         
@@ -207,12 +230,32 @@ public class GameController {
         // Adjust based on departure month
         if (departureMonth.equals("March")) {
             daysToFortKearny += 3; // Muddy conditions in March
+            journeyEvents.add("Muddy spring conditions slowed your travel by 3 days.");
         } else if (departureMonth.equals("July")) {
             daysToFortKearny -= 1; // Better roads in summer
+            journeyEvents.add("The dry summer roads allowed you to travel faster, saving a day.");
         }
         
         notifyListeners("\n=== JOURNEY TO FORT KEARNY ===\n" +
                        "Your journey to Fort Kearny takes " + daysToFortKearny + " days.");
+        
+        // Add landmarks passed to journey events
+        if (!landmarksPassed.isEmpty()) {
+            StringBuilder landmarksPassedText = new StringBuilder("Notable landmarks you passed: ");
+            for (int i = 0; i < landmarksPassed.size(); i++) {
+                Landmark lm = landmarksPassed.get(i);
+                landmarksPassedText.append(lm.getName());
+                if (i < landmarksPassed.size() - 1) {
+                    landmarksPassedText.append(", ");
+                }
+                
+                // Also add individual landmark entries with their descriptions
+                if (lm.getDescription() != null && !lm.getDescription().isEmpty()) {
+                    journeyEvents.add("LANDMARK: " + lm.getName() + " - " + lm.getDescription());
+                }
+            }
+            journeyEvents.add(landmarksPassedText.toString());
+        }
         
         // Simulate the journey to Fort Kearny
         for (int i = 0; i < daysToFortKearny; i++) {
@@ -221,18 +264,61 @@ public class GameController {
             
             // Consume food
             int dailyFoodConsumption = player.getFamilySize() * 2;
-            inventory.consumeFood(dailyFoodConsumption);
+            
+            // Check if enough food is available
+            if (inventory.getFood() >= dailyFoodConsumption) {
+                inventory.consumeFood(dailyFoodConsumption);
+            } else {
+                // Consume whatever food is left
+                int remainingFood = inventory.getFood();
+                inventory.consumeFood(remainingFood);
+                
+                // Health impact based on food shortage
+                int healthLoss = 5;
+                player.decreaseHealth(healthLoss);
+                journeyEvents.add("You ran out of food for " + (daysToFortKearny - i) + " days, causing everyone to lose " + healthLoss + " health points.");
+                
+                // Only record this once
+                break;
+            }
             
             // Check for random events (1/3 chance)
             if (Math.random() < 0.33) {
+                // Create a custom listener to capture events for the journey summary
+                Consumer<String> eventCaptureListener = eventText -> {
+                    // Clean up the event text a bit
+                    if (eventText.startsWith("\n===")) {
+                        // This is a header, start a new entry
+                        String cleanedText = eventText.replace("\n=== ", "");
+                        cleanedText = cleanedText.replace(" ===", ":");
+                        journeyEvents.add(cleanedText);
+                    } else if (!eventText.isEmpty()) {
+                        // This is content, append to the last entry
+                        int lastIndex = journeyEvents.size() - 1;
+                        if (lastIndex >= 0) {
+                            String currentEvent = journeyEvents.get(lastIndex);
+                            journeyEvents.set(lastIndex, currentEvent + " " + eventText);
+                        }
+                    }
+                };
+                
+                // Temporarily redirect events to our capture listener
+                Consumer<String> originalListener = message -> notifyListeners(message);
+                perils.setMessageListener(eventCaptureListener);
+                
+                // Generate the event
                 perils.generateRandomEvent();
+                
+                // Restore the original listener
+                perils.setMessageListener(originalListener);
             }
             
             // Check if player died
             if (player.isDead()) {
                 isGameRunning = false;
-                notifyListeners("\nYou have died of " + player.getCauseOfDeath() + ".\n" +
-                               "Your journey has come to an end after " + time.getTotalDays() + " days on the trail.");
+                String deathMessage = "You died of " + player.getCauseOfDeath() + " after " + time.getTotalDays() + " days on the trail.";
+                journeyEvents.add(deathMessage);
+                notifyListeners("\n" + deathMessage);
                 return;
             }
         }
@@ -240,11 +326,23 @@ public class GameController {
         // Update the map position
         map.travel(fortKearnyDistance);
         
+        // Explicitly set current location to Fort Kearny
+        if (fortKearnyLandmark != null) {
+            map.setCurrentLocation(fortKearnyLandmark.getName());
+        }
+        
         notifyListeners("\nYou have arrived at Fort Kearny!\n" +
                        "This is where the real challenges of your journey begin.");
                        
         // Notify game state listeners to update display
         notifyGameStateChanged();
+    }
+    
+    /**
+     * Get journey events that occurred
+     */
+    public ArrayList<String> getJourneyEvents() {
+        return journeyEvents;
     }
     
     // Game actions
@@ -443,19 +541,67 @@ public class GameController {
         // Check if game should end
         if (player.isDead()) {
             isGameRunning = false;
-            notifyListeners("\nYou have died of " + player.getCauseOfDeath() + ".\n" +
+            final String deathMessage = "\nYou have died of " + player.getCauseOfDeath() + ".\n" +
                            "Your journey has come to an end after " + time.getTotalDays() + " days on the trail.\n" +
                            "You traveled " + map.getDistanceTraveled() + " miles.\n" +
-                           "Your last known location: near " + map.getCurrentLocation());
+                           "Your last known location: near " + map.getCurrentLocation();
+            
+            notifyListeners(deathMessage);
+            
+            // Show death dialog
+            SwingUtilities.invokeLater(() -> {
+                // Find the owner frame
+                Frame owner = null;
+                for (Frame frame : Frame.getFrames()) {
+                    if (frame.isVisible()) {
+                        owner = frame;
+                        break;
+                    }
+                }
+                
+                DeathDialog deathDialog = new DeathDialog(
+                    owner,
+                    player.getCauseOfDeath(),
+                    time.getTotalDays(),
+                    map.getDistanceTraveled(),
+                    map.getCurrentLocation()
+                );
+                
+                deathDialog.setVisible(true);
+            });
         }
         
         if (map.hasReachedDestination()) {
             isGameRunning = false;
-            notifyListeners("\nCONGRATULATIONS!\n" +
+            final String completionMessage = "\nCONGRATULATIONS!\n" +
                            "You have successfully completed your journey to " + map.getDestination() + "!\n\n" +
                            "Your journey took " + time.getTotalDays() + " days.\n" +
                            "You traveled " + map.getDistanceTraveled() + " miles.\n" +
-                           "Final date: " + time.getMonthName() + " " + time.getDay() + ", " + time.getYear());
+                           "Final date: " + time.getMonthName() + " " + time.getDay() + ", " + time.getYear();
+            
+            notifyListeners(completionMessage);
+            
+            // Show completion dialog
+            SwingUtilities.invokeLater(() -> {
+                // Find the owner frame
+                Frame owner = null;
+                for (Frame frame : Frame.getFrames()) {
+                    if (frame.isVisible()) {
+                        owner = frame;
+                        break;
+                    }
+                }
+                
+                CompletionDialog completionDialog = new CompletionDialog(
+                    owner,
+                    map.getDestination(),
+                    time.getTotalDays(),
+                    map.getDistanceTraveled(),
+                    time.getMonthName() + " " + time.getDay() + ", " + time.getYear()
+                );
+                
+                completionDialog.setVisible(true);
+            });
         }
         
         // Notify listeners that game state has changed
@@ -552,7 +698,17 @@ public class GameController {
         return isGameRunning;
     }
     
+    /**
+     * Get the currently chosen trail
+     */
     public String getTrail() {
         return trail;
+    }
+    
+    /**
+     * Trigger a game state update
+     */
+    public void updateGameState() {
+        notifyGameStateChanged();
     }
 } 
