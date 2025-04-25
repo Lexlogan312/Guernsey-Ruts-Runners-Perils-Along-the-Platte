@@ -43,7 +43,7 @@ public class TradingDialog extends JDialog {
         initUI();
         pack();
         setLocationRelativeTo(owner);
-        setSize(700, 500);
+        setSize(800, 500);
         setResizable(false);
     }
     

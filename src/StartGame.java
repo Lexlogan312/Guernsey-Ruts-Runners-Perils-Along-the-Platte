@@ -205,7 +205,7 @@ public class StartGame {
         System.out.println("\nThe timing of your departure was crucial for pioneers.");
         System.out.println("Leave too early: face mud and flooding from spring rains.");
         System.out.println("Leave too late: risk being trapped in mountain snow.");
-        System.out.println("\nMost emigrants departed between April and June.");
+        System.out.println("\nMost emigrants departed between March and June.");
 
         System.out.println("\nSelect your departure month:");
         for (int i = 0; i < months.length; i++) {

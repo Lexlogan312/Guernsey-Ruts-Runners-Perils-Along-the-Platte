@@ -371,7 +371,7 @@ public class StartupDialog extends JDialog {
                 "Choose when to depart. The timing of your departure was crucial for pioneers.\n" +
                         "Leave too early: face mud and flooding from spring rains.\n" +
                         "Leave too late: risk being trapped in mountain snow.\n\n" +
-                        "Most emigrants departed between April and June."
+                        "Most emigrants departed between March and June."
         );
 
         departurePanel.add(descriptionArea, BorderLayout.NORTH);
@@ -397,7 +397,7 @@ public class StartupDialog extends JDialog {
             monthButtons[i].setForeground(TEXT_COLOR);
             monthButtons[i].setBackground(PANEL_COLOR);
 
-            if (i == 1) { // April is default
+            if (i == 0) { // March is default
                 monthButtons[i].setSelected(true);
             }
 
