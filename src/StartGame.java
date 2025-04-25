@@ -3,13 +3,13 @@ import java.util.Scanner;
 public class StartGame {
     private Player player;
     private Map map;
-    private Inventory inventory;
-    private Hunting hunting;
-    private Time time;
+    private final Inventory inventory;
+    private final Hunting hunting;
+    private final Time time;
     private Weather weather;
     private boolean isGameRunning = true;
-    private Scanner scanner = new Scanner(System.in);
-    private String[] months = {"March", "April", "May", "June", "July"};
+    private final Scanner scanner = new Scanner(System.in);
+    private final String[] months = {"March", "April", "May", "June", "July"};
     private int monthChoice = 0;
     
     private int daysTraveled;
@@ -19,7 +19,7 @@ public class StartGame {
     private String departureMonth;
     private String playerName;
     private String playerGender;
-    private Perils perils;
+    private final Perils perils;
     
     public StartGame() {
         displayWelcomeMessage();

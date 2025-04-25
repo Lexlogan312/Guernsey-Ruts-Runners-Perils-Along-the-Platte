@@ -2,36 +2,29 @@ import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder; // Ensure this import exists
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList; // Import ArrayList
-import java.util.List; // Import List
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
-import java.util.function.Consumer; // Import Consumer
+import java.util.function.Consumer;
 
 /**
  * Dialog for river crossing decisions in the GUI
- * CHANGES:
- * - Accepts a Consumer<String> (notifier) in the constructor.
- * - Sends result messages via the notifier instead of local JTextArea.
- * - Removed the local JTextArea (resultArea).
- * - Adjusted layout/size.
  */
 public class RiverCrossingDialog extends JDialog {
-    private Player player;
-    private Inventory inventory;
-    private Weather weather;
-    private Random random = new Random();
-    private Consumer<String> notifier; // To send messages back to GameController
+    private final Player player;
+    private final Inventory inventory;
+    private final Weather weather;
+    private final Random random = new Random();
+    private final Consumer<String> notifier; // To send messages back to GameController
 
     // River characteristics
     private int depth;
-    private int width;
+    private final int width;
 
     // GUI components
-    // private JTextArea resultArea; // REMOVED
     private JPanel optionsPanel; // To disable buttons
 
     // Colors - match EnhancedGUI
@@ -47,15 +40,15 @@ public class RiverCrossingDialog extends JDialog {
      * @param player Player object
      * @param inventory Inventory object
      * @param weather Weather object
-     * @param notifier Function to call to send messages (e.g., gameController::notifyListeners)
+     * @param notifier Function to call to send messages
      */
-    public RiverCrossingDialog(Frame owner, Player player, Inventory inventory, Weather weather, Consumer<String> notifier) { // Added notifier
+    public RiverCrossingDialog(Frame owner, Player player, Inventory inventory, Weather weather, Consumer<String> notifier) {
         super(owner, "River Crossing", true); // Modal dialog
 
         this.player = player;
         this.inventory = inventory;
         this.weather = weather;
-        this.notifier = notifier; // Store the notifier
+        this.notifier = notifier;
 
         // Generate river characteristics
         depth = 2 + random.nextInt(19); // 2-20 feet deep
@@ -69,8 +62,8 @@ public class RiverCrossingDialog extends JDialog {
         }
 
         initUI();
-        pack(); // Pack before setting size
-        setSize(600, 500); // Reduced height as result area is gone
+        pack();
+        setSize(600, 500);
         setLocationRelativeTo(owner);
         setResizable(false);
     }
@@ -304,8 +297,7 @@ public class RiverCrossingDialog extends JDialog {
 
             // Disable the ferry button and let user choose again
             for (Component comp : optionsPanel.getComponents()) {
-                if (comp instanceof JButton) {
-                    JButton button = (JButton) comp;
+                if (comp instanceof JButton button) {
                     if (button.getText().contains("ferry")) {
                         button.setEnabled(false);
                         button.setText("<html><div style='text-align: center; padding: 5px; color: gray;'>Use a ferry ($10)<br><span style='font-size: 11px;'>Not enough money!</span></div></html>");
@@ -381,7 +373,7 @@ public class RiverCrossingDialog extends JDialog {
         if (optionsPanel == null) return;
         for (Component component : optionsPanel.getComponents()) {
             if (component instanceof JButton) {
-                ((JButton)component).setEnabled(false);
+                component.setEnabled(false);
             }
         }
     }

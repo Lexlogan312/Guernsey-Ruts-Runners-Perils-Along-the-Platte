@@ -3,25 +3,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.awt.Frame;
-// Removed unused imports: ByteArrayOutputStream, PrintStream
 
-/**
- * GameController acts as an intermediary between the GUI and the game logic.
- * Manages game state, player actions, and communication with the UI.
- *
- * CHANGES incorporated from previous discussions:
- * - Removed introductory notifyListeners calls during setup.
- * - Modified journeyToFortKearny to track resource consumption (food, parts, medicine, ammo).
- * - Passes consumption data and Landmark list to TravelSummaryDialog.
- * - Passes notifyListeners method reference to RiverCrossingDialog.
- * - Modified low food prompt (checkLowResourcePrompts) to call hunt() directly.
- * - Added logic checks for Independence Rock date.
- * - General cleanup and ensuring listeners are handled on EDT.
- */
 public class GameController {
     private Player player;
     private Map map;
-    private Inventory inventory;
+    private final Inventory inventory;
     private Time time;
     private Weather weather;
     private Hunting hunting;
@@ -38,8 +24,8 @@ public class GameController {
     private boolean isGameRunning = true;
 
     // Event tracking for the initial journey
-    private ArrayList<String> initialJourneyEvents = new ArrayList<>();
-    private ArrayList<Landmark> initialLandmarksPassed = new ArrayList<>();
+    private final ArrayList<String> initialJourneyEvents = new ArrayList<>();
+    private final ArrayList<Landmark> initialLandmarksPassed = new ArrayList<>();
     // Fields to track consumption during initial journey
     private int initialFoodConsumed = 0;
     private int initialPartsUsed = 0;
@@ -48,8 +34,8 @@ public class GameController {
 
 
     // Listeners
-    private ArrayList<Consumer<String>> messageListeners = new ArrayList<>();
-    private ArrayList<Runnable> gameStateListeners = new ArrayList<>();
+    private final ArrayList<Consumer<String>> messageListeners = new ArrayList<>();
+    private final ArrayList<Runnable> gameStateListeners = new ArrayList<>();
 
     /**
      * Constructor: Initializes default game state components.
@@ -555,23 +541,10 @@ public class GameController {
         }
 
         // --- Checks after daily actions/events ---
-        checkIndependenceRockTiming();
         checkLowResourcePrompts(); // Check low resources AFTER events might have used some
         checkGameEndConditions(); // Check for death/win AFTER events
 
         notifyGameStateChanged(); // Update GUI with new date, weather, status, etc.
-    }
-
-    /** Checks timing for Independence Rock. */
-    private void checkIndependenceRockTiming() {
-        if (map.getCurrentLocation().contains("Independence Rock") && time.getMonth() > 7) {
-            // TODO: Add a flag to prevent this message from showing every single day
-            // boolean independenceRockWarningShown = false; // (Needs to be a class member)
-            // if (!independenceRockWarningShown) {
-            notifyListeners("WARNING: Reached Independence Rock after July 4th! Winter crossing ahead will be perilous.");
-            //    independenceRockWarningShown = true;
-            // }
-        }
     }
 
     /** Checks for low food/health and prompts user if needed. */

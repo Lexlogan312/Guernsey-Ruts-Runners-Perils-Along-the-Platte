@@ -1,11 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Main application class.
- * CHANGES:
- * - Set main frame to be resizable.
- */
 public class Main {
 
     private JFrame frame;

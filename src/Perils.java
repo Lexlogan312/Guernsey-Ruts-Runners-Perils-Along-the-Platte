@@ -3,10 +3,10 @@ import java.util.Random;
 import java.util.function.Consumer;
 
 public class Perils {
-    private Player player;
-    private Inventory inventory;
-    private Weather weather;
-    private Random random;
+    private final Player player;
+    private final Inventory inventory;
+    private final Weather weather;
+    private final Random random;
     
     // Add a listener callback for messages
     private Consumer<String> messageListener;

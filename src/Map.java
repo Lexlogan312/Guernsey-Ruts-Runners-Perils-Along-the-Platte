@@ -6,8 +6,8 @@ import java.util.ArrayList;
  * - Added resetRiverCrossing method.
  */
 public class Map {
-    private int trailChoice;
-    private ArrayList<Landmark> landmarks;
+    private final int trailChoice;
+    private final ArrayList<Landmark> landmarks;
     private int currentLandmarkIndex;
     private int distanceTraveled;
     private boolean riverCrossingPending; // Renamed for clarity

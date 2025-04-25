@@ -1,9 +1,9 @@
 import java.util.Scanner;
 
 public class RiverCrossing {
-    private Player player;
-    private Inventory inventory;
-    private Weather weather;
+    private final Player player;
+    private final Inventory inventory;
+    private final Weather weather;
 
     public RiverCrossing(Player player, Inventory inventory, Weather weather) {
         this.player = player;

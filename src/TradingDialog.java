@@ -9,9 +9,9 @@ import java.util.Random;
  * Dialog for trading at landmarks in the GUI
  */
 public class TradingDialog extends JDialog {
-    private Player player;
-    private Inventory inventory;
-    private Random random = new Random();
+    private final Player player;
+    private final Inventory inventory;
+    private final Random random = new Random();
     
     // GUI components
     private JLabel moneyLabel;
@@ -19,7 +19,7 @@ public class TradingDialog extends JDialog {
     private JPanel actionPanel;
     
     // Price modifiers
-    private double priceFactor;
+    private final double priceFactor;
     
     // Colors - match EnhancedGUI
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia

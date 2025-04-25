@@ -16,15 +16,15 @@ import java.util.stream.Collectors;
  * - Ensured text area backgrounds match panel color.
  */
 public class TravelSummaryDialog extends JDialog {
-    private List<String> events;
-    private List<Landmark> landmarksPassed;
-    private int days;
-    private int distance;
+    private final List<String> events;
+    private final List<Landmark> landmarksPassed;
+    private final int days;
+    private final int distance;
     // Added fields for consumption
-    private int foodConsumed;
-    private int partsUsed;
-    private int medicineUsed;
-    private int ammoUsed;
+    private final int foodConsumed;
+    private final int partsUsed;
+    private final int medicineUsed;
+    private final int ammoUsed;
 
 
     // Colors - match EnhancedGUI

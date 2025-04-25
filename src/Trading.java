@@ -2,9 +2,9 @@ import java.util.Scanner;
 import java.util.Random;
 
 public class Trading {
-    private Player player;
-    private Inventory inventory;
-    private Random random;
+    private final Player player;
+    private final Inventory inventory;
+    private final Random random;
 
     public Trading(Player player, Inventory inventory) {
         this.player = player;

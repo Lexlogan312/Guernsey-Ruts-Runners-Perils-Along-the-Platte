@@ -1,7 +1,7 @@
 import java.util.Scanner;
 
 public class Hunting {
-    private Inventory inventory;
+    private final Inventory inventory;
 
     public Hunting(Inventory inventory) {
         this.inventory = inventory;

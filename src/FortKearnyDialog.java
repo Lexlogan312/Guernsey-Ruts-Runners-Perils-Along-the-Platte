@@ -5,7 +5,7 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 public class FortKearnyDialog extends JDialog {
-    private GameController gameController;
+    private final GameController gameController;
 
     // Colors - match EnhancedGUI
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia

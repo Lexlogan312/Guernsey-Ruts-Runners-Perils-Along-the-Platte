@@ -7,7 +7,7 @@ public class Inventory {
     private int medicine;
     private int ammunition;
     private int oxenHealth;
-    private ArrayList<Item> items;
+    private final ArrayList<Item> items;
 
     public Inventory() {
         this.food = 0;

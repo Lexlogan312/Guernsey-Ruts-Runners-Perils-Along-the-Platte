@@ -10,7 +10,7 @@ import java.util.Arrays;
  * Startup dialog to collect player information and game settings
  */
 public class StartupDialog extends JDialog {
-    private GameController gameController;
+    private final GameController gameController;
     
     // Panel components
     private JTabbedPane tabbedPane;
@@ -26,7 +26,7 @@ public class StartupDialog extends JDialog {
     private JRadioButton femaleButton;
     
     // Family fields
-    private JTextField[] familyMemberFields = new JTextField[3];
+    private final JTextField[] familyMemberFields = new JTextField[3];
     
     // Trail fields
     private ButtonGroup trailGroup;
@@ -36,7 +36,7 @@ public class StartupDialog extends JDialog {
     
     // Departure fields
     private ButtonGroup monthGroup;
-    private JRadioButton[] monthButtons = new JRadioButton[5];
+    private final JRadioButton[] monthButtons = new JRadioButton[5];
     
     // Colors - match EnhancedGUI
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia

@@ -7,32 +7,23 @@ import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Path2D; // For potentially curved paths later
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 
 /**
- * EnhancedGUI implements the improved interface for the Oregon Trail game.
- * CHANGES:
- * - Wagon icon now moves along the trail based on distanceTraveled.
- * - Added calculateWagonScreenPosition method.
- * - Modified drawLandmarks to draw wagon separately at calculated position.
- * - Trail path coloring still indicates progress.
- * - Other previous fixes maintained.
+ * GUI implements the interface for the Oregon Trail game.
  */
 public class GUI extends JPanel {
-    private GameController gameController;
+    private final GameController gameController;
 
     // Map panel components
     private MapPanel mapPanel;
 
     // Status panel components
     private JPanel statusPanel;
-    private HashMap<String, JLabel> statusLabels = new HashMap<>();
-    // private HashMap<String, JLabel> statusIcons = new HashMap<>(); // Icons not currently used
+    private final HashMap<String, JLabel> statusLabels = new HashMap<>();
 
     // Control panel components
     private JPanel controlPanel;
@@ -248,34 +239,30 @@ public class GUI extends JPanel {
      */
     private void createOutputPanel() {
         outputPanel = new JPanel(new BorderLayout());
-        outputPanel.setBackground(BACKGROUND_COLOR); // Match main background
+        outputPanel.setBackground(BACKGROUND_COLOR);
 
         // Create titled border
         TitledBorder titledBorder = new TitledBorder(new LineBorder(ACCENT_COLOR, 1), "Trail Updates");
-        titledBorder.setTitleFont(FontManager.getBoldWesternFont(14f)); // Use bold font
+        titledBorder.setTitleFont(FontManager.getBoldWesternFont(14f));
         titledBorder.setTitleColor(TEXT_COLOR);
 
-        // Create output text area with scroll pane
-        outputTextArea = new JTextArea(12, 30); // Adjust width for side panel
+        // Create text area for game output
+        outputTextArea = new JTextArea();
         outputTextArea.setFont(FontManager.getWesternFont(14f));
         outputTextArea.setLineWrap(true);
         outputTextArea.setWrapStyleWord(true);
         outputTextArea.setEditable(false);
-        outputTextArea.setBackground(new Color(250, 240, 220)); // Slightly lighter background for text area
+        outputTextArea.setBackground(PANEL_COLOR);
         outputTextArea.setForeground(TEXT_COLOR);
-        outputTextArea.setMargin(new Insets(5, 5, 5, 5)); // Internal padding
 
-        // Auto-scroll to bottom
-        DefaultCaret caret = (DefaultCaret)outputTextArea.getCaret();
+        // Set caret to always show the latest text
+        DefaultCaret caret = (DefaultCaret) outputTextArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
+        // Add text area to a scroll pane
         outputScrollPane = new JScrollPane(outputTextArea);
-        outputScrollPane.setBorder(titledBorder); // Apply the titled border here
-        // outputScrollPane.setBorder(new CompoundBorder( // Original border style
-        //     titledBorder,
-        //     new EmptyBorder(5, 5, 5, 5)
-        // ));
-
+        outputScrollPane.setBorder(titledBorder);
+        
         outputPanel.add(outputScrollPane, BorderLayout.CENTER);
     }
 
@@ -584,9 +571,8 @@ public class GUI extends JPanel {
     private class MapPanel extends JPanel {
         private Image mapImage;
         private Map map; // Reference to the game's map object
-        // Stores calculated SCREEN coordinates for landmarks {LandmarkName -> Point}
-        private HashMap<String, Point> landmarkScreenPositions = new HashMap<>();
-        private List<Rectangle> drawnLabelBounds = new ArrayList<>(); // For collision detection
+        private final HashMap<String, Point> landmarkScreenPositions = new HashMap<>();
+        private final List<Rectangle> drawnLabelBounds = new ArrayList<>(); // For collision detection
         private String currentLocationName = "";
         private BufferedImage bufferedMap; // For double buffering
         private int distanceTraveled = 0;
@@ -599,7 +585,6 @@ public class GUI extends JPanel {
 
         // Map drawing constants
         private final Color TRAIL_COLOR = new Color(139, 69, 19, 180); // Brown semi-transparent
-        private final Color COMPLETED_TRAIL_COLOR = new Color(165, 42, 42, 200); // Darker brown
         private final Font LANDMARK_FONT = FontManager.getBoldWesternFont(11f); // Smaller font
         private final Font TOOLTIP_FONT = FontManager.getWesternFont(12f);
         private final Color LANDMARK_TEXT_SHADOW = new Color(0, 0, 0, 100);
@@ -609,7 +594,7 @@ public class GUI extends JPanel {
         // Original map dimensions for aspect ratio preservation
         private int originalMapWidth = 0;
         private int originalMapHeight = 0;
-        private Rectangle mapDrawArea = new Rectangle(); // Area where map image is drawn
+        private final Rectangle mapDrawArea = new Rectangle(); // Area where map image is drawn
 
         public MapPanel() {
             setBackground(PANEL_COLOR); // Match GUI panel color
@@ -631,30 +616,20 @@ public class GUI extends JPanel {
         /** Loads the map background image */
         private void loadMapImage() {
             try {
-                ImageIcon icon = null;
-                String filePath = "resources/images/Pixel Map.png"; // Path relative to execution dir
-
-                // File path
-                if (icon == null) {
-                    try {
-                        icon = new ImageIcon(filePath);
-                        if (icon.getImageLoadStatus() == MediaTracker.COMPLETE && icon.getIconWidth() > 0) {
-                            System.out.println("MapPanel: Loaded map using file path: " + filePath);
-                        } else icon = null;
-                    } catch (Exception e) { /* Ignore, try next */ }
-                }
-
-                if (icon != null) {
+                String filePath = "resources/images/Pixel Map.png";
+                ImageIcon icon = new ImageIcon(filePath);
+                
+                if (icon.getImageLoadStatus() == MediaTracker.COMPLETE && icon.getIconWidth() > 0) {
                     mapImage = icon.getImage();
                     originalMapWidth = icon.getIconWidth();
                     originalMapHeight = icon.getIconHeight();
-                    System.out.println("MapPanel: Map dimensions: " + originalMapWidth + "x" + originalMapHeight);
+                    System.out.println("Map loaded: " + originalMapWidth + "x" + originalMapHeight);
                 } else {
-                    System.err.println("MapPanel: Could not load map image with any method.");
-                    mapImage = null; // Ensure it's null if loading failed
+                    System.err.println("Failed to load map image: " + filePath);
+                    mapImage = null;
                 }
             } catch (Exception e) {
-                System.err.println("MapPanel: Error loading map image: " + e.getMessage());
+                System.err.println("Error loading map image: " + e.getMessage());
                 e.printStackTrace();
                 mapImage = null;
             }
@@ -951,6 +926,8 @@ public class GUI extends JPanel {
             if (map == null || landmarkScreenPositions.isEmpty() || map.getLandmarks() == null || fortKearnyDistance < 0) return;
 
             g2d.setStroke(TRAIL_STROKE);
+            g2d.setColor(TRAIL_COLOR);
+            
             Point prevPoint = null;
             List<Landmark> landmarks = map.getLandmarks();
             boolean foundStart = false; // Flag to indicate if we've found Fort Kearny or later
@@ -970,14 +947,12 @@ public class GUI extends JPanel {
 
                 Point currentPoint = landmarkScreenPositions.get(landmark.getName());
                 if (currentPoint == null) {
-                    System.err.println("Warning: No screen position found for landmark: " + landmark.getName() + " in drawTrailPaths");
+                    System.err.println("Warning: No screen position found for landmark: " + landmark.getName());
                     continue; // Skip if position is missing
                 }
 
                 // Draw segments from Fort Kearny onwards
                 if (prevPoint != null) {
-                    // Always use the same color for all trail segments
-                    g2d.setColor(TRAIL_COLOR);
                     g2d.drawLine(prevPoint.x, prevPoint.y, currentPoint.x, currentPoint.y);
                 }
                 prevPoint = currentPoint; // Update previous point for the next iteration
@@ -1090,8 +1065,9 @@ public class GUI extends JPanel {
             int textHeight = fm.getHeight();
             int ascent = fm.getAscent();
             int padding = 4; // Padding around text
+            
             int textX, textY;
-
+            
             // Use custom position if provided
             Point customLabelPos = scaleImagePointToScreen(new Point(landmark.getLabelX(), landmark.getLabelY()));
             textX = customLabelPos.x;
