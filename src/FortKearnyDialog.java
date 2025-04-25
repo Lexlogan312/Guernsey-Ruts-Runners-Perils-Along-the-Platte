@@ -3,7 +3,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.awt.event.ActionListener;
+
 public class FortKearnyDialog extends JDialog {
     private final GameController gameController;
 

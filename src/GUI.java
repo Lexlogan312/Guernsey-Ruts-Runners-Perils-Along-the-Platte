@@ -37,7 +37,6 @@ public class GUI extends JPanel {
     // Output panel components
     private JPanel outputPanel;
     private JTextArea outputTextArea;
-    private JScrollPane outputScrollPane;
 
     // Colors
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
@@ -260,7 +259,7 @@ public class GUI extends JPanel {
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
         // Add text area to a scroll pane
-        outputScrollPane = new JScrollPane(outputTextArea);
+        JScrollPane outputScrollPane = new JScrollPane(outputTextArea);
         outputScrollPane.setBorder(titledBorder);
         
         outputPanel.add(outputScrollPane, BorderLayout.CENTER);
@@ -573,7 +572,6 @@ public class GUI extends JPanel {
         private Map map; // Reference to the game's map object
         private final HashMap<String, Point> landmarkScreenPositions = new HashMap<>();
         private final List<Rectangle> drawnLabelBounds = new ArrayList<>(); // For collision detection
-        private String currentLocationName = "";
         private BufferedImage bufferedMap; // For double buffering
         private int distanceTraveled = 0;
         private int totalDistance = 0;
@@ -647,7 +645,7 @@ public class GUI extends JPanel {
             this.map = gameMap; // Store reference to the current map object
 
             // Update game state variables used for drawing
-            currentLocationName = map.getCurrentLocation();
+            String currentLocationName = map.getCurrentLocation();
             distanceTraveled = map.getDistanceTraveled();
             if (map.getLandmarks() != null && !map.getLandmarks().isEmpty()) {
                 totalDistance = map.getLandmarks().get(map.getLandmarks().size()-1).getDistance();

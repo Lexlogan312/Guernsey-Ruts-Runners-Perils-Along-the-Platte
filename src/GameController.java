@@ -15,9 +15,6 @@ public class GameController {
 
     // Trail setup
     private String trail;
-    private String departureLocation;
-    private String departureMonth;
-    private int monthChoice = 0; // 0=March, 1=April, etc.
 
     // Game state
     private boolean gameStarted = false;
@@ -135,7 +132,7 @@ public class GameController {
         switch (trailChoice) {
             case 1:
                 trail = "Oregon";
-                departureLocation = "Independence, Missouri";
+                String departureLocation = "Independence, Missouri";
                 break;
             case 2:
                 trail = "California";
@@ -167,8 +164,9 @@ public class GameController {
     public void selectDepartureMonth(int month) {
         String[] months = {"March", "April", "May", "June", "July"};
         if (month >= 1 && month <= 5) {
-            monthChoice = month - 1;
-            departureMonth = months[monthChoice];
+            // 0=March, 1=April, etc.
+            int monthChoice = month - 1;
+            String departureMonth = months[monthChoice];
             int monthNumber = monthChoice + 3; // March=3, April=4, etc.
             time = new Time(1848, monthNumber);
 

@@ -4,7 +4,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

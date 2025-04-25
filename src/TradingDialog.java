@@ -11,8 +11,7 @@ import java.util.Random;
 public class TradingDialog extends JDialog {
     private final Player player;
     private final Inventory inventory;
-    private final Random random = new Random();
-    
+
     // GUI components
     private JLabel moneyLabel;
     private JTextArea resultArea;
@@ -38,6 +37,7 @@ public class TradingDialog extends JDialog {
         this.inventory = inventory;
         
         // Random price fluctuations for supply and demand
+        Random random = new Random();
         this.priceFactor = 0.8 + (random.nextDouble() * 0.4); // 0.8 to 1.2 multiplier
         
         initUI();

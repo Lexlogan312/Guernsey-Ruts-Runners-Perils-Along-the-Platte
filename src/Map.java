@@ -226,20 +226,19 @@ public class Map {
     /**
      * Sets the current location by landmark name. Primarily used for initialization or debugging.
      * Also updates distance traveled to match the landmark's distance.
+     *
      * @param landmarkName The name of the landmark to set as current
-     * @return true if landmark found and set, false otherwise
      */
-    public boolean setCurrentLocation(String landmarkName) {
+    public void setCurrentLocation(String landmarkName) {
         for (int i = 0; i < landmarks.size(); i++) {
             if (landmarks.get(i).getName().equals(landmarkName)) {
                 currentLandmarkIndex = i;
                 // Set distance traveled to *exactly* the landmark's distance when setting location this way
                 distanceTraveled = landmarks.get(i).getDistance();
                 System.out.println("Map: Set current location to " + landmarkName + " at index " + i + ", distance " + distanceTraveled);
-                return true;
+                return;
             }
         }
         System.err.println("Map: Landmark not found: " + landmarkName);
-        return false;
     }
 }

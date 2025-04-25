@@ -3,10 +3,6 @@ import java.awt.*;
 
 public class Main {
 
-    private JFrame frame;
-    private GUI gameGUI;
-    private GameController gameController;
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
@@ -27,17 +23,17 @@ public class Main {
 
     private void initializeApp() {
         // Create frame
-        frame = new JFrame("Perils Along the Platte");
+        JFrame frame = new JFrame("Perils Along the Platte");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Load custom font
         FontManager.loadCustomFonts();
 
         // Create game controller
-        gameController = new GameController();
+        GameController gameController = new GameController();
 
         // Create and add GUI component
-        gameGUI = new GUI(gameController);
+        GUI gameGUI = new GUI(gameController);
         frame.getContentPane().add(gameGUI);
 
         // Set frame size and center on screen
