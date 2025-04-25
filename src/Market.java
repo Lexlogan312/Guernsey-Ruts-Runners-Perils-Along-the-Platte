@@ -6,6 +6,9 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 public class Market {
     private final Player player;
@@ -693,21 +696,8 @@ public class Market {
             
             if (totalAllocated <= totalPoundsToBuy && totalAllocated > 0) {
                 result[0] = totalAllocated;
-                JOptionPane.showMessageDialog(foodDialog, 
-                    purchaseSummary.toString(), 
-                    "Purchase Complete", 
-                    JOptionPane.INFORMATION_MESSAGE);
+                new FoodPurchaseDialog(foodDialog, purchaseSummary.toString(), "Purchase Complete").setVisible(true);
                 foodDialog.dispose();
-            } else if (totalAllocated > totalPoundsToBuy) {
-                JOptionPane.showMessageDialog(foodDialog,
-                    "You've allocated more than " + totalPoundsToBuy + " pounds of food.",
-                    "Too Much Food",
-                    JOptionPane.WARNING_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(foodDialog,
-                    "Please allocate at least some food.",
-                    "No Food Selected",
-                    JOptionPane.WARNING_MESSAGE);
             }
         });
         
@@ -722,6 +712,7 @@ public class Market {
         // Add components to the dialog
         JScrollPane scrollPane = new JScrollPane(foodPanel);
         scrollPane.setBorder(null);
+        scrollPane.getViewport().setBackground(PANEL_COLOR);
         
         foodDialog.add(scrollPane, BorderLayout.CENTER);
         foodDialog.add(buttonPanel, BorderLayout.SOUTH);
@@ -761,5 +752,91 @@ public class Market {
             new EmptyBorder(5, 10, 5, 10)
         ));
         return button;
+    }
+    
+    /**
+     * Custom dialog for displaying food purchase information
+     */
+    private class FoodPurchaseDialog extends JDialog {
+        private boolean isWarning;
+        
+        public FoodPurchaseDialog(Window owner, String purchaseSummary, String title) {
+            super(owner, title, ModalityType.APPLICATION_MODAL);
+            
+            // Determine if this is a warning dialog based on the title
+            this.isWarning = title.contains("Too Much") || title.contains("No Food");
+            
+            initUI(purchaseSummary);
+            setSize(450, 350); // Reduced size since we removed the icon
+            setLocationRelativeTo(owner);
+            setResizable(false);
+        }
+        
+        private void initUI(String purchaseSummary) {
+            setLayout(new BorderLayout(10, 10));
+            getContentPane().setBackground(BACKGROUND_COLOR);
+            
+            // Title panel
+            JPanel titlePanel = new JPanel(new BorderLayout());
+            titlePanel.setBackground(BACKGROUND_COLOR);
+            titlePanel.setBorder(new EmptyBorder(10, 10, 5, 10));
+            
+            JLabel titleLabel = new JLabel(isWarning ? getTitle() : "Purchase Complete", JLabel.CENTER);
+            titleLabel.setFont(FontManager.WESTERN_FONT_TITLE);
+            titleLabel.setForeground(isWarning ? new Color(150, 50, 0) : TEXT_COLOR);
+            titlePanel.add(titleLabel, BorderLayout.CENTER);
+            
+            add(titlePanel, BorderLayout.NORTH);
+            
+            // Content panel
+            JPanel contentPanel = new JPanel(new BorderLayout(15, 15));
+            contentPanel.setBackground(PANEL_COLOR);
+            contentPanel.setBorder(new CompoundBorder(
+                new LineBorder(ACCENT_COLOR, 2),
+                new EmptyBorder(20, 20, 20, 20)
+            ));
+            
+            // Summary text - using JTextPane for center alignment
+            JTextPane summaryPane = new JTextPane();
+            summaryPane.setText(purchaseSummary);
+            summaryPane.setFont(FontManager.getWesternFont(14));
+            summaryPane.setEditable(false);
+            summaryPane.setBackground(PANEL_COLOR);
+            summaryPane.setForeground(TEXT_COLOR);
+            summaryPane.setBorder(new EmptyBorder(10, 10, 10, 10)); // Add padding around the text
+            
+            // Center align the text
+            StyledDocument doc = summaryPane.getStyledDocument();
+            SimpleAttributeSet center = new SimpleAttributeSet();
+            StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
+            doc.setParagraphAttributes(0, doc.getLength(), center, false);
+            
+            JScrollPane scrollPane = new JScrollPane(summaryPane);
+            scrollPane.setBorder(null);
+            scrollPane.getViewport().setBackground(PANEL_COLOR);
+            
+            contentPanel.add(scrollPane, BorderLayout.CENTER);
+            
+            add(contentPanel, BorderLayout.CENTER);
+            
+            // Button panel
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            buttonPanel.setBackground(BACKGROUND_COLOR);
+            buttonPanel.setBorder(new EmptyBorder(10, 0, 10, 0));
+            
+            JButton closeButton = new JButton(isWarning ? "Back" : "Continue");
+            closeButton.setFont(FontManager.getBoldWesternFont(14));
+            closeButton.setForeground(TEXT_COLOR);
+            closeButton.setBackground(PANEL_COLOR);
+            closeButton.setBorder(new CompoundBorder(
+                new LineBorder(ACCENT_COLOR, 2),
+                new EmptyBorder(8, 25, 8, 25)
+            ));
+            
+            closeButton.addActionListener(e -> dispose());
+            
+            buttonPanel.add(closeButton);
+            add(buttonPanel, BorderLayout.SOUTH);
+        }
     }
 }
