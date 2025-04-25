@@ -3,13 +3,13 @@ import java.util.Scanner;
 public class StartGame {
     private Player player;
     private Map map;
-    private Inventory inventory;
-    private Hunting hunting;
-    private Time time;
+    private final Inventory inventory;
+    private final Hunting hunting;
+    private final Time time;
     private Weather weather;
     private boolean isGameRunning = true;
-    private Scanner scanner = new Scanner(System.in);
-    private String[] months = {"March", "April", "May", "June", "July"};
+    private final Scanner scanner = new Scanner(System.in);
+    private final String[] months = {"March", "April", "May", "June", "July"};
     private int monthChoice = 0;
     
     private int daysTraveled;
@@ -19,7 +19,7 @@ public class StartGame {
     private String departureMonth;
     private String playerName;
     private String playerGender;
-    private Perils perils;
+    private final Perils perils;
     
     public StartGame() {
         displayWelcomeMessage();
@@ -205,7 +205,7 @@ public class StartGame {
         System.out.println("\nThe timing of your departure was crucial for pioneers.");
         System.out.println("Leave too early: face mud and flooding from spring rains.");
         System.out.println("Leave too late: risk being trapped in mountain snow.");
-        System.out.println("\nMost emigrants departed between April and June.");
+        System.out.println("\nMost emigrants departed between March and June.");
 
         System.out.println("\nSelect your departure month:");
         for (int i = 0; i < months.length; i++) {

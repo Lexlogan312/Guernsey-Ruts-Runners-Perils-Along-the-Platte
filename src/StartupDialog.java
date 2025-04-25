@@ -2,15 +2,13 @@ import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.util.Arrays;
 
 /**
  * Startup dialog to collect player information and game settings
  */
 public class StartupDialog extends JDialog {
-    private GameController gameController;
+    private final GameController gameController;
     
     // Panel components
     private JTabbedPane tabbedPane;
@@ -21,22 +19,15 @@ public class StartupDialog extends JDialog {
     
     // Character fields
     private JTextField nameField;
-    private ButtonGroup genderGroup;
     private JRadioButton maleButton;
-    private JRadioButton femaleButton;
-    
+
     // Family fields
-    private JTextField[] familyMemberFields = new JTextField[3];
-    
-    // Trail fields
-    private ButtonGroup trailGroup;
-    private JRadioButton oregonTrailButton;
+    private final JTextField[] familyMemberFields = new JTextField[3];
+
     private JRadioButton californiaTrailButton;
     private JRadioButton mormonTrailButton;
-    
-    // Departure fields
-    private ButtonGroup monthGroup;
-    private JRadioButton[] monthButtons = new JRadioButton[5];
+
+    private final JRadioButton[] monthButtons = new JRadioButton[5];
     
     // Colors - match EnhancedGUI
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
@@ -188,12 +179,12 @@ public class StartupDialog extends JDialog {
         maleButton.setBackground(PANEL_COLOR);
         maleButton.setSelected(true);
 
-        femaleButton = new JRadioButton("Female");
+        JRadioButton femaleButton = new JRadioButton("Female");
         femaleButton.setFont(FontManager.getWesternFont(14f));
         femaleButton.setForeground(TEXT_COLOR);
         femaleButton.setBackground(PANEL_COLOR);
 
-        genderGroup = new ButtonGroup();
+        ButtonGroup genderGroup = new ButtonGroup();
         genderGroup.add(maleButton);
         genderGroup.add(femaleButton);
 
@@ -296,7 +287,7 @@ public class StartupDialog extends JDialog {
         trailsContainer.setBackground(PANEL_COLOR);
 
         // Create trail buttons
-        oregonTrailButton = new JRadioButton("Oregon Trail (2,170 miles)");
+        JRadioButton oregonTrailButton = new JRadioButton("Oregon Trail (2,170 miles)");
         oregonTrailButton.setFont(FontManager.getBoldWesternFont(14f));
         oregonTrailButton.setForeground(TEXT_COLOR);
         oregonTrailButton.setBackground(PANEL_COLOR);
@@ -312,7 +303,8 @@ public class StartupDialog extends JDialog {
         mormonTrailButton.setForeground(TEXT_COLOR);
         mormonTrailButton.setBackground(PANEL_COLOR);
 
-        trailGroup = new ButtonGroup();
+        // Trail fields
+        ButtonGroup trailGroup = new ButtonGroup();
         trailGroup.add(oregonTrailButton);
         trailGroup.add(californiaTrailButton);
         trailGroup.add(mormonTrailButton);
@@ -371,7 +363,7 @@ public class StartupDialog extends JDialog {
                 "Choose when to depart. The timing of your departure was crucial for pioneers.\n" +
                         "Leave too early: face mud and flooding from spring rains.\n" +
                         "Leave too late: risk being trapped in mountain snow.\n\n" +
-                        "Most emigrants departed between April and June."
+                        "Most emigrants departed between March and June."
         );
 
         departurePanel.add(descriptionArea, BorderLayout.NORTH);
@@ -381,7 +373,8 @@ public class StartupDialog extends JDialog {
         monthsContainer.setBackground(PANEL_COLOR);
 
         // Create month selection
-        monthGroup = new ButtonGroup();
+        // Departure fields
+        ButtonGroup monthGroup = new ButtonGroup();
         String[] months = {"March", "April", "May", "June", "July"};
         String[] descriptions = {
                 "An early start, but you'll face muddy trails and swollen rivers.",
@@ -397,7 +390,7 @@ public class StartupDialog extends JDialog {
             monthButtons[i].setForeground(TEXT_COLOR);
             monthButtons[i].setBackground(PANEL_COLOR);
 
-            if (i == 1) { // April is default
+            if (i == 0) { // March is default
                 monthButtons[i].setSelected(true);
             }
 

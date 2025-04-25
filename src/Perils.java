@@ -3,10 +3,9 @@ import java.util.Random;
 import java.util.function.Consumer;
 
 public class Perils {
-    private Player player;
-    private Inventory inventory;
-    private Weather weather;
-    private Random random;
+    private final Player player;
+    private final Inventory inventory;
+    private final Random random;
     
     // Add a listener callback for messages
     private Consumer<String> messageListener;
@@ -22,7 +21,6 @@ public class Perils {
     public Perils(Player player, Inventory inventory, Weather weather) {
         this.player = player;
         this.inventory = inventory;
-        this.weather = weather;
         this.random = new Random();
         this.messageListener = s -> System.out.println(s); // Default to System.out
         

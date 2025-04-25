@@ -1,10 +1,10 @@
 public class Player {
-    private String name;
-    private String gender;
+    private final String name;
+    private final String gender;
     private int health;
     private boolean isDead;
     private String causeOfDeath;
-    private String[] familyMembers;
+    private final String[] familyMembers;
     private int money;
 
     public Player(String name, String gender) {
@@ -19,9 +19,7 @@ public class Player {
 
     public void setFamilyMembers(String[] members) {
         if (members.length <= 3) {
-            for (int i = 0; i < members.length; i++) {
-                this.familyMembers[i] = members[i];
-            }
+            System.arraycopy(members, 0, this.familyMembers, 0, members.length);
         }
     }
 

@@ -9,17 +9,16 @@ import java.util.Random;
  * Dialog for trading at landmarks in the GUI
  */
 public class TradingDialog extends JDialog {
-    private Player player;
-    private Inventory inventory;
-    private Random random = new Random();
-    
+    private final Player player;
+    private final Inventory inventory;
+
     // GUI components
     private JLabel moneyLabel;
     private JTextArea resultArea;
     private JPanel actionPanel;
     
     // Price modifiers
-    private double priceFactor;
+    private final double priceFactor;
     
     // Colors - match EnhancedGUI
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
@@ -38,12 +37,13 @@ public class TradingDialog extends JDialog {
         this.inventory = inventory;
         
         // Random price fluctuations for supply and demand
+        Random random = new Random();
         this.priceFactor = 0.8 + (random.nextDouble() * 0.4); // 0.8 to 1.2 multiplier
         
         initUI();
         pack();
         setLocationRelativeTo(owner);
-        setSize(700, 500);
+        setSize(800, 500);
         setResizable(false);
     }
     

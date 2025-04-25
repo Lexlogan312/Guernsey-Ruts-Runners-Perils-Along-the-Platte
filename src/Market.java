@@ -3,16 +3,13 @@ import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class Market {
-    private Player player;
-    private Inventory inventory;
+    private final Player player;
+    private final Inventory inventory;
     private static final int OXEN_PRICE = 40;
     private static final int FOOD_PRICE = 1;
     private static final int WAGON_PART_PRICE = 20;
@@ -388,7 +385,7 @@ public class Market {
             if (canStartJourney()) {
                 Window win = SwingUtilities.getWindowAncestor(mainPanel);
                 if (win instanceof JDialog) {
-                    ((JDialog) win).dispose();
+                    win.dispose();
                 }
             } else {
                 insufficientSuppliesLabel.setVisible(true);
