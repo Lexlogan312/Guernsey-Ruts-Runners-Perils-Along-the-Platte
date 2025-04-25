@@ -1,0 +1,19 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="New Perils Along the Platte Project:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/New_Perils_Along_the_Platte_Project_jar</output-path>
+    <root id="archive" name="New Perils Along the Platte Project.jar">
+      <element id="module-output" name="New Perils Along the Platte Project" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/javafx-swt.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/javafx.web.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/javafx.base.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/javafx.fxml.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/javafx.media.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/javafx.swing.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/jdk.jsobject.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/javafx.controls.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/javafx.graphics.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/jfx.incubator.input.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/javafx-sdk-24/lib/jfx.incubator.richtext.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

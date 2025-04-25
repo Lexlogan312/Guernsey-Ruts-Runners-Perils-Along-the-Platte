@@ -246,13 +246,14 @@ public class GUI extends JPanel {
         titledBorder.setTitleColor(TEXT_COLOR);
 
         // Create text area for game output
-        outputTextArea = new JTextArea();
+        outputTextArea = new JTextArea(12, 30); // Adjust width for side panel
         outputTextArea.setFont(FontManager.getWesternFont(14f));
         outputTextArea.setLineWrap(true);
         outputTextArea.setWrapStyleWord(true);
         outputTextArea.setEditable(false);
-        outputTextArea.setBackground(PANEL_COLOR);
+        outputTextArea.setBackground(new Color(250, 240, 220)); // Slightly lighter background for text area
         outputTextArea.setForeground(TEXT_COLOR);
+        outputTextArea.setMargin(new Insets(5, 5, 5, 5)); // Internal padding
 
         // Set caret to always show the latest text
         DefaultCaret caret = (DefaultCaret) outputTextArea.getCaret();

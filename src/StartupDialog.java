@@ -363,7 +363,7 @@ public class StartupDialog extends JDialog {
                 "Choose when to depart. The timing of your departure was crucial for pioneers.\n" +
                         "Leave too early: face mud and flooding from spring rains.\n" +
                         "Leave too late: risk being trapped in mountain snow.\n\n" +
-                        "Most emigrants departed between March and June."
+                        "Most emigrants departed between April and June."
         );
 
         departurePanel.add(descriptionArea, BorderLayout.NORTH);
