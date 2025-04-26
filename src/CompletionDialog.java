@@ -3,6 +3,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.io.File;
 
 /**
  * Dialog shown when the player successfully completes their journey
@@ -16,6 +17,9 @@ public class CompletionDialog extends JDialog {
     private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
     private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
     private final Color SUCCESS_COLOR = new Color(0, 100, 0);        // Dark green for success
+    
+    // Path to custom victory image
+    private static final String CUSTOM_IMAGE_PATH = "images/Completion Screen.png";
     
     /**
      * Constructor
@@ -31,7 +35,7 @@ public class CompletionDialog extends JDialog {
         initUI(destination, days, distance, finalDate);
         pack();
         setLocationRelativeTo(owner);
-        setSize(700, 500);
+        setSize(700, 750);
         setResizable(false);
     }
     
@@ -59,78 +63,12 @@ public class CompletionDialog extends JDialog {
             new EmptyBorder(20, 20, 20, 20)
         ));
         
-        // Success image - simulated with a panel that draws a wagon
-        JPanel imagePanel = new JPanel(new BorderLayout());
-        imagePanel.setBackground(PANEL_COLOR);
-        imagePanel.setPreferredSize(new Dimension(150, 150));
-        
-        // Create a sunset scene with wagon
-        JPanel successPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                
-                int width = getWidth();
-                int height = getHeight();
-                
-                // Sky gradient (sunset)
-                GradientPaint skyGradient = new GradientPaint(
-                    0, 0, new Color(255, 200, 100),
-                    0, height/2, new Color(255, 100, 50)
-                );
-                g2d.setPaint(skyGradient);
-                g2d.fillRect(0, 0, width, height/2);
-                
-                // Ground
-                g2d.setColor(new Color(120, 100, 40));
-                g2d.fillRect(0, height/2, width, height/2);
-                
-                // Sun
-                g2d.setColor(new Color(255, 200, 0));
-                g2d.fillOval(width/2 - 20, height/4 - 20, 40, 40);
-                
-                // Mountain silhouettes
-                g2d.setColor(new Color(80, 60, 30));
-                int[] xPoints = {0, width/4, width/2, 3*width/4, width};
-                int[] yPoints = {height/2, height/3, height/2 - 20, height/3 + 10, height/2};
-                g2d.fillPolygon(xPoints, yPoints, 5);
-                
-                // Draw a simple wagon
-                int wagonWidth = 60;
-                int wagonHeight = 30;
-                int wagonX = width/2 - wagonWidth/2;
-                int wagonY = height/2 - wagonHeight - 5;
-                
-                // Wagon body
-                g2d.setColor(new Color(139, 69, 19));
-                g2d.fillRect(wagonX, wagonY, wagonWidth, wagonHeight);
-                
-                // Wagon cover
-                g2d.setColor(new Color(210, 180, 140));
-                g2d.fillArc(wagonX - 5, wagonY - 20, wagonWidth + 10, 50, 0, 180);
-                
-                // Wheels
-                g2d.setColor(new Color(101, 67, 33));
-                g2d.fillOval(wagonX + 5, wagonY + wagonHeight - 10, 20, 20);
-                g2d.fillOval(wagonX + wagonWidth - 25, wagonY + wagonHeight - 10, 20, 20);
-                g2d.setColor(Color.BLACK);
-                g2d.drawOval(wagonX + 5, wagonY + wagonHeight - 10, 20, 20);
-                g2d.drawOval(wagonX + wagonWidth - 25, wagonY + wagonHeight - 10, 20, 20);
-            }
-        };
-        successPanel.setBackground(PANEL_COLOR);
-        
-        imagePanel.add(successPanel, BorderLayout.CENTER);
-        contentPanel.add(imagePanel, BorderLayout.WEST);
-        
-        // Description text
+        // Create the text panel first
         JPanel textPanel = new JPanel(new BorderLayout(0, 15));
         textPanel.setBackground(PANEL_COLOR);
         
         // Success message
-        JLabel successLabel = new JLabel("You have reached " + destination + "!");
+        JLabel successLabel = new JLabel("You have reached " + destination + "!", JLabel.CENTER);
         successLabel.setFont(FontManager.getBoldWesternFont(20));
         successLabel.setForeground(SUCCESS_COLOR);
         
@@ -154,11 +92,13 @@ public class CompletionDialog extends JDialog {
         statsPanel.add(distanceLabel);
         statsPanel.add(dateLabel);
         
-        // Congratulatory message
+        // Historical context for the arrival
         JTextArea congratsArea = new JTextArea(
-            "You've proven yourself worthy of the frontier spirit! Your courage and " +
-            "determination have carried you through countless hardships to reach your destination.\n\n" +
-            "A new life awaits you and your family in this land of opportunity."
+            "A new life awaits you and your family in this land of opportunity.\n\n" +
+            "Historical Note: Those who completed the journey west often faced new challenges as they " +
+            "established homes and communities in unfamiliar territories. Many emigrants became farmers, " +
+            "miners, or merchants. Women played crucial roles in establishing schools, churches, and " +
+            "social institutions that helped transform the frontier into settled communities."
         );
         congratsArea.setFont(FontManager.getWesternFont(14));
         congratsArea.setLineWrap(true);
@@ -171,7 +111,109 @@ public class CompletionDialog extends JDialog {
         textPanel.add(statsPanel, BorderLayout.CENTER);
         textPanel.add(congratsArea, BorderLayout.SOUTH);
         
+        // Add text panel to the content panel
         contentPanel.add(textPanel, BorderLayout.CENTER);
+        
+        // Try to load custom image, fallback to drawn wagon if not available
+        // Now this will go at the bottom instead of the left
+        JPanel imagePanel = new JPanel(new BorderLayout());
+        imagePanel.setBackground(PANEL_COLOR);
+        
+        boolean customImageLoaded = false;
+        
+        // Try to load custom image using ResourceLoader
+        try {
+            ImageIcon customIcon = ResourceLoader.loadImage(CUSTOM_IMAGE_PATH);
+            if (customIcon != null && customIcon.getIconWidth() > 0) {
+                // Calculate available height to prevent overlap with text
+                int availableHeight = 250; // Adjusted height to fit well in the panel
+                
+                // Scale the image to fit available space while preserving aspect ratio
+                double ratio = (double) customIcon.getIconWidth() / customIcon.getIconHeight();
+                int targetHeight = availableHeight;
+                int targetWidth = (int) (targetHeight * ratio);
+                
+                Image scaledImage = customIcon.getImage().getScaledInstance(
+                        targetWidth, targetHeight, Image.SCALE_SMOOTH);
+                JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
+                imageLabel.setHorizontalAlignment(JLabel.CENTER); // Center the image
+                imageLabel.setBorder(null); // Remove any borders on the image label
+                imagePanel.add(imageLabel, BorderLayout.CENTER);
+                customImageLoaded = true;
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading custom completion image: " + e.getMessage());
+        }
+        
+        // If no custom image, use the drawn wagon
+        if (!customImageLoaded) {
+            // Create a sunset scene with wagon
+            JPanel successPanel = new JPanel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    super.paintComponent(g);
+                    Graphics2D g2d = (Graphics2D) g;
+                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    
+                    int width = getWidth();
+                    int height = getHeight();
+                    
+                    // Sky gradient (sunset)
+                    GradientPaint skyGradient = new GradientPaint(
+                        0, 0, new Color(255, 200, 100),
+                        0, height/2, new Color(255, 100, 50)
+                    );
+                    g2d.setPaint(skyGradient);
+                    g2d.fillRect(0, 0, width, height/2);
+                    
+                    // Ground
+                    g2d.setColor(new Color(120, 100, 40));
+                    g2d.fillRect(0, height/2, width, height/2);
+                    
+                    // Sun
+                    g2d.setColor(new Color(255, 200, 0));
+                    g2d.fillOval(width/2 - 20, height/4 - 20, 40, 40);
+                    
+                    // Mountain silhouettes
+                    g2d.setColor(new Color(80, 60, 30));
+                    int[] xPoints = {0, width/4, width/2, 3*width/4, width};
+                    int[] yPoints = {height/2, height/3, height/2 - 20, height/3 + 10, height/2};
+                    g2d.fillPolygon(xPoints, yPoints, 5);
+                    
+                    // Draw a simple wagon
+                    int wagonWidth = 60;
+                    int wagonHeight = 30;
+                    int wagonX = width/2 - wagonWidth/2;
+                    int wagonY = height/2 - wagonHeight - 5;
+                    
+                    // Wagon body
+                    g2d.setColor(new Color(139, 69, 19));
+                    g2d.fillRect(wagonX, wagonY, wagonWidth, wagonHeight);
+                    
+                    // Wagon cover
+                    g2d.setColor(new Color(210, 180, 140));
+                    g2d.fillArc(wagonX - 5, wagonY - 20, wagonWidth + 10, 50, 0, 180);
+                    
+                    // Wheels
+                    g2d.setColor(new Color(101, 67, 33));
+                    g2d.fillOval(wagonX + 5, wagonY + wagonHeight - 10, 20, 20);
+                    g2d.fillOval(wagonX + wagonWidth - 25, wagonY + wagonHeight - 10, 20, 20);
+                    g2d.setColor(Color.BLACK);
+                    g2d.drawOval(wagonX + 5, wagonY + wagonHeight - 10, 20, 20);
+                    g2d.drawOval(wagonX + wagonWidth - 25, wagonY + wagonHeight - 10, 20, 20);
+                }
+            };
+            successPanel.setBackground(PANEL_COLOR);
+            successPanel.setPreferredSize(new Dimension(500, 200));
+            imagePanel.add(successPanel, BorderLayout.CENTER);
+            customImageLoaded = true; // Set to true so we add the panel
+        }
+        
+        // Only add the image panel if an image was loaded
+        if (customImageLoaded) {
+            contentPanel.add(imagePanel, BorderLayout.SOUTH);
+        }
+        
         add(contentPanel, BorderLayout.CENTER);
         
         // Button panel
@@ -179,7 +221,7 @@ public class CompletionDialog extends JDialog {
         buttonPanel.setBackground(BACKGROUND_COLOR);
         buttonPanel.setBorder(new EmptyBorder(10, 0, 10, 0));
         
-        JButton closeButton = new JButton("Celebrate");
+        JButton closeButton = new JButton("Close");
         closeButton.setFont(FontManager.getBoldWesternFont(16));
         closeButton.setForeground(TEXT_COLOR);
         closeButton.setBackground(PANEL_COLOR);

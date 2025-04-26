@@ -90,20 +90,84 @@ public class Trading {
                 break;
                 
             case "2": // Wagon parts
-                int partPrice = Math.max(20, (int)Math.round(25 * priceFactor));
-                System.out.println("Current price: $" + partPrice + " per wagon part.");
-                System.out.println("How many wagon parts would you like to buy?");
+                System.out.println("\n=== BUY WAGON PARTS ===");
+                System.out.println("Which type of wagon part would you like to buy?");
+                System.out.println("1. Wheels (50 lbs each)");
+                System.out.println("2. Axles (40 lbs each)");
+                System.out.println("3. Tongues (30 lbs each)");
+                System.out.println("4. Wagon Bows (10 lbs each)");
+                System.out.println("5. Return to trading menu");
+                
+                String partChoice = scanner.nextLine();
+                
+                if (partChoice.equals("5")) {
+                    return;
+                }
+                
+                int partPrice;
+                String partName;
+                int partWeight;
+                
+                switch (partChoice) {
+                    case "1": // Wheels
+                        partPrice = Math.max(25, (int)Math.round(30 * priceFactor));
+                        partName = "wheel";
+                        partWeight = 50;
+                        break;
+                    case "2": // Axles
+                        partPrice = Math.max(20, (int)Math.round(25 * priceFactor));
+                        partName = "axle";
+                        partWeight = 40;
+                        break;
+                    case "3": // Tongues
+                        partPrice = Math.max(15, (int)Math.round(20 * priceFactor));
+                        partName = "tongue";
+                        partWeight = 30;
+                        break;
+                    case "4": // Wagon Bows
+                        partPrice = Math.max(10, (int)Math.round(15 * priceFactor));
+                        partName = "wagon bow";
+                        partWeight = 10;
+                        break;
+                    default:
+                        System.out.println("Please enter a valid number.");
+                        return;
+                }
+                
+                System.out.println("Current price: $" + partPrice + " per " + partName + ".");
+                System.out.println("How many " + partName + "s would you like to buy?");
                 
                 try {
                     int amount = Integer.parseInt(scanner.nextLine());
                     int totalCost = amount * partPrice;
+                    int totalWeight = amount * partWeight;
                     
                     if (totalCost > player.getMoney()) {
                         System.out.println("You don't have enough money for that purchase.");
+                    } else if (!inventory.hasWeightCapacity(totalWeight)) {
+                        System.out.println("Your wagon cannot carry that much additional weight!");
+                        System.out.println("Current load: " + inventory.getCurrentWeight() + "/" + inventory.getMaxWeightCapacity() + " pounds");
+                        System.out.println("Additional weight: " + totalWeight + " pounds");
                     } else {
                         player.spendMoney(totalCost);
-                        inventory.addWagonParts(amount);
-                        System.out.println("You purchased " + amount + " wagon parts for $" + totalCost);
+                        
+                        // Add appropriate parts
+                        switch (partChoice) {
+                            case "1":
+                                inventory.addWheels(amount);
+                                break;
+                            case "2":
+                                inventory.addAxles(amount);
+                                break;
+                            case "3":
+                                inventory.addTongues(amount);
+                                break;
+                            case "4":
+                                inventory.addWagonBows(amount);
+                                break;
+                        }
+                        
+                        System.out.println("You purchased " + amount + " " + partName + (amount != 1 ? "s" : "") + " for $" + totalCost);
                     }
                 } catch (NumberFormatException e) {
                     System.out.println("Please enter a valid number.");
@@ -204,21 +268,79 @@ public class Trading {
                 break;
                 
             case "2": // Wagon parts
-                // Ensure minimum price of 10 per part
-                int partPrice = Math.max(10, (int)Math.round(12 * priceFactor));
-                System.out.println("Current selling price: $" + partPrice + " per wagon part.");
-                System.out.println("You have " + inventory.getWagonParts() + " wagon parts.");
-                System.out.println("How many wagon parts would you like to sell?");
+                System.out.println("\n=== SELL WAGON PARTS ===");
+                System.out.println("Which type of wagon part would you like to sell?");
+                System.out.println("1. Wheels - You have " + inventory.getWheels());
+                System.out.println("2. Axles - You have " + inventory.getAxles());
+                System.out.println("3. Tongues - You have " + inventory.getTongues());
+                System.out.println("4. Wagon Bows - You have " + inventory.getWagonBows());
+                System.out.println("5. Return to trading menu");
+                
+                String partChoice = scanner.nextLine();
+                
+                if (partChoice.equals("5")) {
+                    return;
+                }
+                
+                int partPrice;
+                String partName;
+                int availableParts;
+                
+                switch (partChoice) {
+                    case "1": // Wheels
+                        partPrice = Math.max(12, (int)Math.round(15 * priceFactor));
+                        partName = "wheel";
+                        availableParts = inventory.getWheels();
+                        break;
+                    case "2": // Axles
+                        partPrice = Math.max(10, (int)Math.round(12 * priceFactor));
+                        partName = "axle";
+                        availableParts = inventory.getAxles();
+                        break;
+                    case "3": // Tongues
+                        partPrice = Math.max(8, (int)Math.round(10 * priceFactor));
+                        partName = "tongue";
+                        availableParts = inventory.getTongues();
+                        break;
+                    case "4": // Wagon Bows
+                        partPrice = Math.max(5, (int)Math.round(8 * priceFactor));
+                        partName = "wagon bow";
+                        availableParts = inventory.getWagonBows();
+                        break;
+                    default:
+                        System.out.println("Please enter a valid number.");
+                        return;
+                }
+                
+                System.out.println("Current selling price: $" + partPrice + " per " + partName + ".");
+                System.out.println("You have " + availableParts + " " + partName + (availableParts != 1 ? "s" : "") + ".");
+                System.out.println("How many would you like to sell?");
                 
                 try {
                     int amount = Integer.parseInt(scanner.nextLine());
-                    if (amount > inventory.getWagonParts()) {
-                        System.out.println("You don't have that many wagon parts to sell.");
+                    if (amount > availableParts) {
+                        System.out.println("You don't have that many " + partName + "s to sell.");
                     } else {
                         int totalEarned = amount * partPrice;
-                        inventory.useWagonParts(amount);
+                        
+                        // Remove appropriate parts
+                        switch (partChoice) {
+                            case "1":
+                                inventory.useWheels(amount);
+                                break;
+                            case "2":
+                                inventory.useAxles(amount);
+                                break;
+                            case "3":
+                                inventory.useTongues(amount);
+                                break;
+                            case "4":
+                                inventory.useWagonBows(amount);
+                                break;
+                        }
+                        
                         player.addMoney(totalEarned);
-                        System.out.println("You sold " + amount + " wagon parts for $" + totalEarned);
+                        System.out.println("You sold " + amount + " " + partName + (amount != 1 ? "s" : "") + " for $" + totalEarned);
                     }
                 } catch (NumberFormatException e) {
                     System.out.println("Please enter a valid number.");
@@ -280,12 +402,14 @@ public class Trading {
         System.out.println("Some travelers are willing to trade goods directly.");
         
         // Generate random trade offers
-        int tradeType = random.nextInt(5);
+        int tradeType = random.nextInt(8);
         String offerDescription = "";
         String playerGives = "";
         String playerGets = "";
         int playerGivesAmount = 0;
         int playerGetsAmount = 0;
+        String partTypeGiven = "";  // For wagon parts
+        String partTypeReceived = ""; // For wagon parts
         
         switch (tradeType) {
             case 0: // Food for medicine
@@ -304,19 +428,21 @@ public class Trading {
                 offerDescription = "A hunter offers to trade " + playerGets + " for " + playerGives + ".";
                 break;
                 
-            case 2: // Wagon parts for ammunition
-                playerGivesAmount = 1 + random.nextInt(2); // 1-2 wagon parts
+            case 2: // Wheels for ammunition
+                playerGivesAmount = 1;
                 playerGetsAmount = 30 + random.nextInt(30); // 30-60 rounds
-                playerGives = playerGivesAmount + " wagon part" + (playerGivesAmount > 1 ? "s" : "");
+                partTypeGiven = "wheel";
+                playerGives = playerGivesAmount + " " + partTypeGiven;
                 playerGets = playerGetsAmount + " rounds of ammunition";
                 offerDescription = "A wagon master offers to trade " + playerGets + " for " + playerGives + ".";
                 break;
                 
-            case 3: // Medicine for wagon parts
+            case 3: // Medicine for axles
                 playerGivesAmount = 1 + random.nextInt(2); // 1-2 medicines
-                playerGetsAmount = 1 + random.nextInt(2); // 1-2 wagon parts
+                playerGetsAmount = 1;
+                partTypeReceived = "axle";
                 playerGives = playerGivesAmount + " medicine" + (playerGivesAmount > 1 ? "s" : "");
-                playerGets = playerGetsAmount + " wagon part" + (playerGetsAmount > 1 ? "s" : "");
+                playerGets = playerGetsAmount + " " + partTypeReceived;
                 offerDescription = "A trader offers to trade " + playerGets + " for " + playerGives + ".";
                 break;
                 
@@ -326,6 +452,33 @@ public class Trading {
                 playerGives = playerGivesAmount + " pounds of food";
                 playerGets = playerGetsAmount + " rounds of ammunition";
                 offerDescription = "A pioneer offers to trade " + playerGets + " for " + playerGives + ".";
+                break;
+                
+            case 5: // Tongue for food
+                playerGivesAmount = 1;
+                playerGetsAmount = 30 + random.nextInt(30); // 30-60 pounds of food
+                partTypeGiven = "tongue";
+                playerGives = playerGivesAmount + " wagon " + partTypeGiven;
+                playerGets = playerGetsAmount + " pounds of food";
+                offerDescription = "A stranded traveler offers to trade " + playerGets + " for " + playerGives + " - he has plenty of food but his wagon is disabled.";
+                break;
+                
+            case 6: // Ammunition for wagon bows
+                playerGivesAmount = 30 + random.nextInt(20); // 30-50 rounds
+                playerGetsAmount = 2;
+                partTypeReceived = "wagon bow";
+                playerGives = playerGivesAmount + " rounds of ammunition";
+                playerGets = playerGetsAmount + " " + partTypeReceived + "s";
+                offerDescription = "A trader heading back east offers to trade " + playerGets + " for " + playerGives + ".";
+                break;
+                
+            case 7: // Food for tongues
+                playerGivesAmount = 40 + random.nextInt(30); // 40-70 pounds of food
+                playerGetsAmount = 1;
+                partTypeReceived = "tongue";
+                playerGives = playerGivesAmount + " pounds of food";
+                playerGets = playerGetsAmount + " wagon " + partTypeReceived;
+                offerDescription = "A carpenter at a trading post offers to trade " + playerGets + " for " + playerGives + ".";
                 break;
         }
         
@@ -337,7 +490,7 @@ public class Trading {
         if (answer.equals("Y")) {
             boolean canTrade = false;
             
-            // Check if player has required resources
+            // Check if player has required resources and perform trade
             switch (tradeType) {
                 case 0: // Food for medicine
                     canTrade = inventory.getFood() >= playerGivesAmount;
@@ -359,21 +512,21 @@ public class Trading {
                     }
                     break;
                     
-                case 2: // Wagon parts for ammunition
-                    canTrade = inventory.getWagonParts() >= playerGivesAmount;
+                case 2: // Wheels for ammunition
+                    canTrade = inventory.getWheels() >= playerGivesAmount;
                     if (canTrade) {
-                        inventory.useWagonParts(playerGivesAmount);
+                        inventory.useWheels(playerGivesAmount);
                         inventory.addAmmunition(playerGetsAmount);
                     } else {
-                        System.out.println("You don't have enough wagon parts for this trade.");
+                        System.out.println("You don't have enough wheels for this trade.");
                     }
                     break;
                     
-                case 3: // Medicine for wagon parts
+                case 3: // Medicine for axles
                     canTrade = inventory.getMedicine() >= playerGivesAmount;
                     if (canTrade) {
                         inventory.useMedicine(playerGivesAmount);
-                        inventory.addWagonParts(playerGetsAmount);
+                        inventory.addAxles(playerGetsAmount);
                     } else {
                         System.out.println("You don't have enough medicine for this trade.");
                     }
@@ -384,6 +537,36 @@ public class Trading {
                     if (canTrade) {
                         inventory.consumeFood(playerGivesAmount);
                         inventory.addAmmunition(playerGetsAmount);
+                    } else {
+                        System.out.println("You don't have enough food for this trade.");
+                    }
+                    break;
+                    
+                case 5: // Tongue for food
+                    canTrade = inventory.getTongues() >= playerGivesAmount;
+                    if (canTrade) {
+                        inventory.useTongues(playerGivesAmount);
+                        inventory.addFood(playerGetsAmount);
+                    } else {
+                        System.out.println("You don't have enough tongues for this trade.");
+                    }
+                    break;
+                    
+                case 6: // Ammunition for wagon bows
+                    canTrade = inventory.getAmmunition() >= playerGivesAmount;
+                    if (canTrade) {
+                        inventory.useAmmunition(playerGivesAmount);
+                        inventory.addWagonBows(playerGetsAmount);
+                    } else {
+                        System.out.println("You don't have enough ammunition for this trade.");
+                    }
+                    break;
+                    
+                case 7: // Food for tongues
+                    canTrade = inventory.getFood() >= playerGivesAmount;
+                    if (canTrade) {
+                        inventory.consumeFood(playerGivesAmount);
+                        inventory.addTongues(playerGetsAmount);
                     } else {
                         System.out.println("You don't have enough food for this trade.");
                     }

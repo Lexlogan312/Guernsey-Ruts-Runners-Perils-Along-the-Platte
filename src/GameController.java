@@ -559,13 +559,13 @@ public class GameController {
         if (player.getHealth() < 30 && inventory.getMedicine() > 0 && Math.random() < 0.4) {
             SwingUtilities.invokeLater(() -> {
                 int choice = JOptionPane.showConfirmDialog(findVisibleFrame(),
-                        "Health is critical (" + player.getHealth() + "). Use 1 medicine?",
+                        "Health is critical (" + player.getHealth() + "). Use 1 medicine kit?",
                         "Low Health", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (choice == JOptionPane.YES_OPTION) {
                     inventory.useMedicine(1);
                     player.increaseHealth(30);
                     initialMedicineUsed++; // Track usage if needed for summary later too?
-                    notifyListeners("Used 1 medicine. Health recovered to " + player.getHealth() + ".");
+                    notifyListeners("Used 1 medicine kit. Health recovered to " + player.getHealth() + ".");
                     notifyGameStateChanged(); // Update GUI immediately
                 }
             });
@@ -605,12 +605,19 @@ public class GameController {
 
     /** Initiates the river crossing process by showing the dialog. */
     private void handleRiverCrossing() {
-        notifyListeners("\n=== RIVER CROSSING ===\n" +
+        // Get the name and description of the current river crossing
+        String riverName = map.getCurrentRiverCrossingName();
+        String riverDescription = map.getCurrentRiverCrossingDescription();
+        
+        notifyListeners("\n=== " + riverName.toUpperCase() + " ===\n" +
+                riverDescription + "\n\n" +
                 "You must cross the river.");
 
         SwingUtilities.invokeLater(() -> { // Show dialog on EDT
             Frame owner = findVisibleFrame();
             RiverCrossingDialog riverDialog = new RiverCrossingDialog(owner, player, inventory, weather, this::notifyListeners);
+            // Pass the river name to the dialog
+            riverDialog.setRiverName(riverName);
             riverDialog.setVisible(true); // Modal dialog handles its own logic & notification
 
             // State is updated by the dialog. Notify main GUI AFTER it closes.

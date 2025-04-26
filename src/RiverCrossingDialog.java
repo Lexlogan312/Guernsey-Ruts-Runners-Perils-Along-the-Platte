@@ -19,6 +19,9 @@ public class RiverCrossingDialog extends JDialog {
     private final Random random = new Random();
     private final Consumer<String> notifier; // To send messages back to GameController
 
+    // River name to display in the dialog
+    private String riverName = "River Crossing";
+
     // River characteristics
     private int depth;
     private final int width;
@@ -74,15 +77,22 @@ public class RiverCrossingDialog extends JDialog {
         setLayout(new BorderLayout(10, 10));
         getContentPane().setBackground(BACKGROUND_COLOR);
 
+        // Title panel with river name
+        JPanel titlePanel = new JPanel(new BorderLayout());
+        titlePanel.setBackground(BACKGROUND_COLOR);
+        titlePanel.setBorder(new EmptyBorder(10, 10, 5, 10));
+
+        JLabel titleLabel = new JLabel(riverName, JLabel.CENTER);
+        titleLabel.setFont(FontManager.WESTERN_FONT_TITLE);
+        titleLabel.setForeground(TEXT_COLOR);
+        titlePanel.add(titleLabel, BorderLayout.CENTER);
+
+        add(titlePanel, BorderLayout.NORTH);
+
         // Top panel with title and river information
         JPanel topPanel = new JPanel(new BorderLayout(0, 10));
         topPanel.setBackground(BACKGROUND_COLOR);
         topPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        JLabel titleLabel = new JLabel("River Crossing", JLabel.CENTER);
-        titleLabel.setFont(FontManager.WESTERN_FONT_TITLE);
-        titleLabel.setForeground(TEXT_COLOR);
-        topPanel.add(titleLabel, BorderLayout.NORTH);
 
         JTextArea riverInfoText = new JTextArea(
                 "You've come to a river that is " + width + " feet wide and " + depth + " feet deep.\n" +
@@ -220,12 +230,19 @@ public class RiverCrossingDialog extends JDialog {
             }
             messages.add("Lost: " + foodLost + " lbs food" +
                     (partsLost > 0 ? ", " + partsLost + " wagon part(s)" : "") +
-                    (medicineLost > 0 ? ", " + medicineLost + " medicine" : "") +
+                    (medicineLost > 0 ? ", " + medicineLost + " medicine kit" + (medicineLost > 1 ? "s" : "") : "") +
                     ". Oxen health decreased.");
             if (player != null && Math.random() < 0.4) {
                 int healthLost = 10 + random.nextInt(16);
                 player.decreaseHealth(healthLost);
                 messages.add("Someone was injured! Lost " + healthLost + " health.");
+                
+                // Check for drowning death (5% chance in deep water)
+                if (depth > 8 && Math.random() < 0.05) {
+                    player.setCauseOfDeath("drowning");
+                    player.setDead(true);
+                    messages.add("Tragedy strikes! Someone in your party drowned in the river.");
+                }
             }
         }
         // Send collected messages
@@ -269,6 +286,26 @@ public class RiverCrossingDialog extends JDialog {
             }
             messages.add("Lost " + foodLost + " lbs of food" +
                     (ammoLost > 0 ? " and " + ammoLost + " rounds of ammo." : "."));
+                    
+            // Check for potential drowning (8% chance if stormy, 3% otherwise)
+            if (player != null) {
+                double drowningChance = (weather != null && 
+                    (weather.getCurrentWeather().contains("Rain") || 
+                     weather.getCurrentWeather().contains("Storm"))) ? 0.08 : 0.03;
+                     
+                if (Math.random() < drowningChance) {
+                    // Severe health impact with possibility of death
+                    int healthLost = 30 + random.nextInt(30); // 30-60 health impact
+                    player.decreaseHealth(healthLost);
+                    
+                    if (player.getHealth() <= 0) {
+                        player.setCauseOfDeath("drowning");
+                        messages.add("Tragedy! Your wagon capsized in the river and someone drowned.");
+                    } else {
+                        messages.add("Nearly drowned! Lost " + healthLost + " health points.");
+                    }
+                }
+            }
         }
         // Send collected messages
         notify(String.join("\n", messages));
@@ -373,6 +410,36 @@ public class RiverCrossingDialog extends JDialog {
         for (Component component : optionsPanel.getComponents()) {
             if (component instanceof JButton) {
                 component.setEnabled(false);
+            }
+        }
+    }
+
+    /**
+     * Sets the name of the river crossing
+     * @param riverName The name of the river to cross
+     */
+    public void setRiverName(String riverName) {
+        this.riverName = riverName;
+        // Update the title if the dialog components are already initialized
+        if (isDisplayable()) {
+            setTitle(riverName);
+            
+            // Try to update the title label if it exists
+            for (Component comp : getContentPane().getComponents()) {
+                if (comp instanceof JPanel) {
+                    JPanel panel = (JPanel) comp;
+                    if (panel.getLayout() instanceof BorderLayout) {
+                        for (Component innerComp : panel.getComponents()) {
+                            if (innerComp instanceof JLabel) {
+                                JLabel label = (JLabel) innerComp;
+                                if (label.getFont() == FontManager.WESTERN_FONT_TITLE) {
+                                    label.setText(riverName);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

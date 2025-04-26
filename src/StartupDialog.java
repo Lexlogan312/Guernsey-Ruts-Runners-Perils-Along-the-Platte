@@ -12,6 +12,7 @@ public class StartupDialog extends JDialog {
     
     // Panel components
     private JTabbedPane tabbedPane;
+    private JPanel introPanel;
     private JPanel characterPanel;
     private JPanel familyPanel;
     private JPanel trailPanel;
@@ -45,6 +46,8 @@ public class StartupDialog extends JDialog {
         
         initializeUI();
         pack();
+        // Set a more compact height while ensuring all content is visible
+        setSize(Math.max(getWidth(), 850), Math.max(getHeight(), 400));
         setLocationRelativeTo(owner);
         setResizable(false);
     }
@@ -64,12 +67,14 @@ public class StartupDialog extends JDialog {
         tabbedPane.setBackground(PANEL_COLOR);
         
         // Create panels
+        createIntroPanel();
         createCharacterPanel();
         createFamilyPanel();
         createTrailPanel();
         createDeparturePanel();
         
         // Add panels to tabbed pane
+        tabbedPane.addTab("Introduction", introPanel);
         tabbedPane.addTab("Character", characterPanel);
         tabbedPane.addTab("Family", familyPanel);
         tabbedPane.addTab("Trail", trailPanel);
@@ -110,7 +115,8 @@ public class StartupDialog extends JDialog {
         nextButton.addActionListener(e -> {
             int index = tabbedPane.getSelectedIndex();
             if (index < tabbedPane.getTabCount() - 1) {
-                if (validateCurrentTab(index)) {
+                // For intro panel, always allow progression to character tab
+                if (index == 0 || validateCurrentTab(index)) {
                     tabbedPane.setSelectedIndex(index + 1);
                 }
             } else {
@@ -131,6 +137,43 @@ public class StartupDialog extends JDialog {
     }
     
     /**
+     * Creates the introduction panel
+     */
+    private void createIntroPanel() {
+        introPanel = createStyledPanel();
+        introPanel.setLayout(new BorderLayout(10, 10));
+        
+        // Main title
+        JLabel welcomeLabel = new JLabel("Welcome to Perils Along the Platte!", JLabel.CENTER);
+        welcomeLabel.setFont(FontManager.getBoldWesternFont(20f));
+        welcomeLabel.setForeground(HEADER_COLOR);
+        
+        // Introduction text
+        JTextArea introText = createDescriptionArea(
+            "The year is 1848, and you are about to embark on one of the most significant " +
+            "journeys in American history. You will travel a small portion of the nearly 2,000 " +
+            "mile long trails to reach the American frontier in search of a new life.\n\n" +
+            
+            "Your goal is to successfully guide your family from Fort Kearny to Independence Rock on " +
+            "your chosen trail. Along the way, you'll face numerous challenges including river crossings," +
+            "harsh weather, limited supplies, illness, and other hardships that pioneers encountered.\n\n" +
+            
+            "Between 1841 and 1869, over 400,000 pioneers traveled these trails to reach new homes in " +
+            "the west. Their journeys fundamentally shaped American history.\n\n" +
+            
+            "Click 'Next' to begin creating your character and planning your journey west!"
+        );
+        
+        // Add components to the panel - simplified layout without image and tips
+        JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
+        contentPanel.setBackground(PANEL_COLOR);
+        contentPanel.add(introText, BorderLayout.CENTER);
+        
+        introPanel.add(welcomeLabel, BorderLayout.NORTH);
+        introPanel.add(contentPanel, BorderLayout.CENTER);
+    }
+    
+    /**
      * Creates the character selection panel
      */
     private void createCharacterPanel() {
@@ -140,7 +183,7 @@ public class StartupDialog extends JDialog {
         // Add description at the top
         JTextArea descriptionArea = createDescriptionArea(
                 "Choose your character's name and gender. In the 1800s, men and women " +
-                        "faced different challenges on the trail west. Your choice will affect " +
+                        "faced different challenges on the trail. Your choice will affect " +
                         "some of the situations you encounter."
         );
         characterPanel.add(descriptionArea, BorderLayout.NORTH);
@@ -207,8 +250,7 @@ public class StartupDialog extends JDialog {
 
         JTextArea occupationArea = createDescriptionArea(
                 "Emigrants on the trail were farmers, blacksmiths, carpenters, " +
-                        "merchants, doctors, and lawyers. Most were farmers seeking fertile " +
-                        "land in the West."
+                "merchants, doctors, and lawyers seeking new opportunities in the west."
         );
 
         occupationPanel.add(occupationLabel, BorderLayout.NORTH);
@@ -272,19 +314,26 @@ public class StartupDialog extends JDialog {
      */
     private void createTrailPanel() {
         trailPanel = createStyledPanel();
-        trailPanel.setLayout(new BorderLayout());
+        trailPanel.setLayout(new BorderLayout(0, 15)); // Add vertical gap between components
 
         // Add description at the top
         JTextArea descriptionArea = createDescriptionArea(
-                "Choose which trail to follow. Each route had different destinations, " +
-                        "terrain, and challenges."
+                "Choose which trail you would like to follow. Each route had different destinations, terrain, and challenges."
         );
 
-        trailPanel.add(descriptionArea, BorderLayout.NORTH);
+        // Add padding below the description
+        JPanel descriptionPanel = new JPanel(new BorderLayout());
+        descriptionPanel.setBackground(PANEL_COLOR);
+        descriptionPanel.add(descriptionArea, BorderLayout.CENTER);
+        descriptionPanel.setBorder(new EmptyBorder(0, 0, 10, 0)); // Add bottom padding
+        
+        trailPanel.add(descriptionPanel, BorderLayout.NORTH);
 
         // Create a container panel for trails that uses GridLayout
         JPanel trailsContainer = new JPanel(new GridLayout(1, 3, 10, 0)); // 1 row, 3 columns, 10px horizontal gap
         trailsContainer.setBackground(PANEL_COLOR);
+        // Add top padding to push options down further
+        trailsContainer.setBorder(new EmptyBorder(10, 0, 0, 0));
 
         // Create trail buttons
         JRadioButton oregonTrailButton = new JRadioButton("Oregon Trail (2,170 miles)");
@@ -461,7 +510,9 @@ public class StartupDialog extends JDialog {
      */
     private boolean validateCurrentTab(int tabIndex) {
         switch (tabIndex) {
-            case 0: // Character
+            case 0: // Introduction
+                return true; // Always valid as we have text
+            case 1: // Character
                 if (nameField.getText().trim().isEmpty()) {
                     JOptionPane.showMessageDialog(this,
                         "Please enter your character's name.",
@@ -471,7 +522,7 @@ public class StartupDialog extends JDialog {
                 }
                 return true;
                 
-            case 1: // Family
+            case 2: // Family
                 for (int i = 0; i < familyMemberFields.length; i++) {
                     if (familyMemberFields[i].getText().trim().isEmpty()) {
                         JOptionPane.showMessageDialog(this,
@@ -483,10 +534,10 @@ public class StartupDialog extends JDialog {
                 }
                 return true;
                 
-            case 2: // Trail
+            case 3: // Trail
                 return true; // Always valid as we have radio buttons
                 
-            case 3: // Departure
+            case 4: // Departure
                 return true; // Always valid as we have radio buttons
         }
         return true;

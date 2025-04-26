@@ -456,7 +456,7 @@ public class GUI extends JPanel {
         JLabel foodLabel = createInventoryItemLabel("Food", inventory.getFood() + " pounds");
         JLabel oxenLabel = createInventoryItemLabel("Oxen", inventory.getOxen() + " (Health: " + inventory.getOxenHealth() + "%)");
         JLabel partsLabel = createInventoryItemLabel("Wagon Parts", String.valueOf(inventory.getWagonParts()));
-        JLabel medicineLabel = createInventoryItemLabel("Medicine", String.valueOf(inventory.getMedicine()));
+        JLabel medicineLabel = createInventoryItemLabel("Medicine Kits", String.valueOf(inventory.getMedicine()));
         JLabel ammoLabel = createInventoryItemLabel("Ammunition", inventory.getAmmunition() + " rounds");
 
         itemsPanel.add(foodLabel);
@@ -615,16 +615,16 @@ public class GUI extends JPanel {
         /** Loads the map background image */
         private void loadMapImage() {
             try {
-                String filePath = "resources/images/Pixel Map.png";
-                ImageIcon icon = new ImageIcon(filePath);
+                // Use ResourceLoader to load the map image
+                ImageIcon icon = ResourceLoader.loadImage("images/Pixel Map.png");
                 
-                if (icon.getImageLoadStatus() == MediaTracker.COMPLETE && icon.getIconWidth() > 0) {
+                if (icon != null && icon.getImageLoadStatus() == MediaTracker.COMPLETE && icon.getIconWidth() > 0) {
                     mapImage = icon.getImage();
                     originalMapWidth = icon.getIconWidth();
                     originalMapHeight = icon.getIconHeight();
                     System.out.println("Map loaded: " + originalMapWidth + "x" + originalMapHeight);
                 } else {
-                    System.err.println("Failed to load map image: " + filePath);
+                    System.err.println("Failed to load map image using ResourceLoader");
                     mapImage = null;
                 }
             } catch (Exception e) {
@@ -1103,30 +1103,19 @@ public class GUI extends JPanel {
          */
         private void drawWagonIcon(Graphics2D g, int x, int y) {
             try {
-                // Try multiple methods to load the map image
-                ImageIcon icon = null;
+                // Use ResourceLoader to load the wagon icon
+                ImageIcon icon = ResourceLoader.loadImage("images/Wagon Icon.png");
 
-                // File path
-                if (icon == null || icon.getIconWidth() <= 0) {
-                    try {
-                        icon = new ImageIcon("resources/images/Wagon Icon.png");
-                        System.out.println("FortKearnyDialog: Loaded map using file path");
-                    } catch (Exception e) {
-                        System.err.println("FortKearnyDialog: Failed to load map using file path: " + e);
-                    }
-                }
-
-                Image wagonImage = icon.getImage();
-
-                // Only draw if we loaded a valid image
-                if (wagonImage != null && icon.getImageLoadStatus() == MediaTracker.COMPLETE && icon.getIconWidth() > 0) {
+                if (icon != null && icon.getImageLoadStatus() == MediaTracker.COMPLETE && icon.getIconWidth() > 0) {
+                    Image wagonImage = icon.getImage();
+                    
                     // Scale the wagon icon
                     int wagonSize = 75; // Smaller icon size
 
                     // Draw wagon icon centered on the location
                     g.drawImage(wagonImage, x - wagonSize/2, y - wagonSize/2, wagonSize, wagonSize, this);
                 } else {
-                    throw new Exception("Failed to load wagon icon");
+                    throw new Exception("Failed to load wagon icon using ResourceLoader");
                 }
             } catch (Exception e) {
                 // Fallback to simple wagon shape if image fails to load

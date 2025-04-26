@@ -101,15 +101,32 @@ public class RiverCrossing {
             int foodLost = 50 + (int)(Math.random() * 100); // 50-150 pounds lost
             inventory.consumeFood(foodLost);
 
-            int partsLost = (int)(Math.random() * 2); // 0-1 parts lost
-            inventory.useWagonParts(partsLost);
+            // Choose which parts to lose
+            boolean loseWheel = Math.random() < 0.3 && inventory.getWheels() > 0;
+            boolean loseAxle = Math.random() < 0.2 && inventory.getAxles() > 0;
+            boolean loseTongue = Math.random() < 0.15 && inventory.getTongues() > 0;
+            boolean loseWagonBow = Math.random() < 0.25 && inventory.getWagonBows() > 0;
+            
+            int wheelsLost = loseWheel ? 1 : 0;
+            int axlesLost = loseAxle ? 1 : 0;
+            int tonguesLost = loseTongue ? 1 : 0;
+            int wagonBowsLost = loseWagonBow ? 1 : 0;
+
+            // Use parts
+            if (wheelsLost > 0) inventory.useWheels(wheelsLost);
+            if (axlesLost > 0) inventory.useAxles(axlesLost);
+            if (tonguesLost > 0) inventory.useTongues(tonguesLost);
+            if (wagonBowsLost > 0) inventory.useWagonBows(wagonBowsLost);
 
             int medicineLost = (int)(Math.random() * 2); // 0-1 medicine lost
             inventory.useMedicine(medicineLost);
 
             System.out.println("You lost:");
             System.out.println("- " + foodLost + " pounds of food");
-            if (partsLost > 0) System.out.println("- " + partsLost + " wagon parts");
+            if (wheelsLost > 0) System.out.println("- " + wheelsLost + " wheel(s)");
+            if (axlesLost > 0) System.out.println("- " + axlesLost + " axle(s)");
+            if (tonguesLost > 0) System.out.println("- " + tonguesLost + " tongue(s)");
+            if (wagonBowsLost > 0) System.out.println("- " + wagonBowsLost + " wagon bow(s)");
             if (medicineLost > 0) System.out.println("- " + medicineLost + " medicine");
 
             // Potential injury
