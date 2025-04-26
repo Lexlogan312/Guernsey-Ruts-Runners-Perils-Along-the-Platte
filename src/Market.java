@@ -26,7 +26,10 @@ public class Market {
     private static final int[] FOOD_WEIGHTS = {
         25, 15, 10, 5, 2, 5, 2, 20
     };
-    
+    private static final double[] FOOD_SPOILRATE = {
+            .05, .15, .02, .03, .005, .04, .1, .01
+    };
+
     // GUI Components
     private JLabel moneyLabel;
     private JTextField[] quantityFields;
@@ -118,6 +121,9 @@ public class Market {
         System.out.println("How many would you like to buy?");
         int oxenAmount = getValidAmount(scanner);
         int totalCost = oxenAmount * OXEN_PRICE;
+        if (player.getJob() == Job.MERCHANT) {
+            totalCost = (int) Math.round(totalCost * 0.85); // 15% off
+        }
         if (totalCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
         } else {
@@ -134,13 +140,16 @@ public class Market {
         System.out.println("You currently have: " + inventory.getFood() + " pounds of food");
         System.out.println("How many pounds would you like to buy?");
         int foodAmount = getValidAmount(scanner);
-        int totalCost = foodAmount * FOOD_PRICE;
-        if (totalCost > player.getMoney()) {
+        int totalFoodCost = foodAmount * FOOD_PRICE;
+        if (player.getJob() == Job.MERCHANT) {
+            totalFoodCost = (int) Math.round(totalFoodCost * 0.85); // 15% off
+        }
+        if (totalFoodCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
         } else {
-            player.spendMoney(totalCost);
+            player.spendMoney(totalFoodCost);
             inventory.addFood(foodAmount);
-            System.out.println("You bought " + foodAmount + " pounds of food for $" + totalCost);
+            System.out.println("You bought " + foodAmount + " pounds of food for $" + totalFoodCost);
         }
     }
 
@@ -151,13 +160,16 @@ public class Market {
         System.out.println("You currently have: " + inventory.getWagonParts() + " parts");
         System.out.println("How many would you like to buy?");
         int partsAmount = getValidAmount(scanner);
-        int totalCost = partsAmount * WAGON_PART_PRICE;
-        if (totalCost > player.getMoney()) {
+        int totalWagonCost = partsAmount * WAGON_PART_PRICE;
+        if (player.getJob() == Job.MERCHANT) {
+            totalWagonCost = (int) Math.round(totalWagonCost * 0.85); // 15% off
+        }
+        if (totalWagonCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
         } else {
-            player.spendMoney(totalCost);
+            player.spendMoney(totalWagonCost);
             inventory.addWagonParts(partsAmount);
-            System.out.println("You bought " + partsAmount + " wagon parts for $" + totalCost);
+            System.out.println("You bought " + partsAmount + " wagon parts for $" + totalWagonCost);
         }
     }
 
@@ -168,13 +180,16 @@ public class Market {
         System.out.println("You currently have: " + inventory.getMedicine() + " medicine");
         System.out.println("How many would you like to buy?");
         int medicineAmount = getValidAmount(scanner);
-        int totalCost = medicineAmount * MEDICINE_PRICE;
-        if (totalCost > player.getMoney()) {
+        int totalMedicineCost = medicineAmount * MEDICINE_PRICE;
+        if (player.getJob() == Job.MERCHANT) {
+            totalMedicineCost = (int) Math.round(totalMedicineCost * 0.85); // 15% off
+        }
+        if (totalMedicineCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
         } else {
-            player.spendMoney(totalCost);
+            player.spendMoney(totalMedicineCost);
             inventory.addMedicine(medicineAmount);
-            System.out.println("You bought " + medicineAmount + " medicine for $" + totalCost);
+            System.out.println("You bought " + medicineAmount + " medicine for $" + totalMedicineCost);
         }
     }
 
@@ -185,13 +200,16 @@ public class Market {
         System.out.println("You currently have: " + inventory.getAmmunition() + " rounds");
         System.out.println("How many boxes would you like to buy?");
         int boxesAmount = getValidAmount(scanner);
-        int totalCost = boxesAmount * AMMUNITION_PRICE;
-        if (totalCost > player.getMoney()) {
+        int totalAmmoCost = boxesAmount * AMMUNITION_PRICE;
+        if (player.getJob() == Job.MERCHANT) {
+            totalAmmoCost = (int) Math.round(totalAmmoCost * 0.85); // 15% off
+        }
+        if (totalAmmoCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
         } else {
-            player.spendMoney(totalCost);
+            player.spendMoney(totalAmmoCost);
             inventory.addAmmunition(boxesAmount * 20);
-            System.out.println("You bought " + boxesAmount + " boxes of ammunition for $" + totalCost);
+            System.out.println("You bought " + boxesAmount + " boxes of ammunition for $" + totalAmmoCost);
         }
     }
 
@@ -452,6 +470,11 @@ public class Market {
             if (quantity <= 0) return;
             
             int price = getItemPrice(itemIndex);
+
+            if (player.getJob() == Job.MERCHANT) {
+                price = (int) Math.round(price * 0.85); // 15% discount for buying
+            }
+
             int totalCost = quantity * price;
             
             if (totalCost > player.getMoney()) {
@@ -666,41 +689,37 @@ public class Market {
         
         // Add action listeners to buttons
         final int[] result = {0}; // To store the result (total pounds purchased)
-        
+
         confirmButton.addActionListener(e -> {
             int totalAllocated = 0;
             StringBuilder purchaseSummary = new StringBuilder("You purchased:\n");
-            
+
             for (int i = 0; i < foodSpinners.length; i++) {
                 int quantity = (int) foodSpinners[i].getValue();
                 if (quantity > 0) {
                     int pounds = quantity * FOOD_WEIGHTS[i];
                     totalAllocated += pounds;
                     purchaseSummary.append("- ")
-                                  .append(quantity)
-                                  .append(" units of ")
-                                  .append(FOOD_TYPES[i])
-                                  .append(" (")
-                                  .append(pounds)
-                                  .append(" lbs)\n");
+                            .append(quantity)
+                            .append(" units of ")
+                            .append(FOOD_TYPES[i])
+                            .append(" (")
+                            .append(pounds)
+                            .append(" lbs)\n");
+                    double spoilRate = FOOD_SPOILRATE[i];
+                    if(player.getJob().equals("Farmer")){
+                         spoilRate *= 3;
+                    }
+                    Item item = new Item(FOOD_TYPES[i], pounds, spoilRate);
+                    inventory.addItem(item);
                 }
             }
-            
-            // Calculate any refund if they bought less than originally requested
-            int refundPounds = totalPoundsToBuy - totalAllocated;
-            if (refundPounds > 0) {
-                int refundAmount = refundPounds * FOOD_PRICE;
-                player.addMoney(refundAmount);
-                purchaseSummary.append("\nRefund for unused pounds: $").append(refundAmount);
-            }
-            
-            if (totalAllocated <= totalPoundsToBuy && totalAllocated > 0) {
-                result[0] = totalAllocated;
-                new FoodPurchaseDialog(foodDialog, purchaseSummary.toString(), "Purchase Complete").setVisible(true);
-                foodDialog.dispose();
-            }
+
+            // Optional: show summary popup or continue to next screen
+            JOptionPane.showMessageDialog(null, purchaseSummary.toString(), "Purchase Summary", JOptionPane.INFORMATION_MESSAGE);
         });
-        
+
+
         cancelButton.addActionListener(e -> {
             result[0] = 0;
             foodDialog.dispose();

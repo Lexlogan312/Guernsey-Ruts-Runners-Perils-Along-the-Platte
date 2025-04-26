@@ -16,7 +16,9 @@ public class StartupDialog extends JDialog {
     private JPanel familyPanel;
     private JPanel trailPanel;
     private JPanel departurePanel;
-    
+    private JComboBox<String> occupationComboBox;
+
+
     // Character fields
     private JTextField nameField;
     private JRadioButton maleButton;
@@ -146,7 +148,7 @@ public class StartupDialog extends JDialog {
         characterPanel.add(descriptionArea, BorderLayout.NORTH);
 
         // Create a center panel for form elements
-        JPanel formPanel = new JPanel(new GridLayout(3, 1, 0, 10));
+        JPanel formPanel = new JPanel(new GridLayout(4, 1, 0, 10));
         formPanel.setBackground(PANEL_COLOR);
 
         // Add name field with label
@@ -198,24 +200,29 @@ public class StartupDialog extends JDialog {
         formPanel.add(genderPanel);
 
         // Add occupation section
-        JPanel occupationPanel = new JPanel(new BorderLayout(10, 5));
+        // Occupation selection (new actual selection!)
+        JPanel occupationPanel = new JPanel(new BorderLayout(10, 0));
         occupationPanel.setBackground(PANEL_COLOR);
 
-        JLabel occupationLabel = new JLabel("Common Occupations:");
+        JLabel occupationLabel = new JLabel("Occupation:");
         occupationLabel.setFont(FontManager.getBoldWesternFont(14f));
         occupationLabel.setForeground(TEXT_COLOR);
 
-        JTextArea occupationArea = createDescriptionArea(
-                "Emigrants on the trail were farmers, blacksmiths, carpenters, " +
-                        "merchants, doctors, and lawyers. Most were farmers seeking fertile " +
-                        "land in the West."
-        );
+        String[] occupations = {
+                "Farmer", "Blacksmith", "Carpenter", "Merchant",
+                "Doctor", "Hunter", "Teacher", "Preacher"
+        };
 
-        occupationPanel.add(occupationLabel, BorderLayout.NORTH);
-        occupationPanel.add(occupationArea, BorderLayout.CENTER);
+        occupationComboBox = new JComboBox<>(occupations);
+        occupationComboBox.setFont(FontManager.getWesternFont(14f));
+        occupationComboBox.setForeground(TEXT_COLOR);
+        occupationComboBox.setBackground(PANEL_COLOR);
+
+        occupationPanel.add(occupationLabel, BorderLayout.WEST);
+        occupationPanel.add(occupationComboBox, BorderLayout.CENTER);
         formPanel.add(occupationPanel);
 
-        // Add the form panel to the center
+        // Add form panel to center
         characterPanel.add(formPanel, BorderLayout.CENTER);
     }
 
@@ -515,8 +522,10 @@ public class StartupDialog extends JDialog {
         for (int i = 0; i < 3; i++) {
             familyMembers[i] = familyMemberFields[i].getText().trim();
         }
-        
-        gameController.playerSetup(nameField.getText().trim(), gender, familyMembers);
+
+        String selectedOccupation = (String) occupationComboBox.getSelectedItem();
+        Job job = Job.valueOf(selectedOccupation.toUpperCase());
+        gameController.playerSetup(nameField.getText().trim(), gender, familyMembers, job);
         
         // Save trail choice
         int trailChoice = 1; // Default to Oregon Trail

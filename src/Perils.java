@@ -6,6 +6,7 @@ public class Perils {
     private final Player player;
     private final Inventory inventory;
     private final Random random;
+    private final Time time;
     
     // Add a listener callback for messages
     private Consumer<String> messageListener;
@@ -18,9 +19,10 @@ public class Perils {
     private ArrayList<String> weatherEvents;
     private ArrayList<String> animalEvents;
 
-    public Perils(Player player, Inventory inventory, Weather weather) {
+    public Perils(Player player, Inventory inventory, Weather weather, Time time) {
         this.player = player;
         this.inventory = inventory;
+        this.time = time;
         this.random = new Random();
         this.messageListener = s -> System.out.println(s); // Default to System.out
         
@@ -55,6 +57,7 @@ public class Perils {
         diseases.add("fever");
         diseases.add("exhaustion");
         diseases.add("snakebite");
+        diseases.add("morale depreciation");
 
         // Initialize injury events
         injuries = new ArrayList<>();
@@ -145,11 +148,42 @@ public class Perils {
 
         // Select random disease
         String disease = diseases.get(random.nextInt(diseases.size()));
-
+        if(disease == "morale depreciation"){
+            if(player.getMorale() < 50) {
+                showMessage("Your group morale is " + player.getMorale());
+                if(player.getPreacherMoralModifier() > 1.0){
+                    showMessage(player.getName() + " is a " + player.getJob() + "your morale has been increased");
+                    player.increaseMorale(20);
+                }
+                else {
+                    if(player.getPreacherMoralModifier() > 1.0) {
+                        showMessage(player.getName() + " is a " + player.getJob() + "your morale has been increased");
+                        player.increaseMorale(10);
+                    }
+                    showMessage("You need to rest for a day");
+                    time.advanceDay();
+                    player.increaseMorale(20);
+                }
+            }
+            else{
+                showMessage("Your group morale is " + player.getMorale());
+                if(player.getMorale() < 70){
+                    showMessage("Your morale is dropping, rest for a day to increase morale");
+                }
+            }
+        }
         showMessage(victim + " has come down with " + disease + ".");
 
         // Health impact
-        int healthImpact = 10 + random.nextInt(20); // 10-30 health impact
+        int healthImpact = 0;
+
+        if(player.getDoctorModifier() > 1){
+            healthImpact = (int) ((10 + random.nextInt(20)) / 1.2);
+            showMessage(player.getName() + " is a doctor, your health impact was lessoned by 20% " + healthImpact + ".");
+        }
+        else {
+            healthImpact = 10 + random.nextInt(20); // 10-30 health impact
+        }
 
         // If it's a family member, less direct impact on player
         if (!isPlayer) {
