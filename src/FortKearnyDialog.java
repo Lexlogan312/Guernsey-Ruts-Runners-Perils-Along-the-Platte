@@ -24,7 +24,7 @@ public class FortKearnyDialog extends JDialog {
         initUI();
         pack(); // Pack first to get preferred sizes
         // Set size *after* packing, increasing height
-        setSize(800, 550); // Increased height from 500 to 550
+        setSize(800, 750); // Increased height from 600 to 700 to accommodate both images
         setLocationRelativeTo(owner);
         setResizable(false); // Keep this dialog non-resizable for simplicity
     }
@@ -53,51 +53,79 @@ public class FortKearnyDialog extends JDialog {
                 new EmptyBorder(15, 15, 15, 15)
         ));
 
-        // Add map image
-        JPanel imagePanel = new JPanel(new BorderLayout());
-        imagePanel.setBackground(PANEL_COLOR);
+        // Create a panel for both images arranged vertically
+        JPanel imagesPanel = new JPanel(new BorderLayout(0, 10));
+        imagesPanel.setBackground(PANEL_COLOR);
+        
+        // Add trail overlook image at the top
+        JPanel overlookPanel = new JPanel(new BorderLayout());
+        overlookPanel.setBackground(PANEL_COLOR);
         try {
-            // Try multiple methods to load the map image
-            ImageIcon mapIcon = null;
-
-            // File path
-            if (mapIcon == null || mapIcon.getIconWidth() <= 0) {
-                try {
-                    mapIcon = new ImageIcon("resources/images/Wagon Icon.png");
-                    System.out.println("FortKearnyDialog: Loaded map using file path");
-                } catch (Exception e) {
-                    System.err.println("FortKearnyDialog: Failed to load map using file path: " + e);
-                }
-            }
-
-            if (mapIcon != null && mapIcon.getIconWidth() > 0) {
+            ImageIcon overlookIcon = ResourceLoader.loadImage("images/Overlook of Trail.png");
+            if (overlookIcon != null && overlookIcon.getIconWidth() > 0) {
                 // Calculate appropriate size while preserving aspect ratio
-                int originalWidth = mapIcon.getIconWidth();
-                int originalHeight = mapIcon.getIconHeight();
+                int originalWidth = overlookIcon.getIconWidth();
+                int originalHeight = overlookIcon.getIconHeight();
                 float aspectRatio = (float)originalWidth / (float)originalHeight;
 
                 int displayWidth = 300;
                 int displayHeight = (int)(displayWidth / aspectRatio);
 
-                Image mapImage = mapIcon.getImage().getScaledInstance(displayWidth, displayHeight, Image.SCALE_SMOOTH);
-                JLabel mapLabel = new JLabel(new ImageIcon(mapImage));
-                // REMOVED BORDER: mapLabel.setBorder(new LineBorder(ACCENT_COLOR, 1));
-                imagePanel.add(mapLabel, BorderLayout.CENTER);
+                Image overlookImage = overlookIcon.getImage().getScaledInstance(displayWidth, displayHeight, Image.SCALE_SMOOTH);
+                JLabel overlookLabel = new JLabel(new ImageIcon(overlookImage));
+                overlookPanel.add(overlookLabel, BorderLayout.CENTER);
+                
+                System.out.println("FortKearnyDialog: Loaded overlook image using ResourceLoader");
             } else {
-                JLabel noMapLabel = new JLabel("Map image could not be loaded");
-                noMapLabel.setFont(FontManager.getBoldWesternFont(14));
-                noMapLabel.setForeground(TEXT_COLOR);
-                noMapLabel.setHorizontalAlignment(JLabel.CENTER);
-                imagePanel.add(noMapLabel, BorderLayout.CENTER);
+                JLabel noOverlookLabel = new JLabel("Overlook image could not be loaded");
+                noOverlookLabel.setFont(FontManager.getBoldWesternFont(14));
+                noOverlookLabel.setForeground(TEXT_COLOR);
+                noOverlookLabel.setHorizontalAlignment(JLabel.CENTER);
+                overlookPanel.add(noOverlookLabel, BorderLayout.CENTER);
             }
         } catch (Exception e) {
-            System.err.println("Error loading map image: " + e.getMessage());
+            System.err.println("Error loading overlook image: " + e.getMessage());
             e.printStackTrace();
         }
+        
+        // Add wagon image at the bottom
+        JPanel wagonPanel = new JPanel(new BorderLayout());
+        wagonPanel.setBackground(PANEL_COLOR);
+        try {
+            ImageIcon wagonIcon = ResourceLoader.loadImage("images/Wagon Icon.png");
+            if (wagonIcon != null && wagonIcon.getIconWidth() > 0) {
+                // Calculate appropriate size while preserving aspect ratio
+                int originalWidth = wagonIcon.getIconWidth();
+                int originalHeight = wagonIcon.getIconHeight();
+                float aspectRatio = (float)originalWidth / (float)originalHeight;
 
-        contentPanel.add(imagePanel, BorderLayout.WEST);
+                int displayWidth = 300;
+                int displayHeight = (int)(displayWidth / aspectRatio);
 
-        // Description text
+                Image wagonImage = wagonIcon.getImage().getScaledInstance(displayWidth, displayHeight, Image.SCALE_SMOOTH);
+                JLabel wagonLabel = new JLabel(new ImageIcon(wagonImage));
+                wagonPanel.add(wagonLabel, BorderLayout.CENTER);
+                
+                System.out.println("FortKearnyDialog: Loaded wagon icon using ResourceLoader");
+            } else {
+                JLabel noWagonLabel = new JLabel("Wagon image could not be loaded");
+                noWagonLabel.setFont(FontManager.getBoldWesternFont(14));
+                noWagonLabel.setForeground(TEXT_COLOR);
+                noWagonLabel.setHorizontalAlignment(JLabel.CENTER);
+                wagonPanel.add(noWagonLabel, BorderLayout.CENTER);
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading wagon image: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // Add both image panels to the vertical layout
+        imagesPanel.add(overlookPanel, BorderLayout.NORTH);
+        imagesPanel.add(wagonPanel, BorderLayout.CENTER);
+
+        contentPanel.add(imagesPanel, BorderLayout.WEST);
+
+        // Description text with historical context in a scrollable pane
         JTextArea descriptionArea = new JTextArea();
         descriptionArea.setFont(FontManager.getWesternFont(15));
         descriptionArea.setLineWrap(true);
@@ -118,17 +146,32 @@ public class FortKearnyDialog extends JDialog {
                         "Your first major destination is Fort Kearny, a military post established to protect " +
                         "travelers on the trails west. The journey there will take several weeks, " +
                         "depending on weather and trail conditions.\n\n" +
+                        
+                        "Fort Kearny was established in 1848 at the junction of the Oregon and Mormon Trails " +
+                        "along the Platte River in what is now Nebraska. Named after General Stephen Watts Kearny, " +
+                        "it was one of the most important outposts on the westward trails.\n\n" +
+                        
+                        "This initial leg of the journey was crucial - many emigrants who set out unprepared or " +
+                        "experienced early difficulties abandoned their journey at Fort Kearny and returned home.\n\n" +
+                        
                         "During this time, you may encounter various challenges, from weather events to " +
                         "health problems and wagon breakdowns. Your supplies and decision-making will " +
                         "determine how well you fare on this initial leg of your journey.\n\n" +
+                        
                         "When you're ready, click 'Begin Journey' to fast-forward to Fort Kearny."
         );
 
+        // Create a scrollable view for the text
+        JScrollPane scrollPane = new JScrollPane(descriptionArea);
+        scrollPane.setBorder(null); // Remove border
+        scrollPane.setBackground(PANEL_COLOR);
+        scrollPane.getViewport().setBackground(PANEL_COLOR);
+        
         // Add some padding around the text area
         JPanel textPanel = new JPanel(new BorderLayout());
         textPanel.setBackground(PANEL_COLOR);
         textPanel.setBorder(new EmptyBorder(0, 15, 0, 0));
-        textPanel.add(descriptionArea, BorderLayout.CENTER);
+        textPanel.add(scrollPane, BorderLayout.CENTER);
 
         contentPanel.add(textPanel, BorderLayout.CENTER);
 

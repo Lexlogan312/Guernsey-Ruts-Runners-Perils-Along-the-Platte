@@ -65,7 +65,7 @@ public class Main {
         // frame.setVisible(true); // Make frame visible so dialogs have an owner
 
         Market market = new Market(gameController.getPlayer(), gameController.getInventory());
-        JDialog marketDialog = new JDialog(frame, "General Store - Initial Supplies", true);
+        JDialog marketDialog = new JDialog(frame, "Market", true);
         marketDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE); // Ensure it closes properly
         marketDialog.add(market.createMarketPanel());
         marketDialog.pack();

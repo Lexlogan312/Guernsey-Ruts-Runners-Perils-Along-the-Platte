@@ -11,6 +11,22 @@ public class Map {
     private int currentLandmarkIndex;
     private int distanceTraveled;
     private boolean riverCrossingPending; // Renamed for clarity
+    
+    // Add named river crossings for historical accuracy
+    private class RiverCrossing {
+        int distance;
+        String name;
+        String description;
+        
+        RiverCrossing(int distance, String name, String description) {
+            this.distance = distance;
+            this.name = name;
+            this.description = description;
+        }
+    }
+    
+    private ArrayList<RiverCrossing> pendingRiverCrossings = new ArrayList<>();
+    private RiverCrossing currentRiverCrossing; // The river crossing that was triggered
 
     public Map(int trailChoice) {
         this.trailChoice = trailChoice;
@@ -19,6 +35,7 @@ public class Map {
         this.distanceTraveled = 0;
         this.riverCrossingPending = false; // Initialize to false
         this.initializeLandmarks();
+        this.initializeRiverCrossings();
     }
 
     private void initializeLandmarks() {
@@ -58,18 +75,61 @@ public class Map {
             this.landmarks.add(new Landmark("Council Bluffs (Kanesville)", 265, 0, 0, "A key gathering and outfitting point for Mormon pioneers, located on the Missouri River."));
             this.landmarks.add(new Landmark("Loup Fork", 340, 0, 0, "A branch of the Platte River, near Genoa, Nebraska, followed by Mormons as they joined the main trail."));
             this.landmarks.add(new Landmark("Fort Kearny", 420, 1076, 495, 1080, 432, "Established in 1848, Fort Kearny was the first U.S. Army post along the trail and offered supplies, protection, and rest."));
-            this.landmarks.add(new Landmark("Ash Hollow", 500, 821, 465, 850, 415, "A steep descent into the North Platte Valley, it offered fresh water and grass but was difficult for wagons."));
+            this.landmarks.add(new Landmark("Ash Hollow", 620, 821, 465, 850, 415, "A steep descent into the North Platte Valley, it offered fresh water and grass but was difficult for wagons."));
             this.landmarks.add(new Landmark("Courthouse Rock and Jail Rock", 530, 704, 444, 580, 550, "These sandstone formations served as early landmarks for travelers entering western Nebraska."));
-            this.landmarks.add(new Landmark("Chimney Rock", 550, 670, 440, 680, 383, "This towering spire became one of the most iconic landmarks on the trail, often mentioned in emigrant journals."));
-            this.landmarks.add(new Landmark("Scotts Bluff", 570, 651, 424, 560, 500, "A large bluff that required a detour around Mitchell Pass. It marked a difficult but scenic part of the journey."));
-            this.landmarks.add(new Landmark("Fort Laramie", 640, 514, 399, 400, 460, "Originally a fur trading post, Fort Laramie became a key military post offering protection, mail, and supplies."));
-            this.landmarks.add(new Landmark("Guernsey Ruts", 670, 425, 344, 450, 306, "Deep wagon ruts carved into sandstone by thousands of wagon wheels, still visible today."));
-            this.landmarks.add(new Landmark("Register Cliff", 675, 368, 335, 280, 392, "A soft limestone bluff where emigrants carved their names, leaving a record of their passing."));
-            this.landmarks.add(new Landmark("Red Buttes", 695, 325, 275, 400, 258, "Red sandstone hills that marked a nearby North Platte River ford and the final stretch before Independence Rock."));
-            this.landmarks.add(new Landmark("Independence Rock", 705, 295, 275, 180, 200, "Nicknamed the 'Great Register of the Desert,' emigrants scratched their names into this granite rock hoping to reach it by July 4."));
+            this.landmarks.add(new Landmark("Chimney Rock", 670, 670, 440, 680, 383, "This towering spire became one of the most iconic landmarks on the trail, often mentioned in emigrant journals."));
+            this.landmarks.add(new Landmark("Scotts Bluff", 690, 651, 424, 560, 500, "A large bluff that required a detour around Mitchell Pass. It marked a difficult but scenic part of the journey."));
+            this.landmarks.add(new Landmark("Fort Laramie", 760, 514, 399, 400, 460, "Originally a fur trading post, Fort Laramie became a key military post offering protection, mail, and supplies."));
+            this.landmarks.add(new Landmark("Guernsey Ruts", 790, 425, 344, 450, 306, "Deep wagon ruts carved into sandstone by thousands of wagon wheels, still visible today."));
+            this.landmarks.add(new Landmark("Register Cliff", 795, 368, 335, 280, 392, "A soft limestone bluff where emigrants carved their names, leaving a record of their passing."));
+            this.landmarks.add(new Landmark("Red Buttes", 815, 325, 275, 400, 258, "Red sandstone hills that marked a nearby North Platte River ford and the final stretch before Independence Rock."));
+            this.landmarks.add(new Landmark("Independence Rock", 825, 295, 275, 180, 200, "Nicknamed the 'Great Register of the Desert,' emigrants scratched their names into this granite rock hoping to reach it by July 4."));
         }
     }
 
+    /**
+     * Initializes the specific river crossing points based on trail choice
+     */
+    private void initializeRiverCrossings() {
+        pendingRiverCrossings.clear();
+        
+        // Find Fort Laramie landmark to set river crossings after it
+        int fortLaramieDistance = 0;
+        int independenceRockDistance = 0;
+        
+        for (Landmark landmark : landmarks) {
+            if (landmark.getName().contains("Fort Laramie")) {
+                fortLaramieDistance = landmark.getDistance();
+            }
+            if (landmark.getName().contains("Independence Rock")) {
+                independenceRockDistance = landmark.getDistance();
+            }
+        }
+        
+        if (fortLaramieDistance > 0 && independenceRockDistance > 0) {
+            // Calculate distance between Fort Laramie and Independence Rock
+            int segmentDistance = independenceRockDistance - fortLaramieDistance;
+            
+            // Add historically accurate river crossings between Fort Laramie and Independence Rock
+            pendingRiverCrossings.add(new RiverCrossing(
+                fortLaramieDistance + (segmentDistance / 4),
+                "North Platte River Crossing",
+                "The North Platte River was a major obstacle on the trail. At this wider, shallower section, wagons had to be carefully guided across."
+            ));
+            
+            pendingRiverCrossings.add(new RiverCrossing(
+                fortLaramieDistance + (segmentDistance / 2),
+                "Sweetwater River Crossing",
+                "The Sweetwater River had to be crossed multiple times along the trail. Its swift currents could be dangerous during high water."
+            ));
+            
+            pendingRiverCrossings.add(new RiverCrossing(
+                fortLaramieDistance + (3 * segmentDistance / 4),
+                "Deer Creek Crossing",
+                "Deer Creek was a critical water source and crossing point. Many emigrants stopped here to rest before the final push to Independence Rock."
+            ));
+        }
+    }
 
     public String getTrailName() {
         if (this.trailChoice == 1) {
@@ -132,13 +192,40 @@ public class Map {
         int previousDistance = this.distanceTraveled;
         this.distanceTraveled += milesTraveled;
 
-        // Check if a landmark was passed during this travel step
-        // This logic is now handled more in GameController's advanceDay/handleLandmarkArrival
-
-        // Simple random chance for a river crossing event during travel
-        // More complex logic could tie this to specific map segments or distances
-        if (Math.random() < 0.15) { // 15% chance per travel action
-            this.riverCrossingPending = true;
+        // Check for river crossings at specific distances
+        checkForSpecificRiverCrossing(previousDistance, this.distanceTraveled);
+    }
+    
+    /**
+     * Checks if the player has crossed a designated river crossing point
+     * @param previousDistance Distance before travel
+     * @param currentDistance Distance after travel
+     */
+    private void checkForSpecificRiverCrossing(int previousDistance, int currentDistance) {
+        // If Fort Laramie hasn't been reached yet, don't trigger river crossings
+        boolean passedFortLaramie = false;
+        for (int i = 0; i <= currentLandmarkIndex; i++) {
+            if (landmarks.get(i).getName().contains("Fort Laramie")) {
+                passedFortLaramie = true;
+                break;
+            }
+        }
+        
+        if (!passedFortLaramie) {
+            return; // Don't trigger river crossings before Fort Laramie
+        }
+        
+        // Check if we've passed any pending river crossing points
+        for (int i = 0; i < pendingRiverCrossings.size(); i++) {
+            RiverCrossing crossing = pendingRiverCrossings.get(i);
+            
+            // If we've crossed this river point during this travel session
+            if (previousDistance < crossing.distance && currentDistance >= crossing.distance) {
+                riverCrossingPending = true;
+                currentRiverCrossing = crossing;
+                pendingRiverCrossings.remove(i); // Remove this crossing point
+                break; // Only trigger one crossing at a time
+            }
         }
     }
 
@@ -149,14 +236,30 @@ public class Map {
     public boolean checkForRiverCrossing() {
         return this.riverCrossingPending;
     }
+    
+    /**
+     * Gets the name of the current river crossing
+     * @return name of the current river crossing or "River Crossing" if none
+     */
+    public String getCurrentRiverCrossingName() {
+        return currentRiverCrossing != null ? currentRiverCrossing.name : "River Crossing";
+    }
+    
+    /**
+     * Gets the description of the current river crossing
+     * @return description of the current river crossing or empty string if none
+     */
+    public String getCurrentRiverCrossingDescription() {
+        return currentRiverCrossing != null ? currentRiverCrossing.description : "";
+    }
 
     /**
      * Resets the river crossing flag after it has been handled.
      */
     public void resetRiverCrossing() {
         this.riverCrossingPending = false;
+        this.currentRiverCrossing = null;
     }
-
 
     /**
      * Checks if the distance traveled has reached or passed the next landmark.
@@ -198,7 +301,6 @@ public class Map {
         // This depends on whether advanceToNextLandmark is called exactly when reaching the destination distance.
         // Checking distance is usually safer.
     }
-
 
     /**
      * Displays historical info for the current landmark (to console - GUI handles display)

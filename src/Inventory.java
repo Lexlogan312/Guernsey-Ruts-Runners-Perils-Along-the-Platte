@@ -4,16 +4,32 @@ public class Inventory {
     private int food;
     private String foodName;
     private int oxen;
-    private int wagonParts;
+    private int wheels;
+    private int axles;
+    private int tongues;
+    private int wagonBows;
     private int medicine;
     private int ammunition;
     private int oxenHealth;
     private final ArrayList<Item> items;
+    
+    private static final int MAX_WEIGHT_CAPACITY = 1500;
+    
+    private static final int MEDICINE_WEIGHT = 5;
+    private static final int AMMO_BOX_WEIGHT = 3;
+    
+    private static final int WHEEL_WEIGHT = 50;
+    private static final int AXLE_WEIGHT = 40;
+    private static final int TONGUE_WEIGHT = 30;
+    private static final int WAGON_BOW_WEIGHT = 10;
 
     public Inventory() {
         this.food = 0;
         this.oxen = 0;
-        this.wagonParts = 0;
+        this.wheels = 0;
+        this.axles = 0;
+        this.tongues = 0;
+        this.wagonBows = 0;
         this.medicine = 0;
         this.ammunition = 0;
         this.oxenHealth = 100;
@@ -46,20 +62,109 @@ public class Inventory {
     public void addOxen(int amount) {
         this.oxen += amount;
     }
-
-    public int getWagonParts() {
-        return wagonParts;
+    
+    public int getWheels() {
+        return wheels;
     }
-
-    public void addWagonParts(int amount) {
-        this.wagonParts += amount;
+    
+    public void addWheels(int amount) {
+        this.wheels += amount;
     }
-
-    public void useWagonParts(int amount) {
-        this.wagonParts -= amount;
-        if (this.wagonParts < 0) {
-            this.wagonParts = 0;
+    
+    public void useWheels(int amount) {
+        this.wheels -= amount;
+        if (this.wheels < 0) {
+            this.wheels = 0;
         }
+    }
+    
+    public int getAxles() {
+        return axles;
+    }
+    
+    public void addAxles(int amount) {
+        this.axles += amount;
+    }
+    
+    public void useAxles(int amount) {
+        this.axles -= amount;
+        if (this.axles < 0) {
+            this.axles = 0;
+        }
+    }
+    
+    public int getTongues() {
+        return tongues;
+    }
+    
+    public void addTongues(int amount) {
+        this.tongues += amount;
+    }
+    
+    public void useTongues(int amount) {
+        this.tongues -= amount;
+        if (this.tongues < 0) {
+            this.tongues = 0;
+        }
+    }
+    
+    public int getWagonBows() {
+        return wagonBows;
+    }
+    
+    public void addWagonBows(int amount) {
+        this.wagonBows += amount;
+    }
+    
+    public void useWagonBows(int amount) {
+        this.wagonBows -= amount;
+        if (this.wagonBows < 0) {
+            this.wagonBows = 0;
+        }
+    }
+    
+    public int getWagonParts() {
+        return wheels + axles + tongues + wagonBows;
+    }
+    
+    public void addWagonParts(int amount) {
+        int remaining = amount;
+        
+        int halfRemaining = remaining / 2;
+        addWheels(halfRemaining);
+        remaining -= halfRemaining;
+        
+        addAxles(halfRemaining);
+        remaining -= halfRemaining;
+        
+        if (remaining > 0) {
+            addTongues(remaining);
+        }
+    }
+    
+    public void useWagonParts(int amount) {
+        int remaining = amount;
+        
+        int bowsToUse = Math.min(remaining, wagonBows);
+        useWagonBows(bowsToUse);
+        remaining -= bowsToUse;
+        
+        if (remaining <= 0) return;
+        
+        int tonguesToUse = Math.min(remaining, tongues);
+        useTongues(tonguesToUse);
+        remaining -= tonguesToUse;
+        
+        if (remaining <= 0) return;
+        
+        int axlesToUse = Math.min(remaining, axles);
+        useAxles(axlesToUse);
+        remaining -= axlesToUse;
+        
+        if (remaining <= 0) return;
+        
+        int wheelsToUse = Math.min(remaining, wheels);
+        useWheels(wheelsToUse);
     }
 
     public int getMedicine() {
@@ -117,6 +222,38 @@ public class Inventory {
     public ArrayList<Item> getItems() {
         return items;
     }
+    
+    public int getCurrentWeight() {
+        int totalWeight = 0;
+        
+        totalWeight += food;
+        
+        totalWeight += medicine * MEDICINE_WEIGHT;
+        
+        totalWeight += (ammunition / 20) * AMMO_BOX_WEIGHT;
+        if (ammunition % 20 > 0) {
+            totalWeight += AMMO_BOX_WEIGHT;
+        }
+        
+        totalWeight += wheels * WHEEL_WEIGHT;
+        totalWeight += axles * AXLE_WEIGHT;
+        totalWeight += tongues * TONGUE_WEIGHT;
+        totalWeight += wagonBows * WAGON_BOW_WEIGHT;
+        
+        for (Item item : items) {
+            totalWeight += item.getWeight();
+        }
+        
+        return totalWeight;
+    }
+    
+    public int getMaxWeightCapacity() {
+        return MAX_WEIGHT_CAPACITY;
+    }
+    
+    public boolean hasWeightCapacity(int additionalWeight) {
+        return (getCurrentWeight() + additionalWeight) <= MAX_WEIGHT_CAPACITY;
+    }
 
     public String getItem(String name){
         for(int i = 0; i < items.size(); i++){
@@ -149,10 +286,17 @@ public class Inventory {
 
     public void displayInventory() {
         System.out.println("\n=== INVENTORY ===");
+        System.out.println("Load: " + getCurrentWeight() + "/" + MAX_WEIGHT_CAPACITY + " pounds");
         System.out.println("Food: " + food + " pounds");
         System.out.println("Oxen: " + oxen + " (Health: " + oxenHealth + "%)");
-        System.out.println("Wagon parts: " + wagonParts);
-        System.out.println("Medicine: " + medicine);
+        
+        System.out.println("Wagon parts:");
+        System.out.println("- Wheels: " + wheels);
+        System.out.println("- Axles: " + axles);
+        System.out.println("- Tongues: " + tongues);
+        System.out.println("- Wagon Bows: " + wagonBows);
+        
+        System.out.println("Medicine kits: " + medicine);
         System.out.println("Ammunition: " + ammunition + " rounds");
 
         if (!items.isEmpty()) {

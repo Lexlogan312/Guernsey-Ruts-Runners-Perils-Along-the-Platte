@@ -5,10 +5,19 @@ public class Item {
     private int weight;
     private double spoilRate;
 
+
     public Item(String name, String description, int value) {
         this.name = name;
         this.description = description;
         this.value = value;
+        this.weight = 1; // Default weight of 1 pound
+    }
+    
+    public Item(String name, String description, int value, int weight) {
+        this.name = name;
+        this.description = description;
+        this.value = value;
+        this.weight = weight;
     }
 
     public Item(String name, int weight, double spoilRate) {
@@ -34,7 +43,7 @@ public class Item {
     public double getSpoilRate(){
         return spoilRate;
     }
-
+  
     public int getWeight() {
         return weight;
     }
