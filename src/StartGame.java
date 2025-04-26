@@ -41,7 +41,7 @@ public class StartGame {
         weather = new Weather(monthNumber, departureLocation);
         
         // Initialize perils
-        perils = new Perils(player, inventory, weather);
+        perils = new Perils(player, inventory, weather, time);
         
         visitMarket();
         journeyToFortKearny();

@@ -2,6 +2,7 @@ import java.util.ArrayList;
 
 public class Inventory {
     private int food;
+    private String foodName;
     private int oxen;
     private int wheels;
     private int axles;
@@ -37,6 +38,10 @@ public class Inventory {
 
     public int getFood() {
         return food;
+    }
+
+    public String getFoodName(String name){
+        return this.foodName;
     }
 
     public void addFood(int amount) {
@@ -248,6 +253,35 @@ public class Inventory {
     
     public boolean hasWeightCapacity(int additionalWeight) {
         return (getCurrentWeight() + additionalWeight) <= MAX_WEIGHT_CAPACITY;
+    }
+
+    public String getItem(String name){
+        for(int i = 0; i < items.size(); i++){
+            if(items.get(i).equals(name)){
+                return name;
+            }
+        }
+        return null;
+    }
+
+    public double getSpoilRate(String name) {
+        for (int i = 0; i < items.size(); i++) {
+            Item item = items.get(i); // Grab the Item from the list
+            if (item.getName().equalsIgnoreCase(name)) { // Compare name properly
+                return item.getSpoilRate(); // Return the spoil rate
+            }
+        }
+        return 0;
+    }
+
+    public double getWeight(String name){
+        for(int i = 0; i < items.size(); i++){
+            Item item = items.get(i);
+            if (item.getName().equalsIgnoreCase(name)) {
+                return item.getWeight();
+            }
+        }
+        return 0;
     }
 
     public void displayInventory() {

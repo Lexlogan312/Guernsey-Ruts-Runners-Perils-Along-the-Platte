@@ -2,7 +2,9 @@ public class Item {
     private final String name;
     private final String description;
     private final int value;
-    private final int weight; // Weight in pounds
+    private int weight;
+    private double spoilRate;
+
 
     public Item(String name, String description, int value) {
         this.name = name;
@@ -18,6 +20,14 @@ public class Item {
         this.weight = weight;
     }
 
+    public Item(String name, int weight, double spoilRate) {
+        this.name = name;
+        this.weight = weight;
+        this.spoilRate = spoilRate;
+        this.description = "";
+        this.value = 0;
+    }
+
     public String getName() {
         return name;
     }
@@ -29,7 +39,11 @@ public class Item {
     public int getValue() {
         return value;
     }
-    
+
+    public double getSpoilRate(){
+        return spoilRate;
+    }
+  
     public int getWeight() {
         return weight;
     }

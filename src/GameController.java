@@ -12,6 +12,7 @@ public class GameController {
     private Weather weather;
     private Hunting hunting;
     private Perils perils;
+    private Job job;
 
     // Trail setup
     private String trail;
@@ -29,6 +30,13 @@ public class GameController {
     private int initialMedicineUsed = 0;
     private int initialAmmoUsed = 0;
 
+    //Food types, and spoil rates
+    private static final String[] FOOD_TYPES = {
+            "Flour", "Bacon", "Dried Beans", "Rice", "Coffee", "Sugar", "Dried Fruit", "Hardtack"
+    };
+    private static final double[] FOOD_SPOILRATE = {
+            .05, .15, .02, .03, .005, .04, .1, .01
+    };
 
     // Listeners
     private final ArrayList<Consumer<String>> messageListeners = new ArrayList<>();
@@ -40,13 +48,13 @@ public class GameController {
      */
     public GameController() {
         // Initialize with defaults, will be overwritten by dialogs
-        player = new Player("Player", "Male"); // Default player
+        player = new Player("Player", "Male", job); // Default player
         inventory = new Inventory();
         time = new Time(1848, 3); // Default to March 1848
         map = new Map(1); // Default to Oregon Trail
         weather = new Weather(time.getMonth(), map.getStartingLocation());
         hunting = new Hunting(inventory); // Needs inventory
-        perils = new Perils(player, inventory, weather); // Needs player, inventory, weather
+        perils = new Perils(player, inventory, weather, time); // Needs player, inventory, weather, time
 
         // Set the message listener for Perils class right away
         perils.setMessageListener(this::notifyListeners);
@@ -65,7 +73,7 @@ public class GameController {
         // Re-initialize components that depend on player choices if needed
         // (e.g., Perils might depend on player gender or family size indirectly)
         if (player != null && inventory != null && weather != null) {
-            perils = new Perils(player, inventory, weather);
+            perils = new Perils(player, inventory, weather, time);
             perils.setMessageListener(this::notifyListeners);
         } else {
             System.err.println("Error in startNewGame: Player, Inventory, or Weather is null.");
@@ -117,12 +125,12 @@ public class GameController {
     // --- Game Setup Methods (Called by Dialogs) ---
 
     /** Sets up player with name, gender and family members. */
-    public void playerSetup(String name, String gender, String[] familyMembers) {
-        player = new Player(name, gender);
+    public void playerSetup(String name, String gender, String[] familyMembers, Job job) {
+        player = new Player(name, gender, job);
         player.setFamilyMembers(familyMembers);
         // Re-initialize Perils if it depends on player details
         if (inventory != null && weather != null) {
-            perils = new Perils(player, inventory, weather);
+            perils = new Perils(player, inventory, weather, time);
             perils.setMessageListener(this::notifyListeners);
         }
     }
@@ -154,7 +162,7 @@ public class GameController {
         if (time != null) {
             weather = new Weather(time.getMonth(), map.getStartingLocation());
             if (player != null && inventory != null) {
-                perils = new Perils(player, inventory, weather);
+                perils = new Perils(player, inventory, weather, time);
                 perils.setMessageListener(this::notifyListeners);
             }
         }
@@ -176,7 +184,7 @@ public class GameController {
 
             // Ensure player and inventory are initialized before Perils
             if (player != null && inventory != null) {
-                perils = new Perils(player, inventory, weather);
+                perils = new Perils(player, inventory, weather, time);
                 perils.setMessageListener(this::notifyListeners);
             } else {
                 System.err.println("Error initializing Perils in selectDepartureMonth: Player or Inventory is null.");
@@ -424,9 +432,15 @@ public class GameController {
         }
 
         map.travel(adjustedDistance);
+        int randomFood = (int) (Math.random() * 8 + 1) - 1;
+
+        String itemName = inventory.getItem(FOOD_TYPES[randomFood]);
+        double spoilRate = inventory.getSpoilRate(itemName);
 
         int foodConsumedToday = player.getFamilySize() * 2; // Store desired amount for message
         consumeDailyFood(time.getTotalDays() + 1); // Consume food, handles shortage
+
+        foodConsumedToday +=  (int) spoilRate * inventory.getWeight(itemName);
 
         notifyListeners("You traveled " + adjustedDistance + " miles today.\n" +
                 "Food consumed: " + foodConsumedToday + " pounds."); // Report desired consumption
@@ -458,6 +472,12 @@ public class GameController {
         consumeDailyFood(time.getTotalDays() + 1); // Consume food while resting
         notifyListeners("Food consumed: " + foodConsumedToday + " pounds.");
 
+        int moraleHealthRecovered = 5 + (int)(Math.random() * 11 + 2);
+        if(player.getJob().equals("Preacher")){
+            moraleHealthRecovered += 10;
+            player.increaseMorale(moraleHealthRecovered);
+        }
+
         if (Math.random() < 0.2) { // Chance to find food
             int foodFound = 2 + (int)(Math.random() * 9);
             inventory.addFood(foodFound);
@@ -473,7 +493,6 @@ public class GameController {
 
         if (inventory.getAmmunition() <= 0) {
             notifyListeners("You don't have any ammunition for hunting!");
-            // Don't advance day if they can't hunt
             notifyGameStateChanged(); // Update GUI in case button state needs refresh
             return;
         }
@@ -486,17 +505,38 @@ public class GameController {
         }
         inventory.useAmmunition(ammoUsed);
 
-        double baseSuccessChance = 0.6; // Simplified success chance
+        double baseSuccessChance = 0.6;
+
+        // 🛠 Apply Hunter bonus to success chance
+        if (player.getJob() == Job.HUNTER) {
+            baseSuccessChance += 0.15; // 15% bonus to success
+        }
+
         boolean success = Math.random() < baseSuccessChance;
 
         if (success) {
-            // ... (determine animal and foodGained as before) ...
             double animalChance = Math.random();
-            String animal; int foodGained;
-            if (animalChance < 0.1) { animal = "bison"; foodGained = 250 + (int)(Math.random() * 251); }
-            else if (animalChance < 0.3) { animal = "deer"; foodGained = 80 + (int)(Math.random() * 121); }
-            else if (animalChance < 0.6) { animal = "rabbit"; foodGained = 5 + (int)(Math.random() * 11); }
-            else { animal = "squirrel"; foodGained = 2 + (int)(Math.random() * 4); }
+            String animal;
+            int foodGained;
+
+            if (animalChance < 0.1) {
+                animal = "bison";
+                foodGained = 250 + (int)(Math.random() * 251);
+            } else if (animalChance < 0.3) {
+                animal = "deer";
+                foodGained = 80 + (int)(Math.random() * 121);
+            } else if (animalChance < 0.6) {
+                animal = "rabbit";
+                foodGained = 5 + (int)(Math.random() * 11);
+            } else {
+                animal = "squirrel";
+                foodGained = 2 + (int)(Math.random() * 4);
+            }
+
+            // 🛠 Apply Hunter bonus to food gained
+            if (player.getJob() == Job.HUNTER) {
+                foodGained = (int)(foodGained * 1.25); // 25% more food
+            }
 
             notifyListeners("Great shot! You got a " + animal + "!\n" +
                     "Gained " + foodGained + " lbs food. Used " + ammoUsed + " ammo.");
@@ -506,7 +546,6 @@ public class GameController {
                     "Used " + ammoUsed + " ammo.");
         }
 
-        // Hunting takes a day, advance time and check events
         advanceDay(true);
     }
 
@@ -669,7 +708,6 @@ public class GameController {
         }
         return null;
     }
-
     // --- Getters for Game State (Used by GUI) ---
 
     public Player getPlayer() { return player; }
