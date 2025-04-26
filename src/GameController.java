@@ -432,15 +432,20 @@ public class GameController {
         }
 
         map.travel(adjustedDistance);
-        int randomFood = (int) (Math.random() * 8 + 1) - 1;
+        int randomFood = (int) (Math.random() * FOOD_TYPES.length);
 
         String itemName = inventory.getItem(FOOD_TYPES[randomFood]);
-        double spoilRate = inventory.getSpoilRate(itemName);
-
         int foodConsumedToday = player.getFamilySize() * 2; // Store desired amount for message
         consumeDailyFood(time.getTotalDays() + 1); // Consume food, handles shortage
 
-        foodConsumedToday +=  (int) spoilRate * inventory.getWeight(itemName);
+        // Calculate spoilage only if the food item exists in inventory
+        if (itemName != null) {
+            double spoilRate = inventory.getSpoilRate(itemName);
+            int spoiledFood = (int)(spoilRate * inventory.getWeight(itemName));
+            foodConsumedToday += spoiledFood;
+            // Also reduce total food by spoilage amount
+            inventory.consumeFood(spoiledFood);
+        }
 
         notifyListeners("You traveled " + adjustedDistance + " miles today.\n" +
                 "Food consumed: " + foodConsumedToday + " pounds."); // Report desired consumption

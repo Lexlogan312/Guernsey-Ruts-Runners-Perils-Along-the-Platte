@@ -103,7 +103,7 @@ public class StartGame {
                 System.out.println("Invalid name. Please try again.");
             }
         }
-        player = new Player(playerName, playerGender);
+        player = new Player(playerName, playerGender, Job.FARMER);
     }
     
     public void setupFamilyMembers() {
