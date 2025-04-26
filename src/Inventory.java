@@ -257,8 +257,9 @@ public class Inventory {
 
     public String getItem(String name){
         for(int i = 0; i < items.size(); i++){
-            if(items.get(i).equals(name)){
-                return name;
+            Item item = items.get(i);
+            if(item.getName().equalsIgnoreCase(name)){
+                return item.getName();
             }
         }
         return null;

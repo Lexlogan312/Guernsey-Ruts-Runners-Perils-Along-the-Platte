@@ -9,6 +9,7 @@ import java.awt.*;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
+import java.util.HashMap;
 
 public class Market {
     private final Player player;
@@ -162,27 +163,7 @@ public class Market {
             player.spendMoney(totalFoodCost);
             inventory.addFood(foodAmount);
             System.out.println("You bought " + foodAmount + " pounds of food for $" + totalFoodCost);
-
-        int amount = getValidAmount(scanner);
-        int totalCost = amount * FOOD_PRICE;
-
-        if (totalCost > player.getMoney()) {
-            System.out.println("You don't have enough money for that!");
-            return;
-
         }
-
-        // Food weight is just its amount (1 pound = 1 pound of weight)
-        if (!inventory.hasWeightCapacity(amount)) {
-            System.out.println("Your wagon cannot carry that much additional weight!");
-            System.out.println("Current load: " + inventory.getCurrentWeight() + "/" + inventory.getMaxWeightCapacity() + " pounds");
-            System.out.println("Additional weight: " + amount + " pounds");
-            return;
-        }
-
-        player.spendMoney(totalCost);
-        inventory.addFood(amount);
-        System.out.println("You bought " + amount + " pounds of food for $" + totalCost);
     }
 
     private void buyWagonParts(Scanner scanner) {
@@ -238,18 +219,16 @@ public class Market {
         System.out.println("How many would you like to buy?");
 
         int partsAmount = getValidAmount(scanner);
-        int totalWagonCost = partsAmount * WAGON_PART_PRICE;
-        int totalWeight = amount * WHEEL_WEIGHT;
-      
+        int totalWagonCost = partsAmount * WHEEL_PRICE;
+        int totalWeight = partsAmount * WHEEL_WEIGHT;
+       
         if (player.getJob() == Job.MERCHANT) {
             totalWagonCost = (int) Math.round(totalWagonCost * 0.85); // 15% off
         }
+        
         if (totalWagonCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
-        } else {
-            player.spendMoney(totalWagonCost);
-            inventory.addWagonParts(partsAmount);
-            System.out.println("You bought " + partsAmount + " wagon parts for $" + totalWagonCost);
+            return;
         }
 
         if (!inventory.hasWeightCapacity(totalWeight)) {
@@ -259,9 +238,9 @@ public class Market {
             return;
         }
 
-        player.spendMoney(totalCost);
-        inventory.addWheels(amount);
-        System.out.println("You bought " + amount + " wheels for $" + totalCost);
+        player.spendMoney(totalWagonCost);
+        inventory.addWheels(partsAmount);
+        System.out.println("You bought " + partsAmount + " wheels for $" + totalWagonCost);
     }
 
     private void buyAxles(Scanner scanner) {
@@ -271,11 +250,15 @@ public class Market {
         System.out.println("You currently have: " + inventory.getAxles() + " axles");
         System.out.println("How many would you like to buy?");
 
-        int amount = getValidAmount(scanner);
-        int totalCost = amount * AXLE_PRICE;
-        int totalWeight = amount * AXLE_WEIGHT;
+        int partsAmount = getValidAmount(scanner);
+        int totalAxleCost = partsAmount * AXLE_PRICE;
+        int totalWeight = partsAmount * AXLE_WEIGHT;
 
-        if (totalCost > player.getMoney()) {
+        if (player.getJob() == Job.MERCHANT) {
+            totalAxleCost = (int) Math.round(totalAxleCost * 0.85); // 15% off
+        }
+
+        if (totalAxleCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
             return;
         }
@@ -287,9 +270,9 @@ public class Market {
             return;
         }
 
-        player.spendMoney(totalCost);
-        inventory.addAxles(amount);
-        System.out.println("You bought " + amount + " axles for $" + totalCost);
+        player.spendMoney(totalAxleCost);
+        inventory.addAxles(partsAmount);
+        System.out.println("You bought " + partsAmount + " axles for $" + totalAxleCost);
     }
 
     private void buyTongues(Scanner scanner) {
@@ -299,11 +282,15 @@ public class Market {
         System.out.println("You currently have: " + inventory.getTongues() + " tongues");
         System.out.println("How many would you like to buy?");
 
-        int amount = getValidAmount(scanner);
-        int totalCost = amount * TONGUE_PRICE;
-        int totalWeight = amount * TONGUE_WEIGHT;
+        int partsAmount = getValidAmount(scanner);
+        int totalTongueCost = partsAmount * TONGUE_PRICE;
+        int totalWeight = partsAmount * TONGUE_WEIGHT;
 
-        if (totalCost > player.getMoney()) {
+        if (player.getJob() == Job.MERCHANT) {
+            totalTongueCost = (int) Math.round(totalTongueCost * 0.85); // 15% off
+        }
+
+        if (totalTongueCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
             return;
         }
@@ -315,9 +302,9 @@ public class Market {
             return;
         }
 
-        player.spendMoney(totalCost);
-        inventory.addTongues(amount);
-        System.out.println("You bought " + amount + " tongues for $" + totalCost);
+        player.spendMoney(totalTongueCost);
+        inventory.addTongues(partsAmount);
+        System.out.println("You bought " + partsAmount + " tongues for $" + totalTongueCost);
     }
 
     private void buyWagonBows(Scanner scanner) {
@@ -327,11 +314,15 @@ public class Market {
         System.out.println("You currently have: " + inventory.getWagonBows() + " wagon bows");
         System.out.println("How many would you like to buy?");
 
-        int amount = getValidAmount(scanner);
-        int totalCost = amount * WAGON_BOW_PRICE;
-        int totalWeight = amount * WAGON_BOW_WEIGHT;
+        int partsAmount = getValidAmount(scanner);
+        int totalBowCost = partsAmount * WAGON_BOW_PRICE;
+        int totalWeight = partsAmount * WAGON_BOW_WEIGHT;
 
-        if (totalCost > player.getMoney()) {
+        if (player.getJob() == Job.MERCHANT) {
+            totalBowCost = (int) Math.round(totalBowCost * 0.85); // 15% off
+        }
+
+        if (totalBowCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
             return;
         }
@@ -343,9 +334,9 @@ public class Market {
             return;
         }
 
-        player.spendMoney(totalCost);
-        inventory.addWagonBows(amount);
-        System.out.println("You bought " + amount + " wagon bows for $" + totalCost);
+        player.spendMoney(totalBowCost);
+        inventory.addWagonBows(partsAmount);
+        System.out.println("You bought " + partsAmount + " wagon bows for $" + totalBowCost);
     }
 
     private void buyMedicine(Scanner scanner) {
@@ -357,16 +348,15 @@ public class Market {
 
         int medicineAmount = getValidAmount(scanner);
         int totalMedicineCost = medicineAmount * MEDICINE_PRICE;
-        int totalWeight = amount * MEDICINE_WEIGHT;
+        int totalWeight = medicineAmount * MEDICINE_WEIGHT;
+        
         if (player.getJob() == Job.MERCHANT) {
             totalMedicineCost = (int) Math.round(totalMedicineCost * 0.85); // 15% off
         }
+        
         if (totalMedicineCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
-        } else {
-            player.spendMoney(totalMedicineCost);
-            inventory.addMedicine(medicineAmount);
-            System.out.println("You bought " + medicineAmount + " medicine for $" + totalMedicineCost);
+            return;
         }
 
         if (!inventory.hasWeightCapacity(totalWeight)) {
@@ -376,9 +366,9 @@ public class Market {
             return;
         }
 
-        player.spendMoney(totalCost);
-        inventory.addMedicine(amount);
-        System.out.println("You bought " + amount + " medicine kits for $" + totalCost);
+        player.spendMoney(totalMedicineCost);
+        inventory.addMedicine(medicineAmount);
+        System.out.println("You bought " + medicineAmount + " medicine kits for $" + totalMedicineCost);
     }
 
     private void buyAmmunition(Scanner scanner) {
@@ -390,16 +380,15 @@ public class Market {
 
         int boxesAmount = getValidAmount(scanner);
         int totalAmmoCost = boxesAmount * AMMUNITION_PRICE;
-              int totalWeight = boxes * AMMO_WEIGHT;
+        int totalWeight = boxesAmount * AMMO_WEIGHT;
+        
         if (player.getJob() == Job.MERCHANT) {
             totalAmmoCost = (int) Math.round(totalAmmoCost * 0.85); // 15% off
         }
+        
         if (totalAmmoCost > player.getMoney()) {
             System.out.println("You don't have enough money for that!");
-        } else {
-            player.spendMoney(totalAmmoCost);
-            inventory.addAmmunition(boxesAmount * 20);
-            System.out.println("You bought " + boxesAmount + " boxes of ammunition for $" + totalAmmoCost);
+            return;
         }
 
         if (!inventory.hasWeightCapacity(totalWeight)) {
@@ -409,9 +398,9 @@ public class Market {
             return;
         }
 
-        player.spendMoney(totalCost);
-        inventory.addAmmunition(boxes * 20);
-        System.out.println("You bought " + boxes + " boxes of ammunition for $" + totalCost);
+        player.spendMoney(totalAmmoCost);
+        inventory.addAmmunition(boxesAmount * 20);
+        System.out.println("You bought " + boxesAmount + " boxes of ammunition for $" + totalAmmoCost);
     }
 
     private int getValidAmount(Scanner scanner) {
@@ -707,21 +696,23 @@ public class Market {
             }
 
             if (totalCost > player.getMoney()) {
-                JOptionPane.showMessageDialog(null,
-                        "You don't have enough money for that purchase!",
-                        "Insufficient Funds",
-                        JOptionPane.WARNING_MESSAGE);
+                new WagonPartsPurchaseDialog(
+                    SwingUtilities.getWindowAncestor(moneyLabel),
+                    "You don't have enough money for that purchase!",
+                    "Insufficient Funds"
+                ).setVisible(true);
                 return;
             }
 
             // Check if the wagon has enough capacity for this purchase
             if (!inventory.hasWeightCapacity(weight)) {
-                JOptionPane.showMessageDialog(null,
-                        "Your wagon cannot carry that much additional weight!\n" +
-                                "Current load: " + inventory.getCurrentWeight() + "/" + inventory.getMaxWeightCapacity() + " lbs\n" +
-                                "Additional weight: " + weight + " lbs",
-                        "Wagon Overloaded",
-                        JOptionPane.WARNING_MESSAGE);
+                new WagonPartsPurchaseDialog(
+                    SwingUtilities.getWindowAncestor(moneyLabel),
+                    "Your wagon cannot carry that much additional weight!\n" +
+                    "Current load: " + inventory.getCurrentWeight() + "/" + inventory.getMaxWeightCapacity() + " lbs\n" +
+                    "Additional weight: " + weight + " lbs",
+                    "Wagon Overloaded"
+                ).setVisible(true);
                 return;
             }
 
@@ -769,10 +760,11 @@ public class Market {
             }
 
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(null,
-                    "Please enter a valid number for quantity.",
-                    "Invalid Input",
-                    JOptionPane.WARNING_MESSAGE);
+            new WagonPartsPurchaseDialog(
+                SwingUtilities.getWindowAncestor(moneyLabel),
+                "Please enter a valid number for quantity.",
+                "Invalid Input"
+            ).setVisible(true);
         }
     }
 
@@ -953,10 +945,10 @@ public class Market {
                             .append(" lbs)\n");
 
                     double spoilRate = FOOD_SPOILRATE[i];
-                    if(player.getJob().equals("Farmer")){
+                    if(player.getJob() == Job.FARMER){
                          spoilRate *= 3;
                     }
-                    Item item = new Item(FOOD_TYPES[i], pounds, spoilRate);
+                    Item item = new Item(FOOD_TYPES[i], FOOD_WEIGHTS[i], spoilRate);
                     inventory.addItem(item);
                 }
             }
@@ -973,9 +965,6 @@ public class Market {
                 new FoodPurchaseDialog(foodDialog, purchaseSummary.toString(), "Purchase Complete").setVisible(true);
                 foodDialog.dispose();
             }
-
-            // Optional: show summary popup or continue to next screen
-            JOptionPane.showMessageDialog(null, purchaseSummary.toString(), "Purchase Summary", JOptionPane.INFORMATION_MESSAGE);
         });
 
         cancelButton.addActionListener(e -> {
