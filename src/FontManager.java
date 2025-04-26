@@ -12,65 +12,28 @@ public class FontManager {
      */
     public static void loadCustomFonts() {
         try {
-            // Try multiple methods to load the font
-            Font baseFont = null;
-            Exception lastException = null;
+            // Use the ResourceLoader to load the fonts
+            Font baseFont = ResourceLoader.loadFont("fonts/Kirsty Rg.otf");
+            Font boldFont = ResourceLoader.loadFont("fonts/Kirsty Bd.otf");
             
-            // Try method 1: direct file path
-            try {
-                File fontFile = new File("resources/fonts/Kirsty Rg.otf");
-                if (fontFile.exists()) {
-                    baseFont = Font.createFont(Font.TRUETYPE_FONT, fontFile);
-                    System.out.println("Font loaded using direct file path");
-                }
-            } catch (Exception e) {
-                lastException = e;
-                System.err.println("Failed to load font using direct file path: " + e.getMessage());
+            if (baseFont == null) {
+                throw new Exception("Could not load regular font using ResourceLoader");
             }
             
-            // Try method 2: absolute path
-            if (baseFont == null) {
-                try {
-                    String fontPath = System.getProperty("user.dir") + "/resources/fonts/Kirsty Rg.otf";
-                    File fontFile = new File(fontPath);
-                    if (fontFile.exists()) {
-                        baseFont = Font.createFont(Font.TRUETYPE_FONT, fontFile);
-                        System.out.println("Font loaded using absolute path: " + fontPath);
-                    }
-                } catch (Exception e) {
-                    lastException = e;
-                    System.err.println("Failed to load font using absolute path: " + e.getMessage());
-                }
-            }
-            
-            // Try method 3: resource stream (original method)
-            if (baseFont == null) {
-                try {
-                    InputStream is = FontManager.class.getResourceAsStream("/resources/fonts/Kirsty Rg.otf");
-                    if (is != null) {
-                        baseFont = Font.createFont(Font.TRUETYPE_FONT, is);
-                        System.out.println("Font loaded using resource stream");
-                    }
-                } catch (Exception e) {
-                    lastException = e;
-                    System.err.println("Failed to load font using resource stream: " + e.getMessage());
-                }
-            }
-            
-            // If all methods failed, throw the last exception
-            if (baseFont == null) {
-                throw lastException != null ? lastException : 
-                    new Exception("Could not find font file using any method");
+            if (boldFont == null) {
+                System.err.println("Could not load bold font using ResourceLoader. Using regular font with bold style.");
+                boldFont = baseFont.deriveFont(Font.BOLD);
             }
             
             // Create different sizes and styles
             WESTERN_FONT = baseFont.deriveFont(Font.PLAIN, 14f);
-            WESTERN_FONT_BOLD = baseFont.deriveFont(Font.BOLD, 14f);
-            WESTERN_FONT_TITLE = baseFont.deriveFont(Font.BOLD, 32f);
+            WESTERN_FONT_BOLD = boldFont.deriveFont(Font.BOLD, 14f);
+            WESTERN_FONT_TITLE = boldFont.deriveFont(Font.BOLD, 32f);
             
             // Register with the Graphics Environment
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             ge.registerFont(baseFont);
+            ge.registerFont(boldFont);
             
         } catch (Exception e) {
             // Fallback to a similar looking font if custom font fails to load
