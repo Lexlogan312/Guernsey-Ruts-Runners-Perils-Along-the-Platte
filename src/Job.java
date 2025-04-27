@@ -5,5 +5,6 @@ public enum Job {
     MERCHANT,
     DOCTOR,
     HUNTER,
+    TEACHER,
     PREACHER
 }

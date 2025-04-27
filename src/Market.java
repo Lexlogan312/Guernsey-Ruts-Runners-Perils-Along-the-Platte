@@ -630,6 +630,7 @@ public class Market {
         buttonPanel.add(finishButton);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
+        updatePricesForJob();
         return mainPanel;
     }
 
@@ -765,6 +766,37 @@ public class Market {
                 "Please enter a valid number for quantity.",
                 "Invalid Input"
             ).setVisible(true);
+        }
+    }
+
+    private int applyJobPriceAdjustment(int basePrice) {
+        // Apply Merchant discount if applicable
+        if (player.getJob() == Job.MERCHANT) {
+            // 5-10% discount for merchants
+            double discount = 0.05 + (Math.random() * 0.05);
+            return (int)(basePrice * (1.0 - discount));
+        }
+        return basePrice;
+    }
+    
+    /**
+     * Updates prices in the GUI based on job bonuses
+     */
+    private void updatePricesForJob() {
+        // Apply merchant discount to all displayed prices if applicable
+        if (player.getJob() == Job.MERCHANT) {
+            for (JLabel priceLabel : totalCostLabels) {
+                if (priceLabel != null && priceLabel.getText().startsWith("$")) {
+                    try {
+                        String priceText = priceLabel.getText().substring(1);
+                        int originalPrice = Integer.parseInt(priceText);
+                        int discountedPrice = applyJobPriceAdjustment(originalPrice);
+                        priceLabel.setText("$" + discountedPrice);
+                    } catch (NumberFormatException e) {
+                        // Skip if not a valid number
+                    }
+                }
+            }
         }
     }
 

@@ -137,11 +137,11 @@ public class GUI extends JPanel {
 
         String[] categories = {
                 "Trail", "Date", "Days", "Location", "Distance",
-                "Next Landmark", "Weather", "Health", "Food", "Oxen Health"
+                "Next Landmark", "Weather", "Health", "Food", "Oxen Health", "Job"
         };
 
         // Define weights for columns - give more space to Location/Next Landmark
-        double[] weights = {0.8, 0.8, 0.5, 1.5, 0.8, 1.5, 1.0, 0.8, 0.8, 1.0};
+        double[] weights = {0.8, 0.8, 0.5, 1.5, 0.8, 1.5, 1.0, 0.8, 0.8, 1.0, 1.0};
 
 
         for (int i = 0; i < categories.length; i++) {
@@ -323,7 +323,7 @@ public class GUI extends JPanel {
                 System.err.println("GUI Update skipped: GameController components not fully initialized.");
                 return;
             }
-
+            
             // Update status labels
             updateStatusLabels();
 
@@ -355,6 +355,33 @@ public class GUI extends JPanel {
         });
     }
 
+    /**
+     * Gets a short description of the job bonus for display
+     * @param job The player's job
+     * @return A short description of the job bonus
+     */
+    private String getJobBonusDescription(Job job) {
+        switch (job) {
+            case FARMER:
+                return "reduced food spoilage";
+            case BLACKSMITH:
+                return "reduced part breakage";
+            case CARPENTER:
+                return "increased repair skill";
+            case HUNTER:
+                return "increased travel speed";
+            case DOCTOR:
+                return "increased health";
+            case TEACHER:
+                return "increased morale";
+            case PREACHER:
+                return "increased healing";
+            case MERCHANT:
+                return "reduced prices";
+            default:
+                return "";
+        }
+    }
 
     /**
      * Updates status labels with current game values
@@ -383,6 +410,17 @@ public class GUI extends JPanel {
         statusLabels.get("Health").setText(player.getHealthStatus());
         statusLabels.get("Food").setText(inventory.getFood() + " lbs");
         statusLabels.get("Oxen Health").setText(inventory.getOxenHealth() + "%");
+        
+        // Add job information without prefix or bonus descriptions
+        Job playerJob = player.getJob();
+        if (playerJob != null) {
+            // Convert UPPERCASE to Regular Case
+            String jobName = playerJob.toString();
+            jobName = jobName.charAt(0) + jobName.substring(1).toLowerCase();
+            statusLabels.get("Job").setText(jobName);
+        } else {
+            statusLabels.get("Job").setText("None");
+        }
     }
 
     /**
@@ -439,13 +477,39 @@ public class GUI extends JPanel {
         ));
 
         // Money info panel
-        JPanel moneyPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel moneyPanel = new JPanel(new GridLayout(2, 1, 0, 5));
         moneyPanel.setBackground(PANEL_COLOR);
-        JLabel moneyLabel = new JLabel("Money: $" + player.getMoney());
+        
+        JLabel moneyLabel = new JLabel("Money: $" + player.getMoney(), JLabel.CENTER);
         moneyLabel.setFont(FontManager.getBoldWesternFont(16));
         moneyLabel.setForeground(TEXT_COLOR);
+        
+        // Add job information with bonus
+        Job playerJob = player.getJob();
+        String jobDisplayText = "Job: ";
+        if (playerJob != null) {
+            // Convert UPPERCASE to Regular Case
+            String jobName = playerJob.toString();
+            jobName = jobName.charAt(0) + jobName.substring(1).toLowerCase();
+            
+            // Add job name without special symbols
+            String jobBonusText = getJobBonusDescription(playerJob);
+            if (jobBonusText != null && !jobBonusText.isEmpty()) {
+                jobDisplayText += jobName + " (" + jobBonusText + ")";
+            } else {
+                jobDisplayText += jobName;
+            }
+        } else {
+            jobDisplayText += "None";
+        }
+        
+        JLabel jobLabel = new JLabel(jobDisplayText, JLabel.CENTER);
+        jobLabel.setFont(FontManager.getBoldWesternFont(14));
+        jobLabel.setForeground(TEXT_COLOR);
+        
         moneyPanel.add(moneyLabel);
-
+        moneyPanel.add(jobLabel);
+        
         contentPanel.add(moneyPanel, BorderLayout.NORTH);
 
         // Inventory items panel (using GridLayout for organization)

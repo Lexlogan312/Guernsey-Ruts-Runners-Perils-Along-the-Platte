@@ -48,7 +48,7 @@ public class StartupDialog extends JDialog {
         
         initializeUI();
         pack();
-        // Set a more compact height while ensuring all content is visible
+        // Set dialog size back to original size
         setSize(Math.max(getWidth(), 850), Math.max(getHeight(), 400));
         setLocationRelativeTo(owner);
         setResizable(false);
@@ -251,17 +251,32 @@ public class StartupDialog extends JDialog {
         occupationLabel.setFont(FontManager.getBoldWesternFont(14f));
         occupationLabel.setForeground(TEXT_COLOR);
 
+        // Create occupation options with descriptions
+        String[] occupationLabels = {
+                "Farmer - Farmers have experience with plants and animals. Benefit: Food spoils more slowly.",
+                "Blacksmith - Blacksmiths are skilled with metal and tools. Benefit: Wagon parts break less often.",
+                "Carpenter - Carpenters can repair wagons efficiently. Benefit: Better repair skills and faster fixes.",
+                "Merchant - Merchants are skilled traders. Benefit: Better prices when buying and selling goods.",
+                "Doctor - Doctors can treat illnesses and injuries. Benefit: Party health depletes more slowly.",
+                "Hunter - Hunters are expert marksmen. Benefit: Increased travel speed and hunting efficiency.",
+                "Teacher - Teachers boost morale through education. Benefit: Party morale decreases more slowly.",
+                "Preacher - Preachers provide spiritual guidance. Benefit: Improved healing and morale boost."
+        };
+        
+        // These are the actual values we'll use for job creation
         String[] occupations = {
                 "Farmer", "Blacksmith", "Carpenter", "Merchant",
                 "Doctor", "Hunter", "Teacher", "Preacher"
         };
 
-        occupationComboBox = new JComboBox<>(occupations);
+        occupationComboBox = new JComboBox<>(occupationLabels);
         occupationComboBox.setFont(FontManager.getWesternFont(14f));
         occupationComboBox.setForeground(TEXT_COLOR);
         occupationComboBox.setBackground(PANEL_COLOR);
-
-
+        
+        // Make the dropdown wide enough for the descriptions
+        occupationComboBox.setPreferredSize(new Dimension(400, 30));
+        
         occupationPanel.add(occupationLabel, BorderLayout.WEST);
         occupationPanel.add(occupationComboBox, BorderLayout.CENTER);
         formPanel.add(occupationPanel);
@@ -577,7 +592,9 @@ public class StartupDialog extends JDialog {
         }
 
         String selectedOccupation = (String) occupationComboBox.getSelectedItem();
-        Job job = Job.valueOf(selectedOccupation.toUpperCase());
+        // Extract just the job name from the description (takes text before the first hyphen)
+        String jobName = selectedOccupation.split(" - ")[0];
+        Job job = Job.valueOf(jobName.toUpperCase());
         gameController.playerSetup(nameField.getText().trim(), gender, familyMembers, job);
         
         // Save trail choice
@@ -600,5 +617,33 @@ public class StartupDialog extends JDialog {
         }
         
         gameController.selectDepartureMonth(monthChoice);
+    }
+
+    /**
+     * Gets a detailed description for each job type
+     * @param jobName The job name
+     * @return A description of the job and its benefits
+     */
+    private String getJobDescription(String jobName) {
+        switch (jobName) {
+            case "Farmer":
+                return "Farmers have experience with plants and animals. Benefit: Food spoils more slowly.";
+            case "Blacksmith":
+                return "Blacksmiths are skilled with metal and tools. Benefit: Wagon parts break less often.";
+            case "Carpenter":
+                return "Carpenters can repair wagons efficiently. Benefit: Better repair skills and faster fixes.";
+            case "Merchant":
+                return "Merchants are skilled traders. Benefit: Better prices when buying and selling goods.";
+            case "Doctor":
+                return "Doctors can treat illnesses and injuries. Benefit: Party health depletes more slowly.";
+            case "Hunter":
+                return "Hunters are expert marksmen. Benefit: Increased travel speed and hunting efficiency.";
+            case "Teacher":
+                return "Teachers boost morale through education. Benefit: Party morale decreases more slowly.";
+            case "Preacher":
+                return "Preachers provide spiritual guidance. Benefit: Improved healing and morale boost.";
+            default:
+                return "Select an occupation for your journey west.";
+        }
     }
 } 

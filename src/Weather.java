@@ -3,7 +3,7 @@ public class Weather {
     private int severity; // 1-5 scale, 1 = best, 5 = worst
 
     public Weather(int month, String location) {
-        generateWeather(month, location);
+        generateWeather(month, location != null ? location : "");
     }
 
     private void generateWeather(int month, String location) {
@@ -44,21 +44,30 @@ public class Weather {
                 snowProbability = 0.1;
                 fogProbability = 0.1;
                 break;
+            default: // Default to spring-like weather for invalid months
+                rainProbability = 0.4;
+                snowProbability = 0.1;
+                clearProbability = 0.3;
+                cloudyProbability = 0.15;
+                fogProbability = 0.05;
+                break;
         }
 
         // Adjust probabilities further based on specific locations
-        if (location.contains("Mountains")) {
-            snowProbability += 0.2;
-            rainProbability += 0.1;
-            fogProbability += 0.1;
-            clearProbability -= 0.2;
-        } else if (location.contains("River")) {
-            fogProbability += 0.15;
-            rainProbability += 0.1;
-        } else if (location.contains("Desert") || location.contains("Pass")) {
-            clearProbability += 0.2;
-            rainProbability -= 0.1;
-            if (rainProbability < 0) rainProbability = 0;
+        if (location != null) {
+            if (location.contains("Mountains")) {
+                snowProbability += 0.2;
+                rainProbability += 0.1;
+                fogProbability += 0.1;
+                clearProbability -= 0.2;
+            } else if (location.contains("River")) {
+                fogProbability += 0.15;
+                rainProbability += 0.1;
+            } else if (location.contains("Desert") || location.contains("Pass")) {
+                clearProbability += 0.2;
+                rainProbability -= 0.1;
+                if (rainProbability < 0) rainProbability = 0;
+            }
         }
 
         // Determine the weather

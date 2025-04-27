@@ -63,6 +63,12 @@ public class TradingDialog extends JDialog {
         setLayout(new BorderLayout(10, 10));
         getContentPane().setBackground(BACKGROUND_COLOR);
         
+        if (player.getJob() == Job.MERCHANT) {
+            // 5-10% additional discount for merchants
+            double merchantDiscount = 0.05 + (new Random().nextDouble() * 0.05);
+            this.priceFactor *= (1.0 - merchantDiscount);
+        }
+        
         // Top panel with title and info
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(BACKGROUND_COLOR);

@@ -103,4 +103,100 @@ public class Hunting {
         System.out.println("Press Enter to continue...");
         scanner.nextLine();
     }
-} 
+
+    /**
+     * Checks if hunting is possible based on ammunition
+     * @param gameController Game controller for job bonuses
+     * @return true if hunting is possible, false otherwise
+     */
+    public boolean canHunt(GameController gameController) {
+        int minAmmo = 1; // Default minimum ammo needed
+        
+        // Hunters can hunt with less ammo
+        if (gameController.getPlayer().getJob() == Job.HUNTER) {
+            // Still need some ammo, but can hunt when others couldn't
+            return inventory.getAmmunition() > 0;
+        }
+        
+        // For non-hunters, require a bit more ammo to be safe
+        return inventory.getAmmunition() >= 3;
+    }
+    
+    /**
+     * Modified hunt method that takes GameController for job bonuses
+     * @param gameController Game controller for job bonuses
+     * @return Description of hunting results
+     */
+    public String hunt(GameController gameController) {
+        StringBuilder result = new StringBuilder();
+        
+        // Check if player has ammunition
+        if (inventory.getAmmunition() <= 0) {
+            return "You don't have any ammunition for hunting!";
+        }
+        
+        result.append("You set out to hunt for food.\n");
+        
+        // Hunting success calculation
+        boolean success = false;
+        int foodGained = 0;
+        String animal = "";
+        
+        // Base success chance
+        double successChance = 0.7; // 70% base success
+        
+        // Hunters get better success chance
+        if (gameController.getPlayer().getJob() == Job.HUNTER) {
+            successChance += 0.15; // 85% success for hunters
+        }
+        
+        // Use some ammunition
+        int ammoUsed = 1 + (int)(Math.random() * 3); // 1-3 rounds used
+        
+        // Hunters use ammo more efficiently
+        if (gameController.getPlayer().getJob() == Job.HUNTER) {
+            ammoUsed = Math.max(1, ammoUsed - 1); // Use 1-2 rounds instead
+        }
+        
+        // Make sure we don't use more ammo than available
+        ammoUsed = Math.min(ammoUsed, inventory.getAmmunition());
+        inventory.useAmmunition(ammoUsed);
+        
+        result.append("You used ").append(ammoUsed).append(" rounds of ammunition.\n");
+        
+        // Determine hunting success
+        if (Math.random() < successChance) {
+            success = true;
+            
+            // Determine what animal was hunted based on random chance
+            double animalChance = Math.random();
+            
+            if (animalChance < 0.1) {
+                animal = "bison";
+                foodGained = 300 + (int)(Math.random() * 200); // 300-500 pounds
+            } else if (animalChance < 0.3) {
+                animal = "deer";
+                foodGained = 100 + (int)(Math.random() * 100); // 100-200 pounds
+            } else if (animalChance < 0.6) {
+                animal = "rabbit";
+                foodGained = 5 + (int)(Math.random() * 10); // 5-15 pounds
+            } else {
+                animal = "squirrel";
+                foodGained = 2 + (int)(Math.random() * 3); // 2-5 pounds
+            }
+            
+            // Hunters get more food from hunting
+            if (gameController.getPlayer().getJob() == Job.HUNTER) {
+                foodGained = (int)(foodGained * 1.2); // 20% more food
+            }
+            
+            inventory.addFood(foodGained);
+            result.append("Success! You shot a ").append(animal)
+                  .append(" and gained ").append(foodGained).append(" pounds of food.");
+        } else {
+            result.append("You weren't able to find any game this time.");
+        }
+        
+        return result.toString();
+    }
+}
