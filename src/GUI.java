@@ -323,7 +323,15 @@ public class GUI extends JPanel {
                 System.err.println("GUI Update skipped: GameController components not fully initialized.");
                 return;
             }
-
+            Job playerJob = gameController.getPlayer().getJob();
+            if (playerJob != null) {
+                String jobBonusText = getJobBonusDescription(playerJob);
+                if (jobBonusText != null && !jobBonusText.isEmpty()) {
+                    statusLabels.get("job").setText("Job: " + playerJob + " (" + jobBonusText + ")");
+                } else {
+                    statusLabels.get("job").setText("Job: " + playerJob);
+                }
+            }
             // Update status labels
             updateStatusLabels();
 
@@ -354,7 +362,33 @@ public class GUI extends JPanel {
             controlPanel.repaint();
         });
     }
-
+    /**
+     * Gets a short description of the job bonus for display
+     * @param job The player's job
+     * @return A short description of the job bonus
+     */
+    private String getJobBonusDescription(Job job) {
+        switch (job) {
+            case FARMER:
+                return "↓ food spoilage";
+            case BLACKSMITH:
+                return "↓ part breakage";
+            case CARPENTER:
+                return "↑ repair skill";
+            case HUNTER:
+                return "↑ travel speed";
+            case DOCTOR:
+                return "↑ health";
+            case TEACHER:
+                return "↑ morale";
+            case PREACHER:
+                return "↑ healing";
+            case MERCHANT:
+                return "↓ prices";
+            default:
+                return "";
+        }
+    }
 
     /**
      * Updates status labels with current game values

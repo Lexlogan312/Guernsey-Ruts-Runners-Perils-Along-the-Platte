@@ -19,7 +19,7 @@ public class Perils {
     private ArrayList<String> weatherEvents;
     private ArrayList<String> animalEvents;
     private ArrayList<String> femaleSpecificEvents;
-    private ArrayList<String> maleSpecificEvents;
+    private ArrayList<String> maleSpecificEvents;;
 
     public Perils(Player player, Inventory inventory, Weather weather, Time time) {
         this.player = player;
@@ -80,10 +80,21 @@ public class Perils {
         // Initialize positive events
         positiveEvents = new ArrayList<>();
         positiveEvents.add("found wild berries");
-        positiveEvents.add("found an abandoned wagon with supplies");
-        positiveEvents.add("met friendly Native Americans who shared food");
-        positiveEvents.add("found a clean water source");
-        positiveEvents.add("good hunting spot");
+        positiveEvents.add("found extra supplies left by another wagon");
+        positiveEvents.add("met friendly natives who shared food");
+        positiveEvents.add("found a clear stream with fresh fish");
+        positiveEvents.add("found an abandoned wagon with usable parts");
+        positiveEvents.add("weather conditions improved unexpectedly");
+        positiveEvents.add("found a shortcut that saved time");
+        positiveEvents.add("found a good campsite with plenty of resources");
+        
+        // Add farmer-specific food gathering events
+        if (player.getJob() == Job.FARMER) {
+            positiveEvents.add("identified edible wild plants others would miss");
+            positiveEvents.add("successfully harvested wild grain");
+            positiveEvents.add("found and harvested wild root vegetables");
+            positiveEvents.add("expertly foraged for food in the area");
+        }
 
         // Initialize weather events
         weatherEvents = new ArrayList<>();
@@ -176,6 +187,10 @@ public class Perils {
             
             // Health impact
             int healthImpact = 10 + random.nextInt(10); // 10-20 health impact
+            if (player.getJob() == Job.DOCTOR) {
+                healthImpact = (int)(healthImpact * 0.7); // 30% less damage
+                showMessage(player.getName() + " is a Doctor — pregnancy/childbirth complications reduced.");
+            }
             player.decreaseHealth(healthImpact);
             showMessage("Health decreased by " + healthImpact + " points due to pregnancy symptoms.");
             
@@ -235,6 +250,10 @@ public class Perils {
             
             // Small supply boost
             int foodGained = 5 + random.nextInt(10); // 5-15 pounds of food
+            if (player.getJob() == Job.MERCHANT) {
+                foodGained = (int)(foodGained * 1.2);   // 20% more supplies
+                showMessage(player.getName() + " is a Merchant — better negotiation results!");
+            }
             inventory.addFood(foodGained);
             showMessage("Your new friends share " + foodGained + " pounds of food with your family.");
         }
@@ -244,6 +263,11 @@ public class Perils {
             
             // Better deals in trading
             int moneyGained = 10 + random.nextInt(15); // $10-$25
+            // Merchant Bonus: better trading outcomes
+            if (player.getJob() == Job.MERCHANT) {
+                moneyGained = (int)(moneyGained * 1.3); // 30% more money
+                showMessage(player.getName() + " is a Merchant — better negotiation results!");
+            }
             player.addMoney(moneyGained);
             
             // Random supply gain
@@ -335,6 +359,10 @@ public class Perils {
                 inventory.useAmmunition(ammoUsed);
                 
                 int foodGained = 50 + random.nextInt(100); // 50-150 pounds
+                if (player.getJob() == Job.HUNTER) {
+                    foodGained = (int)(foodGained * 1.25); // 25% more food from hunt
+                    showMessage(player.getName() + " is a Hunter — hunting success improved!");
+                }
                 inventory.addFood(foodGained);
                 
                 showMessage("You use " + ammoUsed + " ammunition and bring back " + foodGained + " pounds of food!");
@@ -376,28 +404,24 @@ public class Perils {
 
         // Select random disease
         String disease = diseases.get(random.nextInt(diseases.size()));
-        if(disease == "morale depreciation"){
-            if(player.getMorale() < 50) {
-                showMessage("Your group morale is " + player.getMorale());
-                if(player.getPreacherMoralModifier() > 1.0){
-                    showMessage(player.getName() + " is a " + player.getJob() + "your morale has been increased");
+        if (disease.equals("morale depreciation")) {
+            showMessage("Your group morale is " + player.getMorale());
+
+            if (player.getMorale() < 50) {
+                if (player.getJob() == Job.PREACHER) {
+                    showMessage(player.getName() + " is a Preacher — morale boosted due to spiritual leadership.");
                     player.increaseMorale(20);
-                }
-                else {
-                    if(player.getPreacherMoralModifier() > 1.0) {
-                        showMessage(player.getName() + " is a " + player.getJob() + "your morale has been increased");
-                        player.increaseMorale(10);
-                    }
-                    showMessage("You need to rest for a day");
+                } else if (player.getJob() == Job.TEACHER) {
+                    showMessage(player.getName() + " is a Teacher — helping keep morale steady.");
+                    player.increaseMorale(10);
+                } else {
+                    showMessage("Your morale is dangerously low. You need to rest.");
                     time.advanceDay();
-                    player.increaseMorale(20);
+                    player.increaseMorale(20); // Rest increases morale
                 }
             }
-            else{
-                showMessage("Your group morale is " + player.getMorale());
-                if(player.getMorale() < 70){
-                    showMessage("Your morale is dropping, rest for a day to increase morale");
-                }
+            else if (player.getMorale() < 70) {
+                showMessage("Your morale is dropping. Consider resting soon.");
             }
         }
         showMessage(victim + " has come down with " + disease + ".");
@@ -405,9 +429,9 @@ public class Perils {
         // Health impact
         int healthImpact = 0;
 
-        if(player.getDoctorModifier() > 1){
-            healthImpact = (int) ((10 + random.nextInt(20)) / 1.2);
-            showMessage(player.getName() + " is a doctor, your health impact was lessoned by 20% " + healthImpact + ".");
+        if (player.getJob() == Job.DOCTOR) {
+            healthImpact = (int)(healthImpact * 0.6); // Doctor cuts disease impact heavily
+            showMessage(player.getName() + " is a Doctor — disease damage drastically reduced.");
         }
         else {
             healthImpact = 10 + random.nextInt(20); // 10-30 health impact
@@ -491,6 +515,7 @@ public class Perils {
     private void generateWagonProblem() {
         showMessage("\n=== WAGON PROBLEM ===");
 
+        double improviseSuccessChance = 0.6;
         // Select random wagon problem
         String problem = wagonProblems.get(random.nextInt(wagonProblems.size()));
         
@@ -585,11 +610,47 @@ public class Perils {
                         // No additional penalty
                     } else {
                         showMessage("The wagon seems a bit unsteady with the improvised repair.");
+                        // 🛠 Blacksmith/Carpenter bonus
+                        if (player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER) {
+                            improviseSuccessChance += 0.3; // Increase success to 90%
+                        }
+
+                        if (random.nextDouble() < improviseSuccessChance) {
+                            showMessage("Your improvised repair seems to be holding up well!");
+
+                            // Minor health bonus if player is skilled
+                            if (player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER) {
+                                inventory.decreaseOxenHealth(5); // Minor oxen stress only
+                            } else {
+                                inventory.decreaseOxenHealth(10); // Normal stress
+                            }
+                        } else {
+                            showMessage("Unfortunately, your improvised repair isn't very effective.");
+                            inventory.decreaseOxenHealth(15); // Heavy oxen stress
+                        }
                         inventory.decreaseOxenHealth(5);
                     }
                 } else {
                     showMessage("Unfortunately, your improvised repair isn't very effective.");
                     showMessage("The wagon's performance will be diminished until you can make a proper repair.");
+                    // 🛠 Blacksmith/Carpenter bonus
+                    if (player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER) {
+                        improviseSuccessChance += 0.3; // Increase success to 90%
+                    }
+
+                    if (random.nextDouble() < improviseSuccessChance) {
+                        showMessage("Your improvised repair seems to be holding up well!");
+
+                        // Minor health bonus if player is skilled
+                        if (player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER) {
+                            inventory.decreaseOxenHealth(5); // Minor oxen stress only
+                        } else {
+                            inventory.decreaseOxenHealth(10); // Normal stress
+                        }
+                    } else {
+                        showMessage("Unfortunately, your improvised repair isn't very effective.");
+                        inventory.decreaseOxenHealth(15); // Heavy oxen stress
+                    }
                     inventory.decreaseOxenHealth(15);
                 }
             } else {
@@ -620,18 +681,45 @@ public class Perils {
                 }
             }
         }
+        if (player.getJob() == Job.CARPENTER || player.getJob() == Job.BLACKSMITH) {
+            // Give a real bonus
+            if (random.nextDouble() < 0.7) { // 70% chance repair succeeds WITHOUT using spare parts
+                showMessage(player.getName() + " repairs the wagon without using extra parts due to their skills.");
+            } else {
+                // Normal repair (costs parts)
+                inventory.useWagonParts(1);
+                showMessage(player.getName() + " repaired the wagon, but it still cost a wagon part.");
+            }
+        }
+        else {
+            // No special bonus: Always costs parts
+            inventory.useWagonParts(1);
+            showMessage("You repaired the wagon, but it cost a wagon part.");
+        }
     }
 
     private void generatePositiveEvent() {
         showMessage("\n=== GOOD FORTUNE ===");
 
         // Select random positive event
-        String event = positiveEvents.get(random.nextInt(positiveEvents.size()));
-
-        showMessage("Good news! You " + event + ".");
+        int index = random.nextInt(positiveEvents.size());
+        String event = positiveEvents.get(index);
+        
+        showMessage("Good fortune! You " + event + ".");
+        int foodAmount = 0;
 
         // Apply positive effect
-        if (event.contains("berries")) {
+        if (player.getJob() == Job.FARMER && 
+                (event.contains("edible wild plants") || 
+                 event.contains("harvested wild grain") || 
+                 event.contains("wild root vegetables") ||
+                 event.contains("expertly foraged"))) {
+                foodAmount += 10 + random.nextInt(21); // Additional 10-30 pounds
+
+            
+            inventory.addFood(foodAmount);
+            showMessage("You gained " + foodAmount + " pounds of food.");
+        } else if (event.contains("found wild berries")) {
             int foodGained = 5 + random.nextInt(10); // 5-15 pounds of food
             
             // Women were historically better foragers
@@ -642,7 +730,7 @@ public class Perils {
             
             inventory.addFood(foodGained);
             showMessage("You add " + foodGained + " pounds of food to your supplies.");
-        } else if (event.contains("abandoned wagon")) {
+        } else if (event.contains("found extra supplies left by an abandoned wagon")) {
             // Random assortment of supplies
             int foodGained = 10 + random.nextInt(30); // 10-40 pounds of food
             int medicineGained = random.nextInt(2); // 0-1 medicine kit
@@ -657,7 +745,7 @@ public class Perils {
             showMessage("- " + foodGained + " pounds of food");
             if (medicineGained > 0) showMessage("- " + medicineGained + " medicine kit");
             if (ammoGained > 0) showMessage("- " + ammoGained + " rounds of ammunition");
-        } else if (event.contains("Native Americans")) {
+        } else if (event.contains("met friendly natives who shared food")) {
             int foodGained = 15 + random.nextInt(15); // 15-30 pounds of food
             
             // Women often had better diplomatic relations with native peoples
@@ -672,7 +760,7 @@ public class Perils {
             inventory.addFood(foodGained);
             showMessage("They share " + foodGained + " pounds of food with you.");
             showMessage("They also show you a better route, saving you time.");
-        } else if (event.contains("water source")) {
+        } else if (event.contains("found a clear stream with fresh fish")) {
             showMessage("Everyone in your party feels refreshed.");
             player.increaseHealth(10);
             showMessage("Health increased by 10 points.");

@@ -22,6 +22,12 @@ public class Inventory {
     private static final int AXLE_WEIGHT = 40;
     private static final int TONGUE_WEIGHT = 30;
     private static final int WAGON_BOW_WEIGHT = 10;
+    private final int[] WAGON_PARTS_BREAKPERCENTAGE = new int[]{
+            100, 100, 100, 100
+    };
+    private final String[] WAGON_PARTS = new String[]{
+            "Wheel", "Axle", "Tongue", "Bow"
+    };
 
     public Inventory() {
         this.food = 0;
@@ -167,6 +173,42 @@ public class Inventory {
         useWheels(wheelsToUse);
     }
 
+    public int getWagonPartBreakpercentage(String name){
+        switch(name){
+            case "Wheel": return WAGON_PARTS_BREAKPERCENTAGE[0];
+            case "Axle": return WAGON_PARTS_BREAKPERCENTAGE[1];
+            case "Bow": return WAGON_PARTS_BREAKPERCENTAGE[2];
+                case "Tongue": return WAGON_PARTS_BREAKPERCENTAGE[3];
+            default: return 100;
+        }
+    }
+
+    public String repairRandomBrokenPart() {
+        // Collect list of broken parts first
+        ArrayList<Integer> brokenPartsIndexes = new ArrayList<>();
+
+        for (int i = 0; i < WAGON_PARTS_BREAKPERCENTAGE.length; i++) {
+            if (WAGON_PARTS_BREAKPERCENTAGE[i] < 100) { // 100% means fully repaired
+                brokenPartsIndexes.add(i);
+            }
+        }
+
+        if (brokenPartsIndexes.isEmpty()) {
+            return null; // No broken parts to repair
+        }
+
+        // Pick a random broken part
+        int randomIndex = brokenPartsIndexes.get((int)(Math.random() * brokenPartsIndexes.size()));
+
+        // Repair the part by restoring 20% health (or whatever you want)
+        WAGON_PARTS_BREAKPERCENTAGE[randomIndex] += 20;
+        if (WAGON_PARTS_BREAKPERCENTAGE[randomIndex] > 100) {
+            WAGON_PARTS_BREAKPERCENTAGE[randomIndex] = 100; // Cap at full health
+        }
+
+        return WAGON_PARTS[randomIndex]; // Return the part name that was repaired
+    }
+
     public int getMedicine() {
         return medicine;
     }
@@ -307,4 +349,89 @@ public class Inventory {
             }
         }
     }
-} 
+
+    /**
+     * Applies food spoilage based on weather conditions
+     * @param weather Current weather conditions
+     * @param gameController Game controller for job bonuses
+     */
+    public void applyFoodSpoilage(Weather weather, GameController gameController) {
+        // Base spoilage rate depends on weather
+        double spoilageRate = 0.02; // 2% base spoilage per day
+        
+        String currentWeather = weather.getCurrentWeather();
+        if (currentWeather.contains("Rain") || currentWeather.contains("Hot")) {
+            spoilageRate = 0.05; // 5% spoilage in rain or hot weather
+        } else if (currentWeather.contains("Storm")) {
+            spoilageRate = 0.08; // 8% spoilage in stormy weather
+        }
+        
+        // Apply Farmer job bonus if applicable
+        double jobBonus = gameController.getJobBonus("food_spoilage");
+        spoilageRate += jobBonus; // Will reduce spoilage for farmers
+        
+        // Ensure spoilage rate doesn't go negative
+        if (spoilageRate < 0.005) spoilageRate = 0.005; // Minimum 0.5% spoilage
+        
+        // Calculate and apply spoilage
+        int spoiledFood = (int)(food * spoilageRate);
+        if (spoiledFood > 0) {
+            food -= spoiledFood;
+            if (food < 0) food = 0;
+        }
+    }
+    
+    /**
+     * Checks for random wagon part breakage during travel
+     * @param gameController Game controller for job bonuses
+     * @return String describing what broke, or null if nothing broke
+     */
+    public String checkForPartBreakage(GameController gameController) {
+        // Base chance of part breaking
+        double breakChance = 0.05; // 5% chance per travel day
+        
+        // Apply Blacksmith job bonus if applicable
+        double jobBonus = gameController.getJobBonus("part_breakage");
+        breakChance += jobBonus; // Will reduce breakage for blacksmiths
+        
+        // Ensure break chance doesn't go negative
+        if (breakChance < 0.01) breakChance = 0.01; // Minimum 1% chance
+        
+        // Check if a part breaks
+        if (Math.random() < breakChance) {
+            // Determine which part breaks
+            int partIndex = (int)(Math.random() * WAGON_PARTS.length);
+            String partName = WAGON_PARTS[partIndex];
+            
+            // Apply the breakage
+            switch (partIndex) {
+                case 0: // Wheel
+                    if (wheels > 0) {
+                        wheels--;
+                        return "A wagon wheel broke";
+                    }
+                    break;
+                case 1: // Axle
+                    if (axles > 0) {
+                        axles--;
+                        return "A wagon axle broke";
+                    }
+                    break;
+                case 2: // Tongue
+                    if (tongues > 0) {
+                        tongues--;
+                        return "The wagon tongue broke";
+                    }
+                    break;
+                case 3: // Bow
+                    if (wagonBows > 0) {
+                        wagonBows--;
+                        return "A wagon bow broke";
+                    }
+                    break;
+            }
+        }
+        
+        return null; // Nothing broke
+    }
+}

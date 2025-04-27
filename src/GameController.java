@@ -38,6 +38,11 @@ public class GameController {
             .05, .15, .02, .03, .005, .04, .1, .01
     };
 
+    //Wagon Parts
+    private static final String[] WAGON_PARTS = {
+            "Wheel", "Bow", "Tongue", "Axle"
+    };
+
     // Listeners
     private final ArrayList<Consumer<String>> messageListeners = new ArrayList<>();
     private final ArrayList<Runnable> gameStateListeners = new ArrayList<>();
@@ -109,15 +114,6 @@ public class GameController {
         SwingUtilities.invokeLater(() -> {
             for (Consumer<String> listener : messageListeners) {
                 listener.accept(message);
-            }
-        });
-    }
-
-    /** Notifies all registered game state listeners (ensures runs on EDT). */
-    private void notifyGameStateChanged() {
-        SwingUtilities.invokeLater(() -> {
-            for (Runnable listener : gameStateListeners) {
-                listener.run();
             }
         });
     }
@@ -422,41 +418,91 @@ public class GameController {
 
         int baseDistance = 15;
         int adjustedDistance = calculateDailyDistance(baseDistance);
+        double speedBonus = getJobBonus("travel_speed");
+
+        StringBuilder result = new StringBuilder();
 
         if (adjustedDistance <= 0) {
             notifyListeners("Cannot travel today (check oxen health).");
-            // Consume food even if not traveling? Yes, standard practice.
-            consumeDailyFood(time.getTotalDays() + 1); // Use next day's number for message consistency
-            advanceDay(false); // Advance time, weather, but skip perils/river if no travel
+            consumeDailyFood(time.getTotalDays() + 1);
+            advanceDay(false);
             return;
         }
 
+        String currentWeather = weather.getCurrentWeather();
+        if (currentWeather.contains("Rain") || currentWeather.contains("Snow")) {
+            adjustedDistance = (int)(adjustedDistance * 0.7); // 30% slower in rain/snow
+        } else if (currentWeather.contains("Storm")) {
+            adjustedDistance = (int)(adjustedDistance * 0.5); // 50% slower in storms
+        }
+        // 🛠 TRAVEL happens first
         map.travel(adjustedDistance);
-        int randomFood = (int) (Math.random() * FOOD_TYPES.length);
 
-        String itemName = inventory.getItem(FOOD_TYPES[randomFood]);
-        int foodConsumedToday = player.getFamilySize() * 2; // Store desired amount for message
-        consumeDailyFood(time.getTotalDays() + 1); // Consume food, handles shortage
+        String breakageResult = inventory.checkForPartBreakage(this);
+        if (breakageResult != null) {
+            result.append(breakageResult).append(".\n");
+        }
+        
+        // Apply food spoilage
+        inventory.applyFoodSpoilage(weather, this);
 
-        // Calculate spoilage only if the food item exists in inventory
-        if (itemName != null) {
-            double spoilRate = inventory.getSpoilRate(itemName);
-            int spoiledFood = (int)(spoilRate * inventory.getWeight(itemName));
-            foodConsumedToday += spoiledFood;
-            // Also reduce total food by spoilage amount
-            inventory.consumeFood(spoiledFood);
+        // 🛠 Fatigue, Health decrease from normal trail wear
+        player.decreaseHealth(5); // Base fatigue damage per day of travel
+
+        // 🛠 Health-based Risk Warning
+        if (player.getHealth() <= 30) {
+            notifyListeners("Your party is severely weakened. It is recommended to rest soon or risk breakdowns and deaths.");
         }
 
-        notifyListeners("You traveled " + adjustedDistance + " miles today.\n" +
-                "Food consumed: " + foodConsumedToday + " pounds."); // Report desired consumption
+        // 🛠 Blacksmith Wagon Part Check
+        if (player.getJob() == Job.BLACKSMITH) {
+            for (int i = 0; i < WAGON_PARTS.length; i++) {
+                int partHealth = inventory.getWagonPartBreakpercentage(WAGON_PARTS[i]);
+                if (partHealth < 50) {
+                    notifyListeners("Your " + WAGON_PARTS[i] + " is in poor condition. Resting could allow repairs.");
+                }
+            }
+        }
 
-        simulateDailyOxenFatigue();
-        if (Math.random() < 0.1) { // Minor injury chance
+        // 🛠 Random Injury Chance
+        if (Math.random() < 0.1) {
             player.decreaseHealth(2);
             notifyListeners("The rough trail caused some minor injuries and fatigue.");
         }
 
-        advanceDay(true); // Advance time and check for events/crossings
+        // 🛠 Daily food consumption
+        int foodConsumedToday = player.getFamilySize() * 2;
+        consumeDailyFood(time.getTotalDays() + 1);
+
+        // 🛠 Spoilage check on random food item
+        int randomFood = (int)(Math.random() * FOOD_TYPES.length);
+        String itemName = inventory.getItem(FOOD_TYPES[randomFood]);
+
+        if (itemName != null) {
+            double spoilRate = inventory.getSpoilRate(itemName);
+            // Farmer Bonus: food spoils slower
+            if (player.getJob() == Job.FARMER) {
+                spoilRate *= 0.75; // 25% less spoilage
+            }
+            int spoiledFood = (int)(spoilRate * inventory.getWeight(itemName));
+            if (spoiledFood > 0) {
+                foodConsumedToday += spoiledFood;
+                inventory.consumeFood(spoiledFood);
+                notifyListeners(spoiledFood + " pounds of " + itemName + " spoiled during travel.");
+            }
+        }
+
+        // 🛠 Small random injury chance
+        if (Math.random() < 0.1) {
+            player.decreaseHealth(2);
+            notifyListeners("The rough trail caused some minor injuries and fatigue.");
+        }
+
+        notifyListeners("You traveled " + adjustedDistance + " miles today.\n" +
+                "Food consumed: " + foodConsumedToday + " pounds.");
+
+        // 🛠 Advance Day
+        advanceDay(true);
     }
 
     /** Rest action for one day. */
@@ -466,6 +512,10 @@ public class GameController {
         notifyListeners("You decide to rest for the day.");
 
         int healthRecovered = 5 + (int)(Math.random() * 11);
+        // Doctor Bonus
+        if (player.getJob() == Job.DOCTOR) {
+            healthRecovered = (int)(healthRecovered * 1.25); // Heal 25% more
+        }
         player.increaseHealth(healthRecovered);
         notifyListeners("Health improved by " + healthRecovered + " points.");
 
@@ -478,16 +528,32 @@ public class GameController {
         notifyListeners("Food consumed: " + foodConsumedToday + " pounds.");
 
         int moraleHealthRecovered = 5 + (int)(Math.random() * 11 + 2);
-        if(player.getJob().equals("Preacher")){
+        if(player.getJob() == Job.PREACHER){
             moraleHealthRecovered += 10;
-            player.increaseMorale(moraleHealthRecovered);
         }
+
+        // Teacher Bonus
+        if (player.getJob() == Job.TEACHER) {
+            moraleHealthRecovered += 5;
+        }
+
+        player.increaseMorale(moraleHealthRecovered);
 
         if (Math.random() < 0.2) { // Chance to find food
             int foodFound = 2 + (int)(Math.random() * 9);
             inventory.addFood(foodFound);
             notifyListeners("While resting, your family found " + foodFound + " pounds of edible plants nearby.");
         }
+
+        if (player.getJob() == Job.CARPENTER) {
+            if (Math.random() < 0.4) { // 40% chance to repair a broken part
+                String repairedPart = inventory.repairRandomBrokenPart();
+                if (repairedPart != null) {
+                    notifyListeners("Your carpenter skills repaired the " + repairedPart + "!");
+                }
+            }
+        }
+
 
         advanceDay(true); // Advance time and check for events/crossings
     }
@@ -721,11 +787,119 @@ public class GameController {
     public Time getTime() { return time; }
     public Weather getWeather() { return weather; }
     public boolean isGameStarted() { return gameStarted; }
-    public boolean isGameRunning() { return isGameRunning; }
+    // Add this method to the GameController class if it doesn't exist
+    public boolean isGameRunning() {
+        return isGameRunning;
+    }
+    
+    // Make sure this method exists and is properly implemented
+    public void notifyGameStateChanged() {
+        List<Consumer<GameState>> gameStateListeners = new ArrayList<>();
+        // Notify all GUI components that the game state has changed
+        for (Consumer<GameState> listener : gameStateListeners) {
+            GameState currentState = new GameState(
+                    player,
+                    map,
+                    inventory,
+                    time,
+                    weather,
+                    isGameRunning
+            );
+            // Wrap the Consumer in a Runnable
+            Runnable runnable = () -> listener.accept(currentState);
+            runnable.run(); // Execute the Runnable
+        }
+    }
+
+    // Add this inner class if it doesn't exist
+    public class GameState {
+        public final Player player;
+        public final Map map;
+        public final Inventory inventory;
+        public final Time time;
+        public final Weather weather;
+        public final boolean isRunning;
+        
+        public GameState(Player player, Map map, Inventory inventory, Time time, Weather weather, boolean isRunning) {
+            this.player = player;
+            this.map = map;
+            this.inventory = inventory;
+            this.time = time;
+            this.weather = weather;
+            this.isRunning = isRunning;
+        }
+    }
     public String getTrail() { return trail; }
 
     /** Trigger a game state update manually if needed (e.g., after dialog). */
     public void updateGameState() {
         notifyGameStateChanged();
+    }
+
+
+    /**
+     * Applies job-specific bonuses based on player's occupation
+     * @param jobEffect The type of effect to check for
+     * @return The bonus value (can be positive or negative)
+     */
+    public double getJobBonus(String jobEffect) {
+        Job playerJob = player.getJob();
+        if (playerJob == null) return 0.0;
+        
+        switch (jobEffect) {
+            case "food_spoilage":
+                // Farmer: Food spoils 20-25% slower
+                return (playerJob == Job.FARMER) ? -0.225 : 0.0;
+                
+            case "part_breakage":
+                // Blacksmith: Wagon parts break 20% less often
+                return (playerJob == Job.BLACKSMITH) ? -0.20 : 0.0;
+                
+            case "repair_cost":
+                // Carpenter: Cheaper wagon repairs
+                return (playerJob == Job.CARPENTER) ? -0.25 : 0.0;
+                
+            case "repair_speed":
+                // Carpenter: Faster wagon repairs
+                return (playerJob == Job.CARPENTER) ? 0.30 : 0.0;
+                
+            case "repair_success":
+                // Carpenter: 10% more likely to successfully improvise repairs
+                return (playerJob == Job.CARPENTER) ? 0.10 : 0.0;
+                
+            case "hunting_ammo_threshold":
+                // Hunter: Can hunt with less ammo
+                return (playerJob == Job.HUNTER) ? 0.25 : 0.0;
+                
+            case "travel_speed":
+                // Hunter: +5% travel speed because better scouting
+                return (playerJob == Job.HUNTER) ? 0.05 : 0.0;
+                
+            case "health_depletion":
+                // Doctor: Party health depletes slower by 10%
+                return (playerJob == Job.DOCTOR) ? -0.10 : 0.0;
+                
+            case "morale_decrease":
+                // Teacher: Morale decreases slower over time
+                return (playerJob == Job.TEACHER) ? -0.15 : 0.0;
+                
+            case "morale_healing":
+                // Preacher: Morale heals faster when resting
+                return (playerJob == Job.PREACHER) ? 0.25 : 0.0;
+                
+            case "health_from_morale":
+                // Preacher: Slight boost to healing if morale is high
+                if (playerJob == Job.PREACHER && player.getMorale() > 75) {
+                    return 0.15;
+                }
+                return 0.0;
+                
+            case "merchant_discount":
+                // Merchant: Prices in stores are automatically cheaper (5-10% discount)
+                return (playerJob == Job.MERCHANT) ? -0.075 : 0.0;
+                
+            default:
+                return 0.0;
+        }
     }
 }
