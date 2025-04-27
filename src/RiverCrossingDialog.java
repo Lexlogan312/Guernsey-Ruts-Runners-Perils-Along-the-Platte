@@ -239,8 +239,7 @@ public class RiverCrossingDialog extends JDialog {
                 
                 // Check for drowning death (5% chance in deep water)
                 if (depth > 8 && Math.random() < 0.05) {
-                    player.setCauseOfDeath("drowning");
-                    player.setDead(true);
+                    player.decreaseHealth(player.getHealth(), "drowning"); // Direct cause and ensure death
                     messages.add("Tragedy strikes! Someone in your party drowned in the river.");
                 }
             }
@@ -296,12 +295,13 @@ public class RiverCrossingDialog extends JDialog {
                 if (Math.random() < drowningChance) {
                     // Severe health impact with possibility of death
                     int healthLost = 30 + random.nextInt(30); // 30-60 health impact
-                    player.decreaseHealth(healthLost);
                     
-                    if (player.getHealth() <= 0) {
-                        player.setCauseOfDeath("drowning");
+                    if (player.getHealth() <= healthLost) {
+                        // If this damage would kill the player, provide specific cause
+                        player.decreaseHealth(healthLost, "drowning");
                         messages.add("Tragedy! Your wagon capsized in the river and someone drowned.");
                     } else {
+                        player.decreaseHealth(healthLost);
                         messages.add("Nearly drowned! Lost " + healthLost + " health points.");
                     }
                 }

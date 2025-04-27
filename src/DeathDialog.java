@@ -109,6 +109,13 @@ public class DeathDialog extends JDialog {
                 "Pioneer diaries record incidents of people and livestock being struck and killed instantly. " +
                 "The metal components of wagons could attract lightning, making storms particularly dangerous " +
                 "when no natural shelter was available.");
+                
+        DEATH_DETAILS.put("childbirth complications", "Childbirth on the trail was extremely dangerous. " +
+                "With no proper medical care, women often faced severe complications during labor " +
+                "in primitive conditions. Many mothers died from blood loss, infection, or other " +
+                "complications that would be easily treated today. The journey west claimed the lives " +
+                "of many young women as they tried to bring new life into the world under the harshest " +
+                "conditions imaginable.");
     }
     
     /**
@@ -138,7 +145,15 @@ public class DeathDialog extends JDialog {
         titlePanel.setBackground(BACKGROUND_COLOR);
         titlePanel.setBorder(new EmptyBorder(10, 10, 5, 10));
         
-        JLabel titleLabel = new JLabel("You have died of " + causeOfDeath, JLabel.CENTER);
+        // Check if cause of death is properly set
+        String deathTitle;
+        if (causeOfDeath == null || causeOfDeath.trim().isEmpty()) {
+            deathTitle = "You have died on the trail";
+        } else {
+            deathTitle = "You have died of " + causeOfDeath;
+        }
+        
+        JLabel titleLabel = new JLabel(deathTitle, JLabel.CENTER);
         titleLabel.setFont(FontManager.WESTERN_FONT_TITLE);
         titleLabel.setForeground(new Color(139, 0, 0)); // Dark red for death
         titlePanel.add(titleLabel, BorderLayout.CENTER);
@@ -168,9 +183,13 @@ public class DeathDialog extends JDialog {
         else if (normalizedCause.contains("lightning")) normalizedCause = "lightning strike";
         else if (normalizedCause.contains("snake")) normalizedCause = "snakebite";
         else if (normalizedCause.contains("accident")) normalizedCause = "accident";
-        else if (normalizedCause.contains("childbirth")) normalizedCause = "childbirth";
+        else if (normalizedCause.contains("childbirth") && normalizedCause.contains("complication")) normalizedCause = "childbirth complications";
+        else if (normalizedCause.contains("childbirth")) normalizedCause = "childbirth complications";
         else if (normalizedCause.contains("fever")) normalizedCause = "fever";
         else if (normalizedCause.contains("health")) normalizedCause = "poor health";
+        
+        // Debug log to see what the normalized cause is
+        System.out.println("Debug - Original death cause: '" + causeOfDeath + "', Normalized to: '" + normalizedCause + "'");
         
         // Create the text panel first - moved up from center to top
         JPanel textPanel = new JPanel(new BorderLayout(0, 15));

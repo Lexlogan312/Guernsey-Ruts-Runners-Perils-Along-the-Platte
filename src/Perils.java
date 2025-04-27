@@ -175,889 +175,915 @@ public class Perils {
      * Generate events specific to female characters
      */
     private void generateFemaleSpecificEvent() {
-        showMessage("\n=== EVENT ===");
-        
-        // Select random female-specific event
+        if (!player.getGender().equalsIgnoreCase("female")) return; // Only for female players
+
         String event = femaleSpecificEvents.get(random.nextInt(femaleSpecificEvents.size()));
-        
-        if (event.contains("pregnancy")) {
-            showMessage("You discover you are pregnant.");
-            showMessage("Historically, many women on the trail were pregnant or gave birth during the journey.");
-            showMessage("This will make travel more difficult, but the journey must continue.");
-            
-            // Health impact
-            int healthImpact = 10 + random.nextInt(10); // 10-20 health impact
-            if (player.getJob() == Job.DOCTOR) {
-                healthImpact = (int)(healthImpact * 0.7); // 30% less damage
-                showMessage(player.getName() + " is a Doctor — pregnancy/childbirth complications reduced.");
-            }
-            player.decreaseHealth(healthImpact);
-            showMessage("Health decreased by " + healthImpact + " points due to pregnancy symptoms.");
-            
-            // Extra food consumption
-            int extraFood = 2;
-            inventory.consumeFood(extraFood);
-            showMessage("You need to eat more to maintain your strength. You consume " + extraFood + " extra pounds of food.");
-        } 
-        else if (event.contains("childbirth")) {
-            showMessage("You face childbirth complications on the trail.");
-            showMessage("Historically, childbirth was extremely dangerous on the frontier, with little medical help available.");
-            
-            // Significant health impact
-            int healthImpact = 20 + random.nextInt(20); // 20-40 health impact
-            
-            // Medicine helps substantially
-            if (inventory.getMedicine() > 0) {
-                showMessage("You use 1 medicine kit to help with the complications.");
-                inventory.useMedicine(1);
-                healthImpact /= 2;
-            } else {
-                showMessage("You have no medicine kits available for this difficult situation.");
-                
-                // Serious risk of death without medicine
-                if (random.nextDouble() < 0.15) {
-                    player.setCauseOfDeath("childbirth complications");
-                    player.setDead(true);
-                    return;
+        String message = "";
+        int healthDamage = 0;
+        int moraleLoss = 0;
+
+        switch (event) {
+            case "Difficult Childbirth":
+                message = "Difficult Childbirth: Childbirth on the trail is perilous. Complications arise.";
+                healthDamage = 30 + random.nextInt(40); // Significant health risk (30-70)
+                moraleLoss = 20 + random.nextInt(20); // Significant morale impact (20-40)
+                if (player.getHealth() - healthDamage <= 0) {
+                    message += "\nYou died from complications during childbirth.";
+                    player.decreaseHealth(healthDamage, "childbirth complications"); // Specific cause
+                } else {
+                    player.decreaseHealth(healthDamage);
+                    player.decreaseMorale(moraleLoss);
+                    message += "\nYou lost " + healthDamage + " health and " + moraleLoss + " morale, but survived.";
                 }
-            }
-            
-            player.decreaseHealth(healthImpact);
-            showMessage("Health decreased by " + healthImpact + " points.");
-            showMessage("You'll need to rest more often in the coming days.");
+                break;
+
+            case "Women's Council":
+                message = "Women's Council: The women gather to discuss trail matters and share wisdom.";
+                int moraleGain = 5 + random.nextInt(10);
+                player.increaseMorale(moraleGain);
+                message += "\nSharing experiences boosts morale by " + moraleGain + ".";
+                // Bonus: Chance to gain medicine knowledge
+                if (player.getJob() == Job.DOCTOR || random.nextDouble() < 0.2) {
+                    int medicineGain = random.nextInt(2);
+                    if (medicineGain > 0) {
+                        inventory.addMedicine(medicineGain);
+                        message += "\nYou also learned about local remedies, gaining " + medicineGain + " medicine kit(s).";
+                    }
+                }
+                break;
+
+            case "Lost Supplies":
+                message = "Lost Supplies: While managing the wagon, some crucial supplies shift and fall off.";
+                int foodLost = 10 + random.nextInt(20); // 10-30 lbs food
+                inventory.consumeFood(foodLost);
+                moraleLoss = 5 + random.nextInt(10);
+                player.decreaseMorale(moraleLoss);
+                message += "\nYou lost " + foodLost + " lbs of food and " + moraleLoss + " morale.";
+                // Chance to lose medicine
+                if (random.nextDouble() < 0.2 && inventory.getMedicine() > 0) {
+                    inventory.useMedicine(1);
+                    message += "\nA medicine kit was also damaged.";
+                }
+                break;
+
+            case "Unexpected Kindness":
+                message = "Unexpected Kindness: Another family shares some excess supplies with you.";
+                int foodGained = 5 + random.nextInt(15); // 5-20 lbs food
+                inventory.addFood(foodGained);
+                moraleGain = 5 + random.nextInt(10);
+                player.increaseMorale(moraleGain);
+                message += "\nYou received " + foodGained + " lbs of food. Morale increased by " + moraleGain + ".";
+                break;
+                
+            case "Exhaustion from Caregiving":
+                message = "Exhaustion from Caregiving: Tending to sick family members and daily chores takes its toll.";
+                healthDamage = 5 + random.nextInt(10); // 5-15 health damage
+                moraleLoss = 5 + random.nextInt(10); // 5-15 morale loss
+                if (player.getHealth() - healthDamage <= 0) {
+                    message += "\nThe constant strain was too much. You died from exhaustion.";
+                    player.decreaseHealth(healthDamage, "exhaustion"); // Specific cause
+                } else {
+                    player.decreaseHealth(healthDamage);
+                    player.decreaseMorale(moraleLoss);
+                    message += "\nYou lost " + healthDamage + " health and " + moraleLoss + " morale.";
+                }
+                break;
+                
+            case "Mending Clothes":
+                 message = "Mending Clothes: You spend the evening mending clothes for the family.";
+                 moraleGain = 3 + random.nextInt(5); // Small morale boost 3-8
+                 player.increaseMorale(moraleGain);
+                 message += "\nTaking care of necessities provides a small comfort. Morale increased by " + moraleGain + ".";
+                 // Small chance to prevent minor negative event later? (Could be complex)
+                 break;
+                 
+             case "Gathering Herbs":
+                 message = "Gathering Herbs: You recognize some medicinal plants growing nearby.";
+                 int medicineFound = random.nextInt(2); // 0 or 1 medicine kit
+                 if (player.getJob() == Job.DOCTOR || random.nextDouble() < 0.3) { // Higher chance if Doctor
+                     medicineFound++;
+                 }
+                 if (medicineFound > 0) {
+                     inventory.addMedicine(medicineFound);
+                     message += "\nYour knowledge helps you gather enough for " + medicineFound + " medicine kit(s).";
+                 } else {
+                     message += "\nYou search but don't find enough useful herbs.";
+                 }
+                 break;
+
+            default:
+                message = "An unknown event specific to women occurred: " + event;
+                break;
         }
-        else if (event.contains("sewing")) {
-            showMessage("You use your sewing skills to mend clothing for other travelers in exchange for supplies.");
-            showMessage("Historically, women's domestic skills were highly valued on the trail and could be traded for needed goods.");
-            
-            // Random gain of supplies
-            int foodGained = 10 + random.nextInt(20); // 10-30 pounds of food
-            int moneyGained = 5 + random.nextInt(10); // $5-$15
-            
-            inventory.addFood(foodGained);
-            player.addMoney(moneyGained);
-            
-            showMessage("You gain " + foodGained + " pounds of food and $" + moneyGained + " from your work.");
-        }
-        else if (event.contains("befriended")) {
-            showMessage("You befriend other pioneer families traveling the same route.");
-            showMessage("Historically, women formed important social bonds on the trail that helped with childcare and sharing resources.");
-            
-            // Health boost
-            int healthBoost = 5 + random.nextInt(10); // 5-15 health boost
-            player.increaseHealth(healthBoost);
-            showMessage("The social support improves your morale and health by " + healthBoost + " points.");
-            
-            // Small supply boost
-            int foodGained = 5 + random.nextInt(10); // 5-15 pounds of food
-            if (player.getJob() == Job.MERCHANT) {
-                foodGained = (int)(foodGained * 1.2);   // 20% more supplies
-                showMessage(player.getName() + " is a Merchant — better negotiation results!");
-            }
-            inventory.addFood(foodGained);
-            showMessage("Your new friends share " + foodGained + " pounds of food with your family.");
-        }
-        else if (event.contains("trading")) {
-            showMessage("Your negotiation skills secure a better trading deal with a passing merchant.");
-            showMessage("Historically, many women were skilled negotiators and managed family finances on the frontier.");
-            
-            // Better deals in trading
-            int moneyGained = 10 + random.nextInt(15); // $10-$25
-            // Merchant Bonus: better trading outcomes
-            if (player.getJob() == Job.MERCHANT) {
-                moneyGained = (int)(moneyGained * 1.3); // 30% more money
-                showMessage(player.getName() + " is a Merchant — better negotiation results!");
-            }
-            player.addMoney(moneyGained);
-            
-            // Random supply gain
-            int supplyType = random.nextInt(3);
-            if (supplyType == 0) {
-                int partsGained = 1 + random.nextInt(2); // 1-2 parts
-                inventory.addWagonParts(partsGained);
-                showMessage("You negotiate a better price and save $" + moneyGained + ".");
-                showMessage("You also secure " + partsGained + " wagon parts at a discount.");
-            } else if (supplyType == 1) {
-                int medicineGained = 1 + random.nextInt(2); // 1-2 medicine kits
-                inventory.addMedicine(medicineGained);
-                showMessage("You negotiate a better price and save $" + moneyGained + ".");
-                showMessage("You also secure " + medicineGained + " medicine kit" + (medicineGained > 1 ? "s" : "") + " at a discount.");
-            } else {
-                int ammoGained = 5 + random.nextInt(10); // 5-15 ammo
-                inventory.addAmmunition(ammoGained);
-                showMessage("You negotiate a better price and save $" + moneyGained + ".");
-                showMessage("You also secure " + ammoGained + " ammunition at a discount.");
-            }
-        }
+
+        showMessage(message);
     }
     
     /**
      * Generate events specific to male characters
      */
     private void generateMaleSpecificEvent() {
-        showMessage("\n=== EVENT ===");
-        
-        // Select random male-specific event
+        if (!player.getGender().equalsIgnoreCase("male")) return; // Only for male players
+
         String event = maleSpecificEvents.get(random.nextInt(maleSpecificEvents.size()));
-        
-        if (event.contains("hunting")) {
-            showMessage("You are injured while hunting for food.");
-            showMessage("Historically, hunting accidents were common on the trail, with many men suffering gunshot wounds or falls.");
-            
-            // Health impact
-            int healthImpact = 15 + random.nextInt(15); // 15-30 health impact
-            
-            // Medicine helps
-            if (inventory.getMedicine() > 0) {
-                showMessage("You use 1 medicine kit to treat your injury.");
-                inventory.useMedicine(1);
-                healthImpact /= 2;
-            } else {
-                showMessage("You have no medicine kits to treat your injury.");
-            }
-            
-            player.decreaseHealth(healthImpact);
-            showMessage("Health decreased by " + healthImpact + " points.");
-            
-            // Potential ammunition loss
-            if (random.nextDouble() < 0.5 && inventory.getAmmunition() > 0) {
-                int ammoLost = 1 + random.nextInt(5); // 1-5 ammo lost
-                inventory.useAmmunition(Math.min(ammoLost, inventory.getAmmunition()));
-                showMessage("You lost " + ammoLost + " ammunition in the accident.");
-            }
-        }
-        else if (event.contains("back strain")) {
-            showMessage("You've strained your back while loading heavy supplies.");
-            showMessage("Historically, men did most of the heavy lifting on the trail, leading to frequent injuries.");
-            
-            // Health impact
-            int healthImpact = 10 + random.nextInt(10); // 10-20 health impact
-            player.decreaseHealth(healthImpact);
-            showMessage("Health decreased by " + healthImpact + " points.");
-            showMessage("You'll need to move more carefully for the next few days.");
-        }
-        else if (event.contains("repair wagons")) {
-            showMessage("You help repair the wagons of other travelers and earn some extra money.");
-            showMessage("Historically, men with carpentry and blacksmithing skills were in high demand on the trail.");
-            
-            // Money gain
-            int moneyGained = 15 + random.nextInt(20); // $15-$35
-            player.addMoney(moneyGained);
-            showMessage("You earn $" + moneyGained + " for your work.");
-            
-            // Skill improvement
-            showMessage("The experience makes you better at repairing your own wagon.");
-            showMessage("Future repairs will require fewer resources.");
-        }
-        else if (event.contains("hunting grounds")) {
-            showMessage("Your tracking skills lead you to excellent hunting grounds.");
-            showMessage("Historically, men's hunting skills were essential for supplementing trail rations with fresh meat.");
-            
-            // Better hunting outcomes
-            if (inventory.getAmmunition() >= 2) {
-                int ammoUsed = 2;
-                inventory.useAmmunition(ammoUsed);
-                
-                int foodGained = 50 + random.nextInt(100); // 50-150 pounds
-                if (player.getJob() == Job.HUNTER) {
-                    foodGained = (int)(foodGained * 1.25); // 25% more food from hunt
-                    showMessage(player.getName() + " is a Hunter — hunting success improved!");
+        String message = "";
+        int healthDamage = 0;
+        int moraleLoss = 0;
+
+        switch (event) {
+            case "Hunting Accident":
+                message = "Hunting Accident: While hunting, your firearm misfires or you trip.";
+                healthDamage = 15 + random.nextInt(30); // Moderate injury (15-45)
+                moraleLoss = 10 + random.nextInt(15); // Morale loss (10-25)
+                if (player.getHealth() - healthDamage <= 0) {
+                    message += "\nThe accident was fatal. You died from your injuries.";
+                    player.decreaseHealth(healthDamage, "accident"); // Specific cause
+                } else {
+                    player.decreaseHealth(healthDamage);
+                    player.decreaseMorale(moraleLoss);
+                    message += "\nYou are injured, losing " + healthDamage + " health and " + moraleLoss + " morale.";
+                    // Lose some ammo
+                    if (inventory.getAmmunition() > 0) {
+                        int ammoLost = 5 + random.nextInt(10);
+                        inventory.useAmmunition(Math.min(ammoLost, inventory.getAmmunition()));
+                        message += "\nYou also lost " + Math.min(ammoLost, inventory.getAmmunition()) + " rounds of ammunition.";
+                    }
                 }
-                inventory.addFood(foodGained);
+                break;
+
+            case "Scouting Duty":
+                message = "Scouting Duty: You volunteer to scout ahead for the wagon train.";
+                // Chance of positive or negative outcome
+                if (random.nextDouble() < 0.6) { // Positive outcome (60% chance)
+                    int moraleGain = 5 + random.nextInt(10);
+                    player.increaseMorale(moraleGain);
+                    message += "\nYou find a good campsite or water source. Morale increased by " + moraleGain + ".";
+                    // Chance to find something useful
+                    if (random.nextDouble() < 0.2) {
+                        int foodFound = 5 + random.nextInt(10);
+                        inventory.addFood(foodFound);
+                        message += "\nYou also find " + foodFound + " lbs of edible plants.";
+                    }
+                } else { // Negative outcome (40% chance)
+                    moraleLoss = 5 + random.nextInt(10);
+                    player.decreaseMorale(moraleLoss);
+                    message += "\nYou get lost temporarily or encounter difficult terrain. Morale decreased by " + moraleLoss + ".";
+                    // Chance of minor injury
+                    if (random.nextDouble() < 0.2) {
+                         healthDamage = 5 + random.nextInt(10); // Minor (5-15)
+                         if (player.getHealth() - healthDamage <= 0) {
+                             message += "\nYou succumbed to your injuries while lost.";
+                             player.decreaseHealth(healthDamage, "exposure"); // Specific cause
+                         } else {
+                             player.decreaseHealth(healthDamage);
+                             message += "\nYou suffer minor injuries, losing " + healthDamage + " health.";
+                         }
+                    }
+                }
+                break;
+
+            case "Wagon Repair Duty":
+                message = "Wagon Repair Duty: You spend hours working on maintaining the wagon.";
+                healthDamage = 3 + random.nextInt(7); // Minor exertion (3-10)
+                player.decreaseHealth(healthDamage);
+                message += "\nThe hard labor takes a small toll. Health decreased by " + healthDamage + ".";
+                // Chance to prevent a future wagon problem
+                // (This could be implemented with a temporary player status flag)
+                if (player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER || random.nextDouble() < 0.3) {
+                    message += "\nYour efforts might prevent future breakdowns.";
+                    // TODO: Add mechanism to slightly reduce future breakdown chance
+                }
+                break;
+
+            case "Argument with Traveler":
+                message = "Argument with Traveler: A disagreement breaks out with another member of the train.";
+                moraleLoss = 10 + random.nextInt(15); // Moderate morale loss (10-25)
+                player.decreaseMorale(moraleLoss);
+                message += "\nThe conflict lowers spirits. Morale decreased by " + moraleLoss + ".";
+                // Chance of escalation (small chance of injury)
+                if (random.nextDouble() < 0.1) {
+                    healthDamage = 10 + random.nextInt(15); // Minor fight injury (10-25)
+                     if (player.getHealth() - healthDamage <= 0) {
+                         message += "\nThe argument turned violent, and you died from your injuries.";
+                         player.decreaseHealth(healthDamage, "accident"); // Or potentially "violence"
+                     } else {
+                         player.decreaseHealth(healthDamage);
+                         message += "\nThings got heated, resulting in minor injuries. Lost " + healthDamage + " health.";
+                     }
+                }
+                break;
                 
-                showMessage("You use " + ammoUsed + " ammunition and bring back " + foodGained + " pounds of food!");
-            } else {
-                showMessage("Unfortunately, you don't have enough ammunition to take advantage of the hunting grounds.");
-            }
+            case "Guard Duty":
+                 message = "Guard Duty: You stand watch overnight to protect the camp.";
+                 healthDamage = 2 + random.nextInt(5); // Minor fatigue (2-7)
+                 player.decreaseHealth(healthDamage);
+                 moraleLoss = 2 + random.nextInt(5); // Minor morale hit (2-7)
+                 player.decreaseMorale(moraleLoss);
+                 message += "\nThe long night leaves you tired. Lost " + healthDamage + " health and " + moraleLoss + " morale.";
+                 // Chance to prevent theft (positive outcome)
+                 if (random.nextDouble() < 0.2) {
+                     message += "\nYour vigilance prevented a potential theft during the night.";
+                     // Could add a small morale boost here for success?
+                     player.increaseMorale(5);
+                     message += "\nMorale increased slightly due to your successful watch.";
+                 }
+                 break;
+                 
+             case "River Crossing Assistance":
+                 message = "River Crossing Assistance: You help guide wagons across a treacherous river.";
+                 // Risk of injury or success
+                 if (random.nextDouble() < 0.25) { // 25% chance of injury
+                     healthDamage = 10 + random.nextInt(20); // 10-30 health damage
+                     if (player.getHealth() - healthDamage <= 0) {
+                         message += "\nYou slipped during the crossing and drowned.";
+                         player.decreaseHealth(healthDamage, "drowning"); // Specific cause
+                     } else {
+                         player.decreaseHealth(healthDamage);
+                         message += "\nIt was dangerous work! You were injured, losing " + healthDamage + " health.";
+                     }
+                 } else { // 75% chance of success
+                     int moraleGain = 5 + random.nextInt(10);
+                     player.increaseMorale(moraleGain);
+                     message += "\nYou successfully helped others cross. Morale increased by " + moraleGain + ".";
+                 }
+                 break;
+
+            default:
+                message = "An unknown event specific to men occurred: " + event;
+                break;
         }
-        else if (event.contains("repaired wagon")) {
-            showMessage("You successfully improvise repairs on your wagon without using spare parts.");
-            showMessage("Historically, men were expected to maintain wagons with whatever materials were available.");
-            
-            // Save wagon parts
-            showMessage("Your ingenuity saves valuable wagon parts for future emergencies.");
-            
-            // Health impact from hard work
-            int healthImpact = 5 + random.nextInt(5); // 5-10 health impact
-            player.decreaseHealth(healthImpact);
-            showMessage("The hard work costs you " + healthImpact + " health points, but your wagon is fixed.");
-            
-            // Skill improvement
-            showMessage("This experience makes you better at future repairs.");
-        }
+
+        showMessage(message);
     }
 
     private void generateDiseaseEvent() {
-        showMessage("\n=== HEALTH PROBLEM ===");
-
-        // Determine who gets sick
-        boolean isPlayer = random.nextBoolean();
-        String victim;
-
-        if (isPlayer) {
-            victim = player.getName();
-        } else {
-            // Random family member
-            String[] family = player.getFamilyMembers();
-            victim = family[random.nextInt(family.length)];
-        }
-
-        // Select random disease
         String disease = diseases.get(random.nextInt(diseases.size()));
-        if (disease.equals("morale depreciation")) {
-            showMessage("Your group morale is " + player.getMorale());
+        String message = "Disease strikes! You have contracted " + disease + ".";
+        int healthLost = 0;
+        int medicineNeeded = 1;
 
-            if (player.getMorale() < 50) {
-                if (player.getJob() == Job.PREACHER) {
-                    showMessage(player.getName() + " is a Preacher — morale boosted due to spiritual leadership.");
-                    player.increaseMorale(20);
-                } else if (player.getJob() == Job.TEACHER) {
-                    showMessage(player.getName() + " is a Teacher — helping keep morale steady.");
-                    player.increaseMorale(10);
-                } else {
-                    showMessage("Your morale is dangerously low. You need to rest.");
-                    time.advanceDay();
-                    player.increaseMorale(20); // Rest increases morale
-                }
-            }
-            else if (player.getMorale() < 70) {
-                showMessage("Your morale is dropping. Consider resting soon.");
-            }
+        switch (disease) {
+            case "cholera":
+            case "dysentery":
+                healthLost = 20 + random.nextInt(30); // 20-50 health loss
+                medicineNeeded = 2;
+                break;
+            case "typhoid":
+            case "measles":
+                healthLost = 15 + random.nextInt(25); // 15-40 health loss
+                break;
+            case "fever":
+                healthLost = 10 + random.nextInt(20); // 10-30 health loss
+                break;
+            default: // Generic illness
+                healthLost = 10 + random.nextInt(15); // 10-25 health loss
+                break;
         }
-        showMessage(victim + " has come down with " + disease + ".");
 
-        // Health impact
-        int healthImpact = 0;
-
+        // Apply Doctor job bonus to reduce severity
+        double docBonus = player.getDoctorModifier(); // Assuming 1.2 for doctor
         if (player.getJob() == Job.DOCTOR) {
-            healthImpact = (int)(healthImpact * 0.6); // Doctor cuts disease impact heavily
-            showMessage(player.getName() + " is a Doctor — disease damage drastically reduced.");
+            healthLost = (int) (healthLost / docBonus); // Reduce health loss
+            medicineNeeded = Math.max(1, medicineNeeded - 1); // Reduce medicine needed
         }
-        else {
-            healthImpact = 10 + random.nextInt(20); // 10-30 health impact
-        }
-
-        // If it's a family member, less direct impact on player
-        if (!isPlayer) {
-            healthImpact = 5 + random.nextInt(10); // 5-15 health impact
-            showMessage("Caring for " + victim + " is draining your energy.");
-        }
-        // Gender specific differences in disease susceptibility
-        else if (isPlayer && "female".equalsIgnoreCase(player.getGender())) {
-            // Women were historically considered more susceptible to certain illnesses on the trail
-            healthImpact += 5; // Additional 5 health impact
-            showMessage("Women on the trail often faced additional health challenges.");
-        }
-
-        // Check if medicine is available
-        if (inventory.getMedicine() > 0) {
-            showMessage("You use 1 medicine kit to treat the " + disease + ".");
-            inventory.useMedicine(1);
-            healthImpact /= 2; // Medicine cuts health impact in half
+        
+        // Check if player has medicine
+        if (inventory.getMedicine() >= medicineNeeded) {
+            inventory.useMedicine(medicineNeeded);
+            int healthRecovered = (int)(healthLost * (0.5 + random.nextDouble() * 0.5)); // Recover 50-100% of damage
+            healthLost -= healthRecovered;
+            message += "\nFortunately, you had " + medicineNeeded + " medicine kit(s). You used it and recovered some health.";
+            
+            // Ensure healthLost doesn't become negative if recovery is high
+            healthLost = Math.max(0, healthLost); 
         } else {
-            showMessage("You have no medicine kits to treat the " + disease + ".");
+            message += "\nYou have no medicine to treat the illness!";
+        }
+        
+        message += "\nYou lose " + healthLost + " health.";
+        
+        if (player.getHealth() - healthLost <= 0) {
+            message += "\nThe " + disease + " proved fatal.";
+            // Pass the specific disease name as the cause of death
+            player.decreaseHealth(healthLost, disease);
+        } else {
+            player.decreaseHealth(healthLost);
         }
 
-        // Apply health impact
-        player.decreaseHealth(healthImpact);
-        showMessage("Health decreased by " + healthImpact + " points.");
-
-        // Small chance of death if health is already low
-        if (isPlayer && player.getHealth() < 20 && random.nextDouble() < 0.2) {
-            player.setCauseOfDeath(disease);
-            player.setDead(true);
-        }
+        showMessage(message);
     }
 
     private void generateInjuryEvent() {
-        showMessage("\n=== INJURY ===");
-
-        // Determine who gets injured
-        boolean isPlayer = random.nextBoolean();
-        String victim;
-
-        if (isPlayer) {
-            victim = player.getName();
-        } else {
-            // Random family member
-            String[] family = player.getFamilyMembers();
-            victim = family[random.nextInt(family.length)];
-        }
-
-        // Select random injury
         String injury = injuries.get(random.nextInt(injuries.size()));
+        String message = "Injury! You suffered a " + injury + ".";
+        int healthLost = 0;
+        boolean needsMedicine = false;
 
-        showMessage(victim + " has suffered a " + injury + ".");
-
-        // Health impact
-        int healthImpact = 15 + random.nextInt(20); // 15-35 health impact
-
-        // If it's a family member, less direct impact on player
-        if (!isPlayer) {
-            healthImpact = 5 + random.nextInt(10); // 5-15 health impact
-            showMessage("Caring for " + victim + " slows your travel.");
+        switch (injury) {
+            case "broken leg":
+            case "broken arm":
+                healthLost = 25 + random.nextInt(25); // 25-50 health loss
+                needsMedicine = true;
+                break;
+            case "sprained ankle":
+            case "deep cut":
+                healthLost = 10 + random.nextInt(15); // 10-25 health loss
+                needsMedicine = random.nextDouble() < 0.5; // 50% chance needs medicine
+                break;
+            case "concussion":
+                healthLost = 15 + random.nextInt(20); // 15-35 health loss
+                needsMedicine = true;
+                break;
+            default: // Minor injury
+                healthLost = 5 + random.nextInt(10); // 5-15 health loss
+                break;
         }
 
-        // Check if medicine is available
-        if (inventory.getMedicine() > 0) {
-            showMessage("You use 1 medicine kit to treat the " + injury + ".");
-            inventory.useMedicine(1);
-            healthImpact /= 2; // Medicine cuts health impact in half
+        if (needsMedicine) {
+            if (inventory.getMedicine() > 0) {
+                inventory.useMedicine(1);
+                int healthRecovered = (int)(healthLost * (0.3 + random.nextDouble() * 0.4)); // Recover 30-70%
+                healthLost -= healthRecovered;
+                message += "\nYou used a medicine kit to treat the " + injury + ".";
+                healthLost = Math.max(0, healthLost); // Prevent negative health loss
+            } else {
+                message += "\nYou have no medicine to properly treat the " + injury + "!";
+                healthLost += 5 + random.nextInt(10); // Penalty for no medicine
+            }
+        }
+
+        message += "\nYou lose " + healthLost + " health.";
+        
+        if (player.getHealth() - healthLost <= 0) {
+            message += "\nThe " + injury + " led to complications, and you died.";
+            // Pass the specific injury as the cause
+            player.decreaseHealth(healthLost, injury); 
         } else {
-            showMessage("You have no medicine kits to treat the " + injury + ".");
+            player.decreaseHealth(healthLost);
         }
 
-        // Apply health impact
-        player.decreaseHealth(healthImpact);
-        showMessage("Health decreased by " + healthImpact + " points.");
+        showMessage(message);
     }
 
     private void generateWagonProblem() {
-        showMessage("\n=== WAGON PROBLEM ===");
-
-        double improviseSuccessChance = 0.6;
-        // Select random wagon problem
         String problem = wagonProblems.get(random.nextInt(wagonProblems.size()));
-        
-        showMessage("Your wagon has a " + problem + ".");
-        
-        // Determine which part is needed based on the problem description
-        boolean useWheel = problem.contains("wheel") || problem.contains("tire");
-        boolean useAxle = problem.contains("axle") || problem.contains("undercarriage");
-        boolean useTongue = problem.contains("tongue") || problem.contains("pole");
-        boolean useWagonBow = problem.contains("bow") || problem.contains("cover") || problem.contains("canvas");
-        
-        // If no specific part is identified, default to a random part
-        if (!useWheel && !useAxle && !useTongue && !useWagonBow) {
-            int randomPart = random.nextInt(4);
-            switch (randomPart) {
-                case 0: useWheel = true; break;
-                case 1: useAxle = true; break;
-                case 2: useTongue = true; break;
-                case 3: useWagonBow = true; break;
-            }
+        String message = "Wagon Problem: " + problem + ".";
+        int partsNeeded = 0;
+        String partType = "";
+        int delayDays = 0;
+        int healthDamage = 0; // Potential health damage from exertion or accident
+        int moraleLoss = 5 + random.nextInt(10); // Base morale loss
+
+        switch (problem) {
+            case "Broken Wheel":
+                partsNeeded = 1;
+                partType = "wheel";
+                delayDays = 1 + random.nextInt(2); // 1-2 days delay
+                moraleLoss += 5;
+                break;
+            case "Broken Axle":
+                partsNeeded = 1;
+                partType = "axle";
+                delayDays = 2 + random.nextInt(2); // 2-3 days delay
+                moraleLoss += 10;
+                break;
+            case "Broken Tongue":
+                partsNeeded = 1;
+                partType = "tongue";
+                delayDays = 1 + random.nextInt(2); // 1-2 days delay
+                moraleLoss += 8;
+                break;
+            case "Torn Wagon Cover":
+                // Doesn't require parts, but causes delay and potential spoilage
+                delayDays = 1;
+                moraleLoss += 3;
+                message += "\nSupplies are exposed to the elements.";
+                // Simulate extra spoilage
+                if (inventory.getFood() > 0) {
+                     int spoiledFood = (int)(inventory.getFood() * (0.05 + random.nextDouble() * 0.05)); // 5-10% spoilage
+                     inventory.consumeFood(spoiledFood);
+                     message += "\nLost " + spoiledFood + " lbs of food due to exposure.";
+                }
+                break;
+            case "Oxen Injury":
+                delayDays = 1 + random.nextInt(3); // 1-3 days delay
+                int oxenHealthLoss = 10 + random.nextInt(20); // 10-30 health loss
+                inventory.decreaseOxenHealth(oxenHealthLoss);
+                moraleLoss += 10;
+                message += "\nOne of your oxen is injured. Oxen health decreased by " + oxenHealthLoss + "%.";
+                break;
+            case "Wagon Stuck in Mud":
+                delayDays = 1;
+                moraleLoss += 5;
+                healthDamage = 5 + random.nextInt(10); // Exertion (5-15)
+                message += "\nIt takes significant effort to free the wagon.";
+                break;
+            case "Lost Supplies from Wagon":
+                 delayDays = 0; // No delay, just loss
+                 moraleLoss += 8;
+                 message += "\nSome supplies shifted and fell off the wagon.";
+                 // Lose random items
+                 int foodLost = 10 + random.nextInt(20);
+                 inventory.consumeFood(foodLost);
+                 message += "\nLost " + foodLost + " lbs of food.";
+                 if (random.nextDouble() < 0.3 && inventory.getMedicine() > 0) {
+                     inventory.useMedicine(1);
+                     message += "\nLost 1 medicine kit.";
+                 }
+                 if (random.nextDouble() < 0.2 && inventory.getAmmunition() >= 20) {
+                     inventory.useAmmunition(20);
+                     message += "\nLost 1 box of ammunition.";
+                 }
+                 break;
+            case "Overturned Wagon":
+                 partsNeeded = 1 + random.nextInt(2); // 1-2 parts needed
+                 delayDays = 2 + random.nextInt(3); // 2-4 days delay
+                 moraleLoss += 20;
+                 healthDamage = 10 + random.nextInt(20); // Accident injury (10-30)
+                 message += "\nThe wagon overturned! Major repairs needed.";
+                 // Lose more significant supplies
+                 foodLost = 50 + random.nextInt(100); // 50-150 lbs food
+                 inventory.consumeFood(foodLost);
+                 message += "\nLost " + foodLost + " lbs of food.";
+                 if (inventory.getMedicine() > 0) {
+                     int medLost = 1 + random.nextInt(inventory.getMedicine() + 1); // Lose 1 to all medicine
+                     inventory.useMedicine(medLost);
+                     message += "\nLost " + medLost + " medicine kit(s).";
+                 }
+                 if (inventory.getAmmunition() > 0) {
+                     int ammoLost = 20 + random.nextInt(inventory.getAmmunition() / 2 + 1); // Lose 20 to half ammo
+                     inventory.useAmmunition(ammoLost);
+                     message += "\nLost " + ammoLost + " rounds of ammunition.";
+                 }
+                 // Higher chance of part needed being critical (axle/wheel)
+                 if (random.nextDouble() < 0.6) partType = (random.nextBoolean() ? "axle" : "wheel");
+                 else partType = (random.nextBoolean() ? "tongue" : "bow");
+
+                 break;
+            default:
+                message += "\nRepairs might be needed.";
+                break;
         }
-        
-        String partNeeded = useWheel ? "wheel" : 
-                           useAxle ? "axle" : 
-                           useTongue ? "tongue" : 
-                           "wagon bow";
-        
-        // Check if the needed part is available
-        boolean hasNeededPart = (useWheel && inventory.getWheels() > 0) ||
-                               (useAxle && inventory.getAxles() > 0) ||
-                               (useTongue && inventory.getTongues() > 0) ||
-                               (useWagonBow && inventory.getWagonBows() > 0);
-        
-        if (hasNeededPart) {
-            showMessage("You need to use a " + partNeeded + " to fix the problem.");
-            
-            // Use the appropriate part
-            if (useWheel) {
-                inventory.useWheels(1);
-                showMessage("You used 1 wheel from your inventory.");
-            } else if (useAxle) {
-                inventory.useAxles(1);
-                showMessage("You used 1 axle from your inventory.");
-            } else if (useTongue) {
-                inventory.useTongues(1);
-                showMessage("You used 1 tongue from your inventory.");
+
+        // Apply Blacksmith/Carpenter job bonus
+        boolean hasBonus = player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER;
+        if (hasBonus) {
+            delayDays = Math.max(0, delayDays - 1); // Reduce delay by 1 day
+            moraleLoss = Math.max(0, moraleLoss - 5); // Reduce morale loss
+        }
+
+        if (partsNeeded > 0 && !partType.isEmpty()) {
+            message += "\nYou need " + partsNeeded + " spare " + partType + (partsNeeded > 1 ? "s" : "") + " for repairs.";
+            int availableParts = 0;
+            switch (partType) {
+                case "wheel": availableParts = inventory.getWheels(); break;
+                case "axle": availableParts = inventory.getAxles(); break;
+                case "tongue": availableParts = inventory.getTongues(); break;
+                case "bow": availableParts = inventory.getWagonBows(); break; // Assuming 'bow' corresponds to Wagon Bows
+            }
+
+            if (availableParts >= partsNeeded) {
+                // Use parts
+                 switch (partType) {
+                     case "wheel": inventory.useWheels(partsNeeded); break;
+                     case "axle": inventory.useAxles(partsNeeded); break;
+                     case "tongue": inventory.useTongues(partsNeeded); break;
+                     case "bow": inventory.useWagonBows(partsNeeded); break;
+                 }
+                 message += "\nYou have the necessary parts and make the repairs.";
+                 if (hasBonus) message += "\nYour skills speed up the process.";
             } else {
-                inventory.useWagonBows(1);
-                showMessage("You used 1 wagon bow from your inventory.");
+                 message += "\nYou don't have enough spare parts!";
+                 delayDays += 2 + random.nextInt(3); // Extra delay scavenging/trading
+                 moraleLoss += 15;
+                 message += "\nSignificant delay while you try to find or trade for parts.";
+                 // Chance of abandoning items to lighten load?
+                 if (random.nextDouble() < 0.3) {
+                     int foodAbandoned = 20 + random.nextInt(30);
+                     inventory.consumeFood(foodAbandoned);
+                     message += "\nTo proceed, you abandon " + foodAbandoned + " lbs of food.";
+                 }
             }
-            
-            showMessage("The repair takes some time, but you're able to continue.");
-            
-            // Gender-specific skill difference in repairs
-            if ("male".equalsIgnoreCase(player.getGender())) {
-                showMessage("Your experience with wagon repairs makes this a quicker fix.");
-                // Men recover a small amount of health due to confidence in their work
-                player.increaseHealth(2);
+        }
+
+        if (delayDays > 0) {
+            message += "\nYou are delayed by " + delayDays + " day(s).";
+            for (int i = 0; i < delayDays; i++) {
+                time.advanceDay();
+                // Consume food during delay
+                int foodConsumed = player.getFamilySize() * 2;
+                inventory.consumeFood(foodConsumed);
+                 message += "\n(Consumed " + foodConsumed + " lbs food during delay)";
             }
-        } else {
-            // Check if player has any parts, even if not the specific needed one
-            boolean hasAnyParts = inventory.getWheels() > 0 || 
-                                 inventory.getAxles() > 0 || 
-                                 inventory.getTongues() > 0 || 
-                                 inventory.getWagonBows() > 0;
-            
-            if (hasAnyParts) {
-                showMessage("You don't have a " + partNeeded + " for the repair, but you might be able to improvise...");
-                
-                // Use any available part as a substitute, but with diminished effectiveness
-                if (inventory.getWagonBows() > 0) {
-                    inventory.useWagonBows(1);
-                    showMessage("You try using a wagon bow to create a makeshift " + partNeeded + ".");
-                } else if (inventory.getTongues() > 0) {
-                    inventory.useTongues(1);
-                    showMessage("You try adapting a wagon tongue to work as a " + partNeeded + ".");
-                } else if (inventory.getAxles() > 0) {
-                    inventory.useAxles(1);
-                    showMessage("You try modifying an axle to function as a " + partNeeded + ".");
-                } else if (inventory.getWheels() > 0) {
-                    inventory.useWheels(1);
-                    showMessage("You try salvaging parts from a wheel to create a makeshift " + partNeeded + ".");
-                }
-                
-                // Improvised repair has a chance to work
-                if (random.nextDouble() < 0.6) {
-                    showMessage("Your improvised repair seems to be holding up!");
-                    
-                    // Gender-specific skill difference in repairs
-                    if ("male".equalsIgnoreCase(player.getGender()) && random.nextDouble() < 0.6) {
-                        showMessage("Your mechanical experience helps the repair work better than expected.");
-                        // No additional penalty
-                    } else {
-                        showMessage("The wagon seems a bit unsteady with the improvised repair.");
-                        // 🛠 Blacksmith/Carpenter bonus
-                        if (player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER) {
-                            improviseSuccessChance += 0.3; // Increase success to 90%
-                        }
-
-                        if (random.nextDouble() < improviseSuccessChance) {
-                            showMessage("Your improvised repair seems to be holding up well!");
-
-                            // Minor health bonus if player is skilled
-                            if (player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER) {
-                                inventory.decreaseOxenHealth(5); // Minor oxen stress only
-                            } else {
-                                inventory.decreaseOxenHealth(10); // Normal stress
-                            }
-                        } else {
-                            showMessage("Unfortunately, your improvised repair isn't very effective.");
-                            inventory.decreaseOxenHealth(15); // Heavy oxen stress
-                        }
-                        inventory.decreaseOxenHealth(5);
-                    }
-                } else {
-                    showMessage("Unfortunately, your improvised repair isn't very effective.");
-                    showMessage("The wagon's performance will be diminished until you can make a proper repair.");
-                    // 🛠 Blacksmith/Carpenter bonus
-                    if (player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER) {
-                        improviseSuccessChance += 0.3; // Increase success to 90%
-                    }
-
-                    if (random.nextDouble() < improviseSuccessChance) {
-                        showMessage("Your improvised repair seems to be holding up well!");
-
-                        // Minor health bonus if player is skilled
-                        if (player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER) {
-                            inventory.decreaseOxenHealth(5); // Minor oxen stress only
-                        } else {
-                            inventory.decreaseOxenHealth(10); // Normal stress
-                        }
-                    } else {
-                        showMessage("Unfortunately, your improvised repair isn't very effective.");
-                        inventory.decreaseOxenHealth(15); // Heavy oxen stress
-                    }
-                    inventory.decreaseOxenHealth(15);
-                }
+        }
+        
+        player.decreaseMorale(moraleLoss);
+        message += "\nMorale decreases by " + moraleLoss + ".";
+        
+        if (healthDamage > 0) {
+            if (player.getHealth() - healthDamage <= 0) {
+                message += "\nYou died from injuries sustained during the wagon incident.";
+                 // Specific cause based on the problem
+                String deathCause = problem.contains("Overturned") || problem.contains("Stuck") ? "accident" : "exhaustion";
+                player.decreaseHealth(healthDamage, deathCause);
             } else {
-                showMessage("You have no wagon parts to make repairs!");
-                showMessage("You'll have to improvise a solution, which takes time and energy.");
-
-                // Health impact from working hard to fix wagon without parts
-                int healthImpact = 5 + random.nextInt(10); // 5-15 health impact
-                
-                // Gender-specific repair outcomes
-                if ("male".equalsIgnoreCase(player.getGender()) && random.nextDouble() < 0.6) {
-                    healthImpact -= 2; // Men take slightly less health damage from repairs
-                    showMessage("Your experience with mechanical repairs helps you find a solution more quickly.");
-                } else if ("female".equalsIgnoreCase(player.getGender())) {
-                    healthImpact += 2; // Women take slightly more health damage from repairs
-                    showMessage("Without formal training in wagon repairs common for women of this era, you struggle more with the fix.");
-                }
-                
-                player.decreaseHealth(healthImpact);
-                showMessage("Health decreased by " + healthImpact + " points from the hard labor.");
-
-                // Chance of permanent wagon damage
-                if (random.nextDouble() < 0.3) {
-                    showMessage("Your makeshift repair isn't as good as it should be.");
-                    showMessage("Your wagon will now move a bit slower on the trail.");
-                    // This effect is simulated in the oxen health factor
-                    inventory.decreaseOxenHealth(20);
-                }
+                 player.decreaseHealth(healthDamage);
+                 message += "\nThe incident causes " + healthDamage + " health damage.";
             }
         }
-        if (player.getJob() == Job.CARPENTER || player.getJob() == Job.BLACKSMITH) {
-            // Give a real bonus
-            if (random.nextDouble() < 0.7) { // 70% chance repair succeeds WITHOUT using spare parts
-                showMessage(player.getName() + " repairs the wagon without using extra parts due to their skills.");
-            } else {
-                // Normal repair (costs parts)
-                inventory.useWagonParts(1);
-                showMessage(player.getName() + " repaired the wagon, but it still cost a wagon part.");
-            }
-        }
-        else {
-            // No special bonus: Always costs parts
-            inventory.useWagonParts(1);
-            showMessage("You repaired the wagon, but it cost a wagon part.");
-        }
+
+        showMessage(message);
     }
 
     private void generatePositiveEvent() {
-        showMessage("\n=== GOOD FORTUNE ===");
+        String event = positiveEvents.get(random.nextInt(positiveEvents.size()));
+        String message = "Good Fortune: " + event + ".";
+        int moraleGain = 0;
+        int healthGain = 0;
 
-        // Select random positive event
-        int index = random.nextInt(positiveEvents.size());
-        String event = positiveEvents.get(index);
-        
-        showMessage("Good fortune! You " + event + ".");
-        int foodAmount = 0;
-
-        // Apply positive effect
-        if (player.getJob() == Job.FARMER && 
-                (event.contains("edible wild plants") || 
-                 event.contains("harvested wild grain") || 
-                 event.contains("wild root vegetables") ||
-                 event.contains("expertly foraged"))) {
-                foodAmount += 10 + random.nextInt(21); // Additional 10-30 pounds
-
-            
-            inventory.addFood(foodAmount);
-            showMessage("You gained " + foodAmount + " pounds of food.");
-        } else if (event.contains("found wild berries")) {
-            int foodGained = 5 + random.nextInt(10); // 5-15 pounds of food
-            
-            // Women were historically better foragers
-            if ("female".equalsIgnoreCase(player.getGender())) {
-                foodGained += 5; // Additional 5 pounds of food
-                showMessage("Your knowledge of wild plants helps you find more edible berries.");
-            }
-            
-            inventory.addFood(foodGained);
-            showMessage("You add " + foodGained + " pounds of food to your supplies.");
-        } else if (event.contains("found extra supplies left by an abandoned wagon")) {
-            // Random assortment of supplies
-            int foodGained = 10 + random.nextInt(30); // 10-40 pounds of food
-            int medicineGained = random.nextInt(2); // 0-1 medicine kit
-            int ammoGained = random.nextInt(20); // 0-19 ammunition
-
-            // Add resources
-            inventory.addFood(foodGained);
-            inventory.addMedicine(medicineGained);
-            inventory.addAmmunition(ammoGained);
-
-            showMessage("You scavenge:");
-            showMessage("- " + foodGained + " pounds of food");
-            if (medicineGained > 0) showMessage("- " + medicineGained + " medicine kit");
-            if (ammoGained > 0) showMessage("- " + ammoGained + " rounds of ammunition");
-        } else if (event.contains("met friendly natives who shared food")) {
-            int foodGained = 15 + random.nextInt(15); // 15-30 pounds of food
-            
-            // Women often had better diplomatic relations with native peoples
-            if ("female".equalsIgnoreCase(player.getGender())) {
-                foodGained += 10; // Additional 10 pounds of food
-                int medicineGained = 1; // Bonus medicine
-                inventory.addMedicine(medicineGained);
-                showMessage("Your friendly approach leads to a cultural exchange. You learn about medicinal plants.");
-                showMessage("You gain 1 medicine from this knowledge.");
-            }
-            
-            inventory.addFood(foodGained);
-            showMessage("They share " + foodGained + " pounds of food with you.");
-            showMessage("They also show you a better route, saving you time.");
-        } else if (event.contains("found a clear stream with fresh fish")) {
-            showMessage("Everyone in your party feels refreshed.");
-            player.increaseHealth(10);
-            showMessage("Health increased by 10 points.");
-        } else if (event.contains("hunting")) {
-            int foodGained = 25 + random.nextInt(50); // 25-75 pounds of food
-            int ammoUsed = 1 + random.nextInt(3); // 1-3 ammunition used
-
-            // Men were typically better hunters in this era
-            if ("male".equalsIgnoreCase(player.getGender())) {
-                foodGained += 25; // Additional 25 pounds of food
-                ammoUsed = Math.max(1, ammoUsed - 1); // Use 1 less ammunition (minimum 1)
-                showMessage("Your hunting skills allow you to bring down larger game with fewer shots.");
-            } else if ("female".equalsIgnoreCase(player.getGender())) {
-                foodGained -= 10; // 10 pounds less food
-                showMessage("Though women weren't typically the primary hunters in this era, you manage a successful hunt.");
-            }
-
-            if (inventory.getAmmunition() >= ammoUsed) {
-                inventory.useAmmunition(ammoUsed);
+        switch (event) {
+            case "Found Wild Berries":
+                int foodGained = 10 + random.nextInt(20); // 10-30 lbs
                 inventory.addFood(foodGained);
-                showMessage("You use " + ammoUsed + " ammunition and get " + foodGained + " pounds of food.");
-            } else {
-                showMessage("Unfortunately, you don't have enough ammunition to hunt effectively.");
-                foodGained = 5 + random.nextInt(10); // Much less food without ammunition
-                inventory.addFood(foodGained);
-                showMessage("You manage to gather " + foodGained + " pounds of food instead.");
-            }
-        } else if (event.contains("herbs")) {
-            showMessage("You discover medicinal herbs and learn how to use them from a fellow traveler.");
-            showMessage("This knowledge will benefit your family's health on the journey.");
-            
-            // Health boost
-            int healthBoost = 10 + random.nextInt(10); // 10-20 health boost
-            player.increaseHealth(healthBoost);
-            showMessage("Immediate health improved by " + healthBoost + " points.");
-            
-            // Medicine gain
-            int medicineGained = 1; // Bonus medicine kit
-            inventory.addMedicine(medicineGained);
-            
-            showMessage("You gain 1 medicine kit from this knowledge.");
+                moraleGain = 5 + random.nextInt(10);
+                message += "\nYou find " + foodGained + " lbs of edible berries.";
+                break;
+            case "Clear Skies Ahead":
+                moraleGain = 10 + random.nextInt(10);
+                message += "\nThe weather is perfect for travel, lifting everyone's spirits.";
+                // Could add a temporary small speed boost?
+                break;
+            case "Met Friendly Natives":
+                moraleGain = 15 + random.nextInt(10);
+                message += "\nYou have a peaceful encounter with local Native Americans.";
+                // Chance of trade or gaining supplies
+                if (random.nextDouble() < 0.4) {
+                    if (random.nextBoolean() && inventory.getFood() > 20) {
+                        inventory.consumeFood(10);
+                        inventory.addMedicine(1);
+                        message += "\nYou trade 10 lbs of food for a medicine kit.";
+                    } else if (inventory.getAmmunition() > 10) {
+                         inventory.useAmmunition(10);
+                         int foodTraded = 15 + random.nextInt(15);
+                         inventory.addFood(foodTraded);
+                         message += "\nYou trade 10 rounds of ammunition for " + foodTraded + " lbs of dried meat.";
+                    } else {
+                         message += "\nThey share some knowledge about the trail ahead.";
+                    }
+                }
+                break;
+            case "Successful Hunt (Minor)":
+                // Check if player has ammo first
+                if (inventory.getAmmunition() > 0) {
+                    int ammoUsed = 1 + random.nextInt(2);
+                    inventory.useAmmunition(Math.min(ammoUsed, inventory.getAmmunition()));
+                    foodGained = 15 + random.nextInt(25); // 15-40 lbs (rabbit, bird)
+                    inventory.addFood(foodGained);
+                    moraleGain = 8 + random.nextInt(7);
+                    message += "\nA quick hunt yields " + foodGained + " lbs of small game. Used " + Math.min(ammoUsed, inventory.getAmmunition()) + " ammo.";
+                } else {
+                    message = "Good Fortune: You spot game, but have no ammunition to hunt.";
+                    moraleGain = -2; // Slight disappointment
+                }
+                break;
+            case "Found Lost Item":
+                 moraleGain = 5 + random.nextInt(5);
+                 message += "\nYou find a small valuable item lost by a previous traveler.";
+                 // Small money gain
+                 int moneyFound = 5 + random.nextInt(10);
+                 player.addMoney(moneyFound);
+                 message += "\nIt fetches $" + moneyFound + " at the next trading post (added to your funds now).";
+                 break;
+             case "Restful Night":
+                 healthGain = 5 + random.nextInt(10); // 5-15 health
+                 moraleGain = 5 + random.nextInt(10); // 5-15 morale
+                 message += "\nEveryone gets a particularly good night's sleep.";
+                 // Also slightly recover oxen health
+                 inventory.increaseOxenHealth(3 + random.nextInt(5));
+                 message += "\nOxen also seem more rested.";
+                 break;
+             case "Inspiring Sermon (if Preacher)":
+                 if (player.getJob() == Job.PREACHER) {
+                     moraleGain = 15 + random.nextInt(15); // Significant boost (15-30)
+                     message = "Good Fortune: Your words inspire the wagon train.";
+                     message += "\nMorale significantly increases for everyone.";
+                 } else {
+                     // Reroll event if not preacher
+                     generatePositiveEvent();
+                     return; // Avoid double message
+                 }
+                 break;
+             case "Good Fishing Spot":
+                 moraleGain = 5 + random.nextInt(8);
+                 foodGained = 5 + random.nextInt(15); // 5-20 lbs fish
+                 inventory.addFood(foodGained);
+                 message += "\nYou stop by a river and catch " + foodGained + " lbs of fish.";
+                 break;
+
+            default:
+                moraleGain = 5;
+                break;
         }
+
+        player.increaseMorale(moraleGain);
+        player.increaseHealth(healthGain);
+        message += "\nMorale increases by " + moraleGain + "." + (healthGain > 0 ? " Health increases by " + healthGain + "." : "");
+
+        showMessage(message);
     }
-
+    
     private void generateWeatherEvent() {
-        showMessage("\n=== WEATHER EVENT ===");
-
-        // Select random weather event
         String event = weatherEvents.get(random.nextInt(weatherEvents.size()));
+        String message = "Weather Event: " + event + ".";
+        int delayDays = 0;
+        int healthDamage = 0;
+        int moraleLoss = 0;
+        int foodSpoilagePercent = 0;
+        boolean partDamage = false;
+        String deathCause = "exposure"; // Default cause for weather deaths
 
-        showMessage(event);
+        switch (event) {
+            case "Thunderstorm":
+                moraleLoss = 5 + random.nextInt(10);
+                delayDays = random.nextInt(2); // 0-1 day delay
+                message += "\nA fierce storm rolls in.";
+                // Small chance of lightning strike
+                if (random.nextDouble() < 0.05) {
+                    healthDamage = 50 + random.nextInt(51); // High damage (50-100)
+                    message += "\nDisaster! Lightning strikes near your wagon!";
+                    deathCause = "lightning strike";
+                } else {
+                    healthDamage = 3 + random.nextInt(7); // Minor exposure/fatigue (3-10)
+                    foodSpoilagePercent = 5; // 5% spoilage
+                    partDamage = random.nextDouble() < 0.1; // 10% chance minor part damage
+                }
+                break;
 
-        // Apply weather effect
-        if (event.contains("rain")) {
-            // Rain slows travel but may help find water
-            inventory.decreaseOxenHealth(5); // Muddy conditions strain animals
-            showMessage("The rain slows your travel but provides fresh drinking water.");
-            
-            // Food loss chance
-            if (random.nextDouble() < 0.3) {
-                int foodLost = 5 + random.nextInt(15); // 5-20 pounds
-                inventory.consumeFood(foodLost);
-                showMessage("Some of your food got wet and spoiled. You lost " + foodLost + " pounds of food.");
-            }
-        } else if (event.contains("snow")) {
-            // Snow significantly slows travel
-            inventory.decreaseOxenHealth(10);
-            player.decreaseHealth(5);
-            showMessage("The severe cold affects everyone's health and slows travel considerably.");
-            
-            // Food consumption increases
-            int extraFood = player.getFamilySize();
-            if (inventory.getFood() >= extraFood) {
-                inventory.consumeFood(extraFood);
-                showMessage("The cold weather makes everyone hungrier. You consume " + extraFood + " extra pounds of food.");
-            } else {
-                player.decreaseHealth(3);
-                showMessage("You don't have enough extra food for the cold weather. Everyone suffers a bit more.");
-            }
-            
-            // Small chance of freezing/exposure death if health is already low
-            if (player.getHealth() < 30 && random.nextDouble() < 0.10) {
-                player.decreaseHealth(player.getHealth()); // Ensure death
-                player.setCauseOfDeath("exposure to cold");
-                player.setDead(true);
-                showMessage("The bitter cold is too much in your weakened condition. Someone in your party succumbs to the freezing temperatures.");
-            }
-        } else if (event.contains("lightning")) {
-            // Lightning has a chance to damage supplies or wagon
-            boolean wagonDamage = random.nextDouble() < 0.4;
-            
-            if (wagonDamage) {
-                showMessage("A lightning strike damages your wagon!");
-                
-                // Random part damaged
-                int partType = random.nextInt(4);
-                String damagedPart;
-                boolean hasPart = false;
-                
-                switch (partType) {
-                    case 0:
-                        damagedPart = "wheel";
-                        hasPart = inventory.getWheels() > 0;
-                        if (hasPart) inventory.useWheels(1);
-                        break;
-                    case 1:
-                        damagedPart = "axle";
-                        hasPart = inventory.getAxles() > 0;
-                        if (hasPart) inventory.useAxles(1);
-                        break;
-                    case 2:
-                        damagedPart = "tongue";
-                        hasPart = inventory.getTongues() > 0;
-                        if (hasPart) inventory.useTongues(1);
-                        break;
-                    default:
-                        damagedPart = "wagon bow";
-                        hasPart = inventory.getWagonBows() > 0;
-                        if (hasPart) inventory.useWagonBows(1);
-                        break;
+            case "Heavy Fog":
+                moraleLoss = 3 + random.nextInt(5);
+                delayDays = 1; // Usually causes a delay
+                message += "\nThick fog blankets the trail, making travel impossible.";
+                healthDamage = 2 + random.nextInt(4); // Minor fatigue from waiting (2-6)
+                break;
+
+            case "Hail Storm":
+                moraleLoss = 10 + random.nextInt(10);
+                delayDays = random.nextInt(2); // 0-1 day delay
+                message += "\nLarge hailstones batter your wagon.";
+                healthDamage = 5 + random.nextInt(10); // Minor injuries from hail (5-15)
+                partDamage = random.nextDouble() < 0.3; // 30% chance of part damage (cover/bows)
+                // Damage oxen slightly
+                inventory.decreaseOxenHealth(5 + random.nextInt(10));
+                message += "\nOxen are bruised by the hail.";
+                deathCause = "accident"; // If somehow fatal
+                break;
+
+            case "Blizzard":
+                moraleLoss = 20 + random.nextInt(15); // High morale loss (20-35)
+                delayDays = 2 + random.nextInt(4); // Significant delay (2-5 days)
+                message += "\nA blinding blizzard traps you in place.";
+                healthDamage = 15 + random.nextInt(20); // Significant cold exposure (15-35)
+                foodSpoilagePercent = 10; // Higher spoilage
+                deathCause = "exposure to cold";
+                 // High chance of oxen health loss
+                if (random.nextDouble() < 0.7) {
+                    int oxenDamage = 15 + random.nextInt(20);
+                    inventory.decreaseOxenHealth(oxenDamage);
+                    message += "\nOxen suffer from the extreme cold, health decreased by " + oxenDamage + "%.";
                 }
+                break;
+
+            case "Extreme Heat":
+                moraleLoss = 10 + random.nextInt(10);
+                message += "\nScorching heat beats down on the trail.";
+                healthDamage = 10 + random.nextInt(15); // Heat exhaustion (10-25)
+                delayDays = random.nextInt(2); // Potential delay looking for water/shade (0-1)
+                foodSpoilagePercent = 15; // High spoilage in heat
+                deathCause = "heat stroke";
+                // Increase oxen fatigue/health loss
+                 int oxenDamage = 10 + random.nextInt(15);
+                 inventory.decreaseOxenHealth(oxenDamage);
+                 message += "\nOxen struggle in the heat, health decreased by " + oxenDamage + "%.";
+                break;
+
+            case "Dust Storm":
+                moraleLoss = 8 + random.nextInt(7);
+                delayDays = 1;
+                message += "\nA choking dust storm reduces visibility and makes breathing difficult.";
+                healthDamage = 5 + random.nextInt(10); // Respiratory issues/fatigue (5-15)
+                foodSpoilagePercent = 5;
+                deathCause = "exhaustion";
+                break;
                 
-                if (hasPart) {
-                    showMessage("The strike damaged a " + damagedPart + ". You use a spare to repair it.");
-                } else {
-                    showMessage("The strike damaged a " + damagedPart + ", but you have no spare parts!");
-                    showMessage("You have no spare parts to properly repair your wagon.");
-                    inventory.decreaseOxenHealth(15);
-                    showMessage("Your makeshift repairs will slow your travel significantly.");
-                }
-            } else {
-                // Just a scare
-                showMessage("The storm passes without causing serious harm.");
-            }
-            
-            // Very small chance of lightning strike on person
-            if (random.nextDouble() < 0.02) { // 2% chance
-                int healthLost = 30 + random.nextInt(30); // 30-60 damage
-                player.decreaseHealth(healthLost);
-                showMessage("Lightning strikes dangerously close, causing injuries!");
-                
-                if (player.getHealth() <= 0) {
-                    player.setCauseOfDeath("lightning strike");
-                    player.setDead(true);
-                    showMessage("Tragedy! Someone was struck by lightning and killed instantly.");
-                }
-            }
-        } else if (event.contains("hail")) {
-            // Hail can damage food supplies
-            int foodLost = 10 + random.nextInt(20); // 10-30 pounds
-            inventory.consumeFood(foodLost);
-            showMessage("Hail damages some of your supplies. You lost " + foodLost + " pounds of food.");
-            
-            // Small chance of injury
-            if (random.nextDouble() < 0.2) {
-                player.decreaseHealth(5);
-                showMessage("The hail causes minor injuries to members of your party.");
-            }
-        } else if (event.contains("drought") || event.contains("heat")) {
-            // Drought affects health more than supplies
-            int healthLoss = 7 + random.nextInt(8); // 7-15 health loss
-            player.decreaseHealth(healthLoss);
-            showMessage("The extreme heat and drought leaves everyone dehydrated and weakened.");
-            showMessage("You lost " + healthLoss + " health points.");
-            
-            // Chance of heat stroke/death in extreme conditions
-            if (player.getHealth() < 25 && random.nextDouble() < 0.15) {
-                player.decreaseHealth(player.getHealth()); // Ensure death
-                player.setCauseOfDeath("heat stroke");
-                player.setDead(true);
-                showMessage("The relentless heat causes someone in your party to suffer fatal heat stroke.");
-            }
-        } else if (event.contains("fog")) {
-            // Fog mostly just slows travel and creates risk
-            showMessage("The fog makes travel treacherous. You proceed with caution.");
-            
-            // Small chance of wagon accident
-            if (random.nextDouble() < 0.2) {
-                showMessage("In the fog, your wagon hits a rock and sustains damage.");
-                
-                if (inventory.getWagonParts() > 0) {
-                    inventory.useWagonParts(1);
-                    showMessage("You use 1 wagon part to repair the damage.");
-                } else {
-                    showMessage("You have no spare parts to properly repair your wagon.");
-                    inventory.decreaseOxenHealth(10);
+            case "Sudden Freeze":
+                 moraleLoss = 10 + random.nextInt(10);
+                 message += "\nAn unexpected cold snap hits overnight.";
+                 healthDamage = 8 + random.nextInt(12); // Cold exposure (8-20)
+                 delayDays = random.nextInt(2); // 0-1 day delay
+                 foodSpoilagePercent = 5; // Less spoilage than blizzard but still risk
+                 deathCause = "exposure to cold";
+                 // Chance of damaging fragile items? (Less likely than parts)
+                 break;
+                 
+             case "Flooding River": // Could happen away from main crossing
+                 moraleLoss = 15 + random.nextInt(10);
+                 delayDays = 1 + random.nextInt(3); // 1-3 days delay waiting for water to subside
+                 message += "\nHeavy rains cause a nearby creek to flood, blocking the path.";
+                 healthDamage = 5 + random.nextInt(5); // Fatigue from waiting/finding detour
+                 // Chance of losing items if camped too close
+                 if (random.nextDouble() < 0.2) {
+                     int foodWashedAway = 10 + random.nextInt(20);
+                     inventory.consumeFood(foodWashedAway);
+                     message += "\nSome supplies stored near the ground were washed away! Lost " + foodWashedAway + " lbs food.";
+                 }
+                 break;
+
+            default:
+                message += "\nThe weather takes a turn.";
+                moraleLoss = 5;
+                break;
+        }
+
+        // Apply delay
+        if (delayDays > 0) {
+            message += "\nYou are delayed by " + delayDays + " day(s).";
+            for (int i = 0; i < delayDays; i++) {
+                time.advanceDay();
+                int foodConsumed = player.getFamilySize() * 2;
+                inventory.consumeFood(foodConsumed);
+                message += "\n(Consumed " + foodConsumed + " lbs food during delay)";
+                // Health can decline further during severe weather delay
+                if (healthDamage > 10 && random.nextDouble() < 0.3) { // Extra damage if already significant
+                     int extraDamage = 2 + random.nextInt(5);
+                     healthDamage += extraDamage;
+                     message += "\n(Conditions worsen, +" + extraDamage + " health damage)";
                 }
             }
         }
+
+        // Apply food spoilage
+        if (foodSpoilagePercent > 0 && inventory.getFood() > 0) {
+            int spoiledFood = (int)(inventory.getFood() * (foodSpoilagePercent / 100.0));
+            inventory.consumeFood(spoiledFood);
+            message += "\n" + spoiledFood + " lbs of food spoiled due to the weather.";
+        }
+        
+        // Apply part damage
+        if (partDamage) {
+            String brokenPart = inventory.repairRandomBrokenPart(); // Let's assume this simulates damage for now
+            if (brokenPart != null) {
+                 message += "\nThe harsh weather damaged a wagon " + brokenPart + ".";
+                 // TODO: Need a better damage system than using repair method
+            } else if (inventory.getWagonParts() > 0) {
+                // If repair didn't work but parts exist, maybe damage one specifically?
+                inventory.useWagonParts(1); // Use a random part
+                message += "\nThe harsh weather damaged a wagon part.";
+            }
+        }
+
+        player.decreaseMorale(moraleLoss);
+        message += "\nMorale decreases by " + moraleLoss + ".";
+
+        if (healthDamage > 0) {
+            if (player.getHealth() - healthDamage <= 0) {
+                message += "\nYou succumbed to the harsh conditions (" + deathCause + ").";
+                player.decreaseHealth(healthDamage, deathCause); // Use specific cause
+            } else {
+                player.decreaseHealth(healthDamage);
+                message += "\nThe weather causes " + healthDamage + " health damage.";
+            }
+        }
+
+        showMessage(message);
     }
 
     private void generateAnimalEvent() {
-        showMessage("\n=== ANIMAL ENCOUNTER ===");
-
-        // Select random animal event
         String event = animalEvents.get(random.nextInt(animalEvents.size()));
+        String message = "Animal Encounter: " + event + ".";
+        int healthDamage = 0;
+        int moraleChange = 0; // Can be positive or negative
+        int ammoUsed = 0;
+        String deathCause = "animal attack"; // Default for attacks
 
-        showMessage(event);
-
-        // Apply effect based on animal type
-        if (event.contains("buffalo")) {
-            // Buffalo could be food or danger
-            boolean canHunt = inventory.getAmmunition() >= 3;
-            
-            if (canHunt && random.nextDouble() < 0.6) {
-                int ammoUsed = 3;
-                inventory.useAmmunition(ammoUsed);
-                
-                int foodGained = 200 + random.nextInt(300); // 200-500 pounds
-                
-                // Men typically had more hunting experience
-                if ("male".equalsIgnoreCase(player.getGender())) {
-                    foodGained += 50; // Additional 50 pounds
-                    ammoUsed = Math.max(2, ammoUsed - 1); // Use 1 less ammo (min 2)
-                    showMessage("Your hunting experience helps you make a more efficient kill.");
+        switch (event) {
+            case "Snakebite":
+                message += "\nA venomous snake bites you!";
+                healthDamage = 30 + random.nextInt(40); // Serious health impact (30-70)
+                moraleChange = -15 - random.nextInt(10); // Significant fear/morale loss
+                deathCause = "snakebite";
+                // Check for medicine
+                if (inventory.getMedicine() > 0) {
+                    inventory.useMedicine(1);
+                    int healthRecovered = (int)(healthDamage * (0.4 + random.nextDouble() * 0.4)); // Recover 40-80%
+                    healthDamage -= healthRecovered;
+                    message += "\nYou quickly use a medicine kit as an antivenom.";
+                    healthDamage = Math.max(0, healthDamage); // Prevent negative health loss
                 } else {
-                    foodGained -= 50; // 50 pounds less
-                    showMessage("Though women weren't typically the primary hunters in this era, your shot is successful.");
+                    message += "\nYou have no medicine to treat the bite!";
+                    healthDamage += 10 + random.nextInt(15); // Penalty
                 }
-                
-                inventory.addFood(foodGained);
-                
-                showMessage("You successfully hunt a buffalo, using " + ammoUsed + " ammunition.");
-                showMessage("You gain " + foodGained + " pounds of food! That should last a while.");
-            } else if (canHunt) {
-                inventory.useAmmunition(2);
-                showMessage("You try to hunt the buffalo, using 2 ammunition, but it escapes.");
+                break;
+
+            case "Wolf Pack Nearby":
+                message += "\nA pack of wolves is spotted shadowing the wagon train.";
+                moraleChange = -10 - random.nextInt(10); // Fear
+                // Chance of attack if low on ammo or traveling slow?
+                if (inventory.getAmmunition() < 20 && random.nextDouble() < 0.3) {
+                     message += "\nSeeing weakness, the wolves attack!";
+                     healthDamage = 15 + random.nextInt(20); // Moderate attack (15-35)
+                     ammoUsed = Math.min(inventory.getAmmunition(), 5 + random.nextInt(10)); // Use 5-15 ammo or less if not available
+                     inventory.useAmmunition(ammoUsed);
+                     message += "\nYou fend them off, using " + ammoUsed + " rounds.";
+                     deathCause = "wolf attack"; // More specific
+                } else {
+                    message += "\nThey keep their distance for now.";
+                }
+                break;
+
+            case "Bison Stampede":
+                message += "\nA massive bison herd stampedes nearby!";
+                moraleChange = -5 - random.nextInt(10); // Fear and awe
+                // Chance of wagon damage or injury
+                if (random.nextDouble() < 0.15) {
+                     message += "\nYour wagon is caught on the edge of the stampede!";
+                     healthDamage = 20 + random.nextInt(30); // Significant injury (20-50)
+                     // Damage wagon parts
+                     int partsDamaged = 1 + random.nextInt(2);
+                     inventory.useWagonParts(partsDamaged);
+                     message += "\n" + partsDamaged + " wagon part(s) were damaged.";
+                     // Damage oxen
+                     inventory.decreaseOxenHealth(20 + random.nextInt(20));
+                     message += "\nOxen were injured in the chaos.";
+                     deathCause = "accident";
+                } else {
+                     message += "\nYou manage to steer clear of the main herd.";
+                }
+                break;
+
+            case "Bear Sighting":
+                 message += "\nA large bear is seen near the camp.";
+                 moraleChange = -8 - random.nextInt(7); // Fear
+                 // Chance of raid if food is not secured? (Simplification: random chance)
+                 if (random.nextDouble() < 0.2) {
+                      message += "\nThe bear raids your camp during the night!";
+                      int foodStolen = 20 + random.nextInt(30); // 20-50 lbs food
+                      inventory.consumeFood(foodStolen);
+                      message += "\nIt stole " + foodStolen + " lbs of food.";
+                      // Chance of injury if someone confronts it
+                      if (random.nextDouble() < 0.2) {
+                           healthDamage = 25 + random.nextInt(25); // Bear attack (25-50)
+                           message += "\nSomeone was injured trying to scare it off!";
+                           deathCause = "bear attack";
+                      }
+                 } else {
+                      message += "\nIt eventually wanders away.";
+                 }
+                 break;
+                 
+             case "Wild Horse Encounter":
+                  message += "\nA herd of wild horses gallops past.";
+                  moraleChange = 5 + random.nextInt(5); // Inspiring sight
+                  // Small chance to potentially trade for one? (Very rare/complex)
+                  message += "\nTheir wild spirit is an inspiring sight.";
+                  break;
+                  
+             case "Prairie Dog Town":
+                  message += "\nYou pass through a large prairie dog town.";
+                  moraleChange = 2 + random.nextInt(4); // Mildly amusing
+                  // Small chance of wagon wheel damage from holes
+                  if (random.nextDouble() < 0.05 && inventory.getWheels() > 0) {
+                       inventory.useWheels(1);
+                       message += "\nCareful! A wheel got stuck in a hole and was damaged.";
+                       moraleChange = -5; // Annoyance overrides amusement
+                  } else {
+                       message += "\nTheir antics provide some amusement.";
+                  }
+                  break;
+
+            default:
+                message += "\nAn animal is nearby.";
+                moraleChange = -2;
+                break;
+        }
+
+        if (moraleChange > 0) {
+             player.increaseMorale(moraleChange);
+             message += "\nMorale increases by " + moraleChange + ".";
+        } else if (moraleChange < 0) {
+             player.decreaseMorale(Math.abs(moraleChange));
+             message += "\nMorale decreases by " + Math.abs(moraleChange) + ".";
+        }
+
+        if (healthDamage > 0) {
+            if (player.getHealth() - healthDamage <= 0) {
+                message += "\nThe encounter proved fatal (" + deathCause + ").";
+                player.decreaseHealth(healthDamage, deathCause); // Use specific cause
             } else {
-                showMessage("Without ammunition, you can only watch as the buffalo herd passes by.");
-                
-                // Small chance of stampede
-                if (random.nextDouble() < 0.2) {
-                    showMessage("A buffalo gets too close to your wagon and startles your oxen!");
-                    inventory.decreaseOxenHealth(10);
-                    
-                    int foodLost = 10 + random.nextInt(20); // 10-30 pounds
-                    if (inventory.getFood() > foodLost) {
-                        inventory.consumeFood(foodLost);
-                        showMessage("In the chaos, you lose " + foodLost + " pounds of food.");
-                    }
-                }
-            }
-        } else if (event.contains("bears")) {
-            // Bears are dangerous - ammunition helps
-            boolean hasAmmo = inventory.getAmmunition() >= 3;
-            
-            if (hasAmmo) {
-                inventory.useAmmunition(3);
-                showMessage("You fire shots to scare away the bears, using 3 ammunition.");
-                
-                // Small chance to hunt
-                if (random.nextDouble() < 0.3) {
-                    int foodGained = 100 + random.nextInt(100); // 100-200 pounds
-                    
-                    // Gender-based hunting differences
-                    if ("male".equalsIgnoreCase(player.getGender())) {
-                        foodGained += 30; // Additional 30 pounds
-                        showMessage("Your hunting experience allows you to make a clean kill.");
-                    }
-                    
-                    inventory.addFood(foodGained);
-                    showMessage("You manage to kill a bear, gaining " + foodGained + " pounds of food!");
-                }
-            } else {
-                // No ammunition - health impact
-                int healthLoss = 10 + random.nextInt(15); // 10-25 health
-                player.decreaseHealth(healthLoss);
-                showMessage("Without ammunition, you have to hide and wait for the bears to leave.");
-                showMessage("The encounter leaves everyone shaken and costs valuable time.");
-                showMessage("Health decreased by " + healthLoss + " points from stress and lost time.");
-                
-                // Food loss possible
-                if (random.nextDouble() < 0.5) {
-                    int foodLost = 20 + random.nextInt(30); // 20-50 pounds
-                    if (inventory.getFood() > foodLost) {
-                        inventory.consumeFood(foodLost);
-                        showMessage("The bears get into your food supplies! You lose " + foodLost + " pounds of food.");
-                    }
-                }
-            }
-        } else if (event.contains("wolves")) {
-            // Wolves are a threat to oxen more than people
-            boolean hasAmmo = inventory.getAmmunition() >= 2;
-            
-            if (hasAmmo) {
-                inventory.useAmmunition(2);
-                showMessage("You fire shots to scare away the wolves, using 2 ammunition.");
-            } else {
-                // No ammunition - oxen health impact
-                inventory.decreaseOxenHealth(15);
-                showMessage("Without ammunition, you struggle to protect your oxen from the wolves.");
-                showMessage("Your oxen are injured and exhausted from the encounter.");
-                
-                // Small health impact to player
-                player.decreaseHealth(5);
-                showMessage("The stress of the situation affects everyone's health.");
+                player.decreaseHealth(healthDamage);
+                message += "\nYou suffer " + healthDamage + " health damage.";
             }
         }
+
+        showMessage(message);
     }
 } 

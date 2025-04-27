@@ -327,21 +327,30 @@ public class GameController {
 
     /** Handles daily food consumption and tracks total. */
     private void consumeDailyFood(int currentDay) {
-        int desiredFoodConsumption = player.getFamilySize() * 2;
-        int actualFoodConsumedToday = 0;
-        if (inventory.getFood() >= desiredFoodConsumption) {
-            actualFoodConsumedToday = desiredFoodConsumption;
-            inventory.consumeFood(actualFoodConsumedToday);
+        int foodNeeded = player.getFamilySize() * 2; // Base 2 lbs per person per day
+        int foodAvailable = inventory.getFood();
+
+        if (foodAvailable >= foodNeeded) {
+            inventory.consumeFood(foodNeeded);
+            initialFoodConsumed += foodNeeded;
         } else {
-            actualFoodConsumedToday = inventory.getFood();
-            inventory.consumeFood(actualFoodConsumedToday);
-            player.decreaseHealth(5);
-            String foodShortageMsg = "Ran out of food on day " + currentDay + ", health declining.";
-            if (!initialJourneyEvents.contains(foodShortageMsg)) {
-                initialJourneyEvents.add(foodShortageMsg);
+            // Consume remaining food
+            inventory.consumeFood(foodAvailable);
+            initialFoodConsumed += foodAvailable;
+            
+            // Apply health penalty for insufficient food
+            int healthPenalty = 5 + (foodNeeded - foodAvailable); // Penalty increases with shortfall
+            // Pass "starvation" as the cause when health decreases due to lack of food
+            player.decreaseHealth(healthPenalty, "starvation"); 
+            initialJourneyEvents.add("Day " + currentDay + ": Ran low on food! Lost " + healthPenalty + " health.");
+            
+            // Check if player died from starvation during initial journey
+            if (player.isDead()) {
+                initialJourneyEvents.add("Tragically, you starved before reaching Fort Kearny.");
+                handleInitialJourneyDeath(currentDay);
+                return; // Stop simulation if player dies
             }
         }
-        initialFoodConsumed += actualFoodConsumedToday;
     }
 
     /** Simulates random oxen fatigue. */
@@ -385,7 +394,15 @@ public class GameController {
     /** Handles player death during the initial journey simulation. */
     private void handleInitialJourneyDeath(int days) {
         isGameRunning = false;
-        String deathMessage = "Died of " + player.getCauseOfDeath() + " after " + days + " days, before reaching Fort Kearny.";
+        
+        // Get cause of death or use default if somehow not set
+        String causeOfDeath = player.getCauseOfDeath();
+        if (causeOfDeath == null || causeOfDeath.trim().isEmpty()) {
+            causeOfDeath = "unknown causes";
+            player.setCauseOfDeath(causeOfDeath); // Set it for the DeathDialog
+        }
+        
+        String deathMessage = "Died of " + causeOfDeath + " after " + days + " days, before reaching Fort Kearny.";
         initialJourneyEvents.add(deathMessage);
         notifyListeners("\n" + deathMessage);
         showDeathDialog(); // Show death dialog immediately
@@ -739,15 +756,32 @@ public class GameController {
 
     /** Shows the death dialog. */
     private void showDeathDialog() {
-        final String deathMessage = "\nYou have died of " + player.getCauseOfDeath() + ".\n" +
-                "Journey ended after " + time.getTotalDays() + " days. Traveled " + map.getDistanceTraveled() + " miles.\n" +
-                "Last location: near " + map.getCurrentLocation();
-        notifyListeners(deathMessage);
-        SwingUtilities.invokeLater(() -> {
-            Frame owner = findVisibleFrame();
-            DeathDialog deathDialog = new DeathDialog(owner, player.getCauseOfDeath(), time.getTotalDays(), map.getDistanceTraveled(), map.getCurrentLocation());
-            deathDialog.setVisible(true);
-        });
+        if (player == null || time == null || map == null) {
+            System.err.println("Cannot show death dialog: Game components not initialized.");
+            return;
+        }
+        
+        Frame parentFrame = findVisibleFrame();
+        if (parentFrame == null) {
+            System.err.println("Cannot show death dialog: No visible parent frame found.");
+            // Optionally, create a temporary frame or show a console message
+            return;
+        }
+
+        // Get the specific cause of death from the player object
+        String causeOfDeath = player.getCauseOfDeath();
+        // If the cause is still null or empty, default to "unknown causes" as a final fallback
+        if (causeOfDeath == null || causeOfDeath.trim().isEmpty()) {
+            causeOfDeath = "unknown causes"; 
+        }
+        
+        int days = time.getTotalDays();
+        int distance = map.getDistanceTraveled();
+        String location = map.getCurrentLocation();
+        
+        // Use the retrieved causeOfDeath when creating the dialog
+        DeathDialog deathDialog = new DeathDialog(parentFrame, causeOfDeath, days, distance, location);
+        deathDialog.setVisible(true); // Show the dialog
     }
 
     /** Shows the completion dialog. */
@@ -794,21 +828,12 @@ public class GameController {
     
     // Make sure this method exists and is properly implemented
     public void notifyGameStateChanged() {
-        List<Consumer<GameState>> gameStateListeners = new ArrayList<>();
         // Notify all GUI components that the game state has changed
-        for (Consumer<GameState> listener : gameStateListeners) {
-            GameState currentState = new GameState(
-                    player,
-                    map,
-                    inventory,
-                    time,
-                    weather,
-                    isGameRunning
-            );
-            // Wrap the Consumer in a Runnable
-            Runnable runnable = () -> listener.accept(currentState);
-            runnable.run(); // Execute the Runnable
-        }
+        SwingUtilities.invokeLater(() -> {
+            for (Runnable listener : gameStateListeners) {
+                listener.run();
+            }
+        });
     }
 
     // Add this inner class if it doesn't exist
