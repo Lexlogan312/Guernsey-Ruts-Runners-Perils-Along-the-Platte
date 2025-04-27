@@ -10,8 +10,13 @@ import java.io.File;
  */
 public class ResourceLoader {
     
-    private static final String RESOURCE_BASE_PATH = "/resources/";
-
+    // We'll try multiple base paths to ensure resources are found
+    private static final String[] RESOURCE_BASE_PATHS = {
+        "/",            // Root of JAR or classpath
+        "/resources/",  // Original path - for IDE compatibility
+        ""              // Relative path - for both JAR and IDE
+    };
+    
     /**
      * Loads an image using multiple fallback strategies.
      * 
@@ -21,23 +26,30 @@ public class ResourceLoader {
     public static ImageIcon loadImage(String imagePath) {
         ImageIcon icon = null;
         String fullPath = "resources/" + imagePath;
-        String resourcePath = RESOURCE_BASE_PATH + imagePath;
         
-        // Try loading as a resource from the classpath (works in JAR)
-        try {
-            URL resourceUrl = ResourceLoader.class.getResource(resourcePath);
-            if (resourceUrl != null) {
-                icon = new ImageIcon(resourceUrl);
-                if (icon.getIconWidth() > 0) {
-                    System.out.println("Image loaded as classpath resource: " + resourcePath);
-                    return icon;
+        // Debug information
+        System.out.println("Attempting to load image: " + imagePath);
+        
+        // Try all resource base paths first (for JAR)
+        for (String basePath : RESOURCE_BASE_PATHS) {
+            String resourcePath = basePath + imagePath;
+            try {
+                URL resourceUrl = ResourceLoader.class.getResource(resourcePath);
+                if (resourceUrl != null) {
+                    icon = new ImageIcon(resourceUrl);
+                    if (icon.getIconWidth() > 0) {
+                        System.out.println("Image loaded as classpath resource: " + resourcePath);
+                        return icon;
+                    }
+                } else {
+                    System.out.println("Resource URL is null for path: " + resourcePath);
                 }
+            } catch (Exception e) {
+                System.err.println("Failed to load image as resource from " + resourcePath + ": " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.err.println("Failed to load image as resource: " + e.getMessage());
         }
         
-        // Try direct file path (works when running from IDE)
+        // Also try direct paths (works when running from IDE)
         try {
             File file = new File(fullPath);
             if (file.exists()) {
@@ -46,6 +58,8 @@ public class ResourceLoader {
                     System.out.println("Image loaded from file path: " + fullPath);
                     return icon;
                 }
+            } else {
+                System.out.println("File does not exist: " + fullPath);
             }
         } catch (Exception e) {
             System.err.println("Failed to load image from file path: " + e.getMessage());
@@ -61,9 +75,25 @@ public class ResourceLoader {
                     System.out.println("Image loaded from absolute path: " + absolutePath);
                     return icon;
                 }
+            } else {
+                System.out.println("Absolute file does not exist: " + absolutePath);
             }
         } catch (Exception e) {
             System.err.println("Failed to load image from absolute path: " + e.getMessage());
+        }
+        
+        // Lastly, try with just the image path directly
+        try {
+            File file = new File(imagePath);
+            if (file.exists()) {
+                icon = new ImageIcon(imagePath);
+                if (icon.getIconWidth() > 0) {
+                    System.out.println("Image loaded from direct path: " + imagePath);
+                    return icon;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load image from direct path: " + e.getMessage());
         }
         
         // If all methods failed, return null
@@ -78,13 +108,24 @@ public class ResourceLoader {
      * @return InputStream or null if the resource cannot be found
      */
     public static InputStream getResourceAsStream(String resourcePath) {
-        String fullResourcePath = RESOURCE_BASE_PATH + resourcePath;
+        // Debug information
+        System.out.println("Attempting to load resource stream: " + resourcePath);
         
-        // Try to get resource from classpath (works in JAR)
-        InputStream is = ResourceLoader.class.getResourceAsStream(fullResourcePath);
-        if (is != null) {
-            System.out.println("Resource stream opened: " + fullResourcePath);
-            return is;
+        // Try all resource base paths first (for JAR)
+        InputStream is = null;
+        for (String basePath : RESOURCE_BASE_PATHS) {
+            String fullResourcePath = basePath + resourcePath;
+            try {
+                is = ResourceLoader.class.getResourceAsStream(fullResourcePath);
+                if (is != null) {
+                    System.out.println("Resource stream opened from classpath: " + fullResourcePath);
+                    return is;
+                } else {
+                    System.out.println("Resource stream not found at: " + fullResourcePath);
+                }
+            } catch (Exception e) {
+                System.err.println("Error checking resource at " + fullResourcePath + ": " + e.getMessage());
+            }
         }
         
         // Try as direct file path (works in IDE)
@@ -96,9 +137,25 @@ public class ResourceLoader {
                     System.out.println("Resource loaded from file path: " + file.getPath());
                     return is;
                 }
+            } else {
+                System.out.println("File does not exist: resources/" + resourcePath);
             }
         } catch (Exception e) {
             System.err.println("Failed to load resource from file path: " + e.getMessage());
+        }
+        
+        // Try direct path as a last resort
+        try {
+            File file = new File(resourcePath);
+            if (file.exists()) {
+                is = file.toURI().toURL().openStream();
+                if (is != null) {
+                    System.out.println("Resource loaded from direct path: " + file.getPath());
+                    return is;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load resource from direct path: " + e.getMessage());
         }
         
         System.err.println("Resource not found: " + resourcePath);
@@ -113,17 +170,30 @@ public class ResourceLoader {
      */
     public static Font loadFont(String fontPath) {
         try {
+            // Debug information
+            System.out.println("Attempting to load font: " + fontPath);
+            
             Font font = null;
             
             // Try loading from resource stream
             InputStream is = getResourceAsStream(fontPath);
             if (is != null) {
                 try {
-                    font = Font.createFont(Font.TRUETYPE_FONT, is);
+                    // Determine if it's a TrueType font or OpenType font
+                    int fontFormat = Font.TRUETYPE_FONT;
+                    if (fontPath.toLowerCase().endsWith(".otf")) {
+                        fontFormat = Font.TRUETYPE_FONT; // OpenType is handled by TRUETYPE_FONT in Java
+                    }
+                    
+                    font = Font.createFont(fontFormat, is);
                     is.close();
-                    return font;
+                    if (font != null) {
+                        System.out.println("Successfully loaded font: " + fontPath);
+                        return font;
+                    }
                 } catch (Exception e) {
                     System.err.println("Failed to create font from stream: " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
             
@@ -131,6 +201,7 @@ public class ResourceLoader {
             return null;
         } catch (Exception e) {
             System.err.println("Failed to load font: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
@@ -142,13 +213,15 @@ public class ResourceLoader {
      * @return true if resource exists, false otherwise
      */
     public static boolean resourceExists(String resourcePath) {
-        // Try as classpath resource
-        if (ResourceLoader.class.getResource(RESOURCE_BASE_PATH + resourcePath) != null) {
-            return true;
+        // Try all potential paths
+        for (String basePath : RESOURCE_BASE_PATHS) {
+            if (ResourceLoader.class.getResource(basePath + resourcePath) != null) {
+                return true;
+            }
         }
         
         // Try as file
-        if (new File("resources/" + resourcePath).exists()) {
+        if (new File("resources/" + resourcePath).exists() || new File(resourcePath).exists()) {
             return true;
         }
         

@@ -37,13 +37,6 @@ public class Player {
         return morale;
     }
 
-    public void increaseMorale(int amount){
-        this.morale = this.getMorale() + amount;
-        if(this.getMorale() > 100){
-            this.morale = 100;
-        }
-    }
-
     public int getLearningLevel() {
         return learningLevel;
     }
@@ -95,23 +88,133 @@ public class Player {
         }
     }
 
-    public void decreaseHealth(int amount) {
-        this.health -= amount;
+    /**
+     * Decreases health based on conditions, with job bonuses applied
+     * @param amount Base amount to decrease
+     * @param gameController Game controller for job bonuses
+     */
+    public void decreaseHealth(int amount, GameController gameController) {
+        // Apply Doctor job bonus if applicable
+        double jobBonus = gameController.getJobBonus("health_depletion");
+        int adjustedAmount = (int)(amount * (1.0 + jobBonus)); // Will reduce amount for doctors
+        
+        // Ensure at least 1 point is decreased if amount > 0
+        if (amount > 0 && adjustedAmount < 1) adjustedAmount = 1;
+        
+        this.health -= adjustedAmount;
         if (this.health <= 0) {
             this.health = 0;
             this.isDead = true;
-
-            // If cause of death isn't set, default to "poor health"
-            if (this.causeOfDeath.isEmpty()) {
-                this.causeOfDeath = "poor health";
-            }
+            
+            // Don't set a default cause here - 
+            // This allows the specific peril to set the cause appropriately
+            // If somehow we reach this point with no cause set, it will be handled in setDead()
         }
     }
 
-    public void increaseHealth(int amount) {
-        this.health += amount;
+    public void decreaseHealth(int amount) {
+        health -= amount;
+        if (health <= 0) {
+            health = 0;
+            isDead = true;
+            
+            // Don't set a default cause here -
+            // This allows the specific peril to set the cause appropriately
+            // If somehow we reach this point with no cause set, it will be handled in setDead()
+        }
+    }
+    
+    /**
+     * Decreases health and assigns a specific cause if the player dies
+     * @param amount Amount of health to decrease
+     * @param cause Specific cause to assign if player dies from this damage
+     */
+    public void decreaseHealth(int amount, String cause) {
+        health -= amount;
+        if (health <= 0) {
+            health = 0;
+            this.causeOfDeath = cause;
+            isDead = true;
+        }
+    }
+    
+    /**
+     * Increases health with potential Preacher bonus for high morale
+     * @param amount Base amount to increase
+     * @param gameController Game controller for job bonuses
+     */
+    public void increaseHealth(int amount, GameController gameController) {
+        // Apply Preacher job bonus if applicable and morale is high
+        double jobBonus = gameController.getJobBonus("health_from_morale");
+        int adjustedAmount = (int)(amount * (1.0 + jobBonus)); // Will increase amount for preachers with high morale
+        
+        this.health += adjustedAmount;
         if (this.health > 100) {
             this.health = 100;
+        }
+    }
+
+    public void increaseHealth(int amount){
+        health += amount;
+        if(health > 100){
+            health = 100;
+        }
+    }
+    
+    /**
+     * Decreases morale based on conditions, with job bonuses applied
+     * @param amount Base amount to decrease
+     * @param gameController Game controller for job bonuses
+     */
+    public void decreaseMorale(int amount, GameController gameController) {
+        // Apply Teacher job bonus if applicable
+        double jobBonus = gameController.getJobBonus("morale_decrease");
+        int adjustedAmount = (int)(amount * (1.0 + jobBonus)); // Will reduce amount for teachers
+        
+        // Ensure at least 1 point is decreased if amount > 0
+        if (amount > 0 && adjustedAmount < 1) adjustedAmount = 1;
+        
+        this.morale -= adjustedAmount;
+        if (this.morale < 0) {
+            this.morale = 0;
+        }
+    }
+    
+    /**
+     * Decreases morale by specified amount without job bonus
+     * @param amount Amount to decrease
+     */
+    public void decreaseMorale(int amount) {
+        this.morale -= amount;
+        if (this.morale < 0) {
+            this.morale = 0;
+        }
+    }
+    
+    /**
+     * Increases morale with potential Preacher bonus
+     * @param amount Base amount to increase
+     * @param gameController Game controller for job bonuses
+     */
+    public void increaseMorale(int amount, GameController gameController) {
+        // Apply Preacher job bonus if applicable
+        double jobBonus = gameController.getJobBonus("morale_healing");
+        int adjustedAmount = (int)(amount * (1.0 + jobBonus)); // Will increase amount for preachers
+        
+        this.morale += adjustedAmount;
+        if (this.morale > 100) {
+            this.morale = 100;
+        }
+    }
+    
+    /**
+     * Increases morale by specified amount without job bonus
+     * @param amount Amount to increase
+     */
+    public void increaseMorale(int amount) {
+        this.morale += amount;
+        if (this.morale > 100) {
+            this.morale = 100;
         }
     }
 
@@ -125,6 +228,11 @@ public class Player {
 
     public void setDead(boolean dead) {
         isDead = dead;
+        
+        // If player is marked as dead, ensure a cause is set
+        if (dead && (causeOfDeath == null || causeOfDeath.trim().isEmpty())) {
+            causeOfDeath = "unknown causes";
+        }
     }
 
     public String getCauseOfDeath() {
