@@ -132,7 +132,7 @@ public class DeathDialog extends JDialog {
         initUI(causeOfDeath, days, distance, lastLocation);
         pack();
         setLocationRelativeTo(owner);
-        setSize(700, 650);
+        setSize(700, 700);
         setResizable(false);
     }
     
