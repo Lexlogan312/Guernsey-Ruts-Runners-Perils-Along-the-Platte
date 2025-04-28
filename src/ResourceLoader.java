@@ -205,26 +205,4 @@ public class ResourceLoader {
             return null;
         }
     }
-    
-    /**
-     * Checks if a resource exists.
-     * 
-     * @param resourcePath Path to check, relative to the resources folder
-     * @return true if resource exists, false otherwise
-     */
-    public static boolean resourceExists(String resourcePath) {
-        // Try all potential paths
-        for (String basePath : RESOURCE_BASE_PATHS) {
-            if (ResourceLoader.class.getResource(basePath + resourcePath) != null) {
-                return true;
-            }
-        }
-        
-        // Try as file
-        if (new File("resources/" + resourcePath).exists() || new File(resourcePath).exists()) {
-            return true;
-        }
-        
-        return false;
-    }
 } 
