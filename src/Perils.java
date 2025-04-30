@@ -19,7 +19,7 @@ public class Perils {
     private ArrayList<String> weatherEvents;
     private ArrayList<String> animalEvents;
     private ArrayList<String> femaleSpecificEvents;
-    private ArrayList<String> maleSpecificEvents;;
+    private ArrayList<String> maleSpecificEvents;
 
     public Perils(Player player, Inventory inventory, Weather weather, Time time) {
         this.player = player;

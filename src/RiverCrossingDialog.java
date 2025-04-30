@@ -426,12 +426,10 @@ public class RiverCrossingDialog extends JDialog {
             
             // Try to update the title label if it exists
             for (Component comp : getContentPane().getComponents()) {
-                if (comp instanceof JPanel) {
-                    JPanel panel = (JPanel) comp;
+                if (comp instanceof JPanel panel) {
                     if (panel.getLayout() instanceof BorderLayout) {
                         for (Component innerComp : panel.getComponents()) {
-                            if (innerComp instanceof JLabel) {
-                                JLabel label = (JLabel) innerComp;
+                            if (innerComp instanceof JLabel label) {
                                 if (label.getFont() == FontManager.WESTERN_FONT_TITLE) {
                                     label.setText(riverName);
                                     break;

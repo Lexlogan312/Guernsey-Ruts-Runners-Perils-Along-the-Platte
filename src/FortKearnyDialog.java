@@ -11,7 +11,6 @@ public class FortKearnyDialog extends JDialog {
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
     private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
     private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
     private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
 
     /**

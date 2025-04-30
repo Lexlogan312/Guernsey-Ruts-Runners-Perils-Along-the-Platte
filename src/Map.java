@@ -25,7 +25,7 @@ public class Map {
         }
     }
     
-    private ArrayList<RiverCrossing> pendingRiverCrossings = new ArrayList<>();
+    private final ArrayList<RiverCrossing> pendingRiverCrossings = new ArrayList<>();
     private RiverCrossing currentRiverCrossing; // The river crossing that was triggered
 
     public Map(int trailChoice) {
@@ -164,16 +164,6 @@ public class Map {
         }
     }
 
-    public int getDistanceToNextLandmark() {
-        int nextIndex = currentLandmarkIndex + 1;
-        if (nextIndex < landmarks.size()) {
-            int nextDistance = landmarks.get(nextIndex).getDistance();
-            return Math.max(0, nextDistance - this.distanceTraveled); // Ensure non-negative
-        } else {
-            return 0; // No more landmarks
-        }
-    }
-
     public String getDestination() {
         return landmarks.isEmpty() ? "Unknown" : landmarks.get(landmarks.size() - 1).getName();
     }
@@ -300,18 +290,6 @@ public class Map {
         // Alternative check: return this.currentLandmarkIndex == this.landmarks.size() - 1;
         // This depends on whether advanceToNextLandmark is called exactly when reaching the destination distance.
         // Checking distance is usually safer.
-    }
-
-    /**
-     * Displays historical info for the current landmark (to console - GUI handles display)
-     */
-    public void displayHistoricalInfo() {
-        if (landmarks.isEmpty() || currentLandmarkIndex < 0 || currentLandmarkIndex >= landmarks.size()) {
-            System.out.println("No historical information available for current location.");
-            return;
-        }
-        System.out.println("\n=== " + getCurrentLocation() + " ===");
-        System.out.println(landmarks.get(currentLandmarkIndex).getDescription());
     }
 
     public ArrayList<Landmark> getLandmarks() {

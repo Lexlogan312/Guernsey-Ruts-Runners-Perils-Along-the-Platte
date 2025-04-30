@@ -3,7 +3,6 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.io.File;
 
 /**
  * Dialog shown when the player successfully completes their journey
@@ -14,7 +13,6 @@ public class CompletionDialog extends JDialog {
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
     private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
     private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
     private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
     private final Color SUCCESS_COLOR = new Color(0, 100, 0);        // Dark green for success
     
@@ -206,14 +204,11 @@ public class CompletionDialog extends JDialog {
             successPanel.setBackground(PANEL_COLOR);
             successPanel.setPreferredSize(new Dimension(500, 200));
             imagePanel.add(successPanel, BorderLayout.CENTER);
-            customImageLoaded = true; // Set to true so we add the panel
         }
         
         // Only add the image panel if an image was loaded
-        if (customImageLoaded) {
-            contentPanel.add(imagePanel, BorderLayout.SOUTH);
-        }
-        
+        contentPanel.add(imagePanel, BorderLayout.SOUTH);
+
         add(contentPanel, BorderLayout.CENTER);
         
         // Button panel

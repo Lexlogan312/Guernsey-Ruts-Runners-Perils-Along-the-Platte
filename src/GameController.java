@@ -10,7 +10,6 @@ public class GameController {
     private final Inventory inventory;
     private Time time;
     private Weather weather;
-    private Hunting hunting;
     private Perils perils;
     private Job job;
 
@@ -58,7 +57,6 @@ public class GameController {
         time = new Time(1848, 3); // Default to March 1848
         map = new Map(1); // Default to Oregon Trail
         weather = new Weather(time.getMonth(), map.getStartingLocation());
-        hunting = new Hunting(inventory); // Needs inventory
         perils = new Perils(player, inventory, weather, time); // Needs player, inventory, weather, time
 
         // Set the message listener for Perils class right away
@@ -84,13 +82,6 @@ public class GameController {
             System.err.println("Error in startNewGame: Player, Inventory, or Weather is null.");
             // Handle error - maybe show message and exit?
             notifyListeners("ERROR: Failed to initialize game components fully.");
-            isGameRunning = false;
-        }
-        if (inventory != null) {
-            hunting = new Hunting(inventory);
-        } else {
-            System.err.println("Error in startNewGame: Inventory is null.");
-            notifyListeners("ERROR: Failed to initialize inventory.");
             isGameRunning = false;
         }
 
@@ -257,14 +248,13 @@ public class GameController {
 
     /** Helper to validate essential game components before simulation/actions. */
     private boolean validateGameComponents() {
-        if (map == null || time == null || player == null || inventory == null || perils == null || hunting == null) {
+        if (map == null || time == null || player == null || inventory == null || perils == null) {
             String missing = "";
             if (map == null) missing += "Map ";
             if (time == null) missing += "Time ";
             if (player == null) missing += "Player ";
             if (inventory == null) missing += "Inventory ";
             if (perils == null) missing += "Perils ";
-            if (hunting == null) missing += "Hunting ";
             notifyListeners("ERROR: Game not fully initialized. Missing: " + missing.trim());
             System.err.println("ERROR: Game not fully initialized. Missing: " + missing.trim());
             isGameRunning = false; // Stop the game if critical components missing
@@ -348,7 +338,7 @@ public class GameController {
             if (player.isDead()) {
                 initialJourneyEvents.add("Tragically, you starved before reaching Fort Kearny.");
                 handleInitialJourneyDeath(currentDay);
-                return; // Stop simulation if player dies
+                // Stop simulation if player dies
             }
         }
     }

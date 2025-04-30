@@ -54,9 +54,5 @@ public class Landmark {
     public int getLabelY() {
         return labelY;
     }
-    
-    // Used to check if custom label position is provided
-    public boolean hasCustomLabelPosition() {
-        return labelX != 0 || labelY != 0;
-    }
+
 }
