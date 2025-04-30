@@ -196,7 +196,7 @@ public class Trading {
                 break;
                 
             case "4": // Ammunition
-                int ammoPrice = Math.max(2, (int)Math.round(2.5 * priceFactor));
+                int ammoPrice = Math.max(8, (int)Math.round(10 * priceFactor));
                 System.out.println("Current price: $" + ammoPrice + " per box of 20 rounds.");
                 System.out.println("How many boxes would you like to buy?");
                 
@@ -370,8 +370,8 @@ public class Trading {
                 break;
                 
             case "4": // Ammunition
-                // Ensure minimum price of 1 per box
-                int ammoPrice = Math.max(1, (int)Math.round(1.25 * priceFactor));
+                // Ensure minimum price of 5 per box
+                int ammoPrice = Math.max(5, (int)Math.round(7.5 * priceFactor));
                 System.out.println("Current selling price: $" + ammoPrice + " per box of 20 rounds.");
                 System.out.println("You have " + inventory.getAmmunition() + " rounds of ammunition.");
                 System.out.println("How many boxes would you like to sell?");

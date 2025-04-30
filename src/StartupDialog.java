@@ -92,17 +92,15 @@ public class StartupDialog extends JDialog {
         // Add tabbed pane to center
         add(tabbedPane, BorderLayout.CENTER);
         
-        // Add next/back/finish buttons at bottom
+        // Add next/back buttons at bottom
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(BACKGROUND_COLOR);
         
         JButton backButton = createStyledButton("Back");
         JButton nextButton = createStyledButton("Next");
-        JButton finishButton = createStyledButton("Begin Journey");
         
         buttonPanel.add(backButton);
         buttonPanel.add(nextButton);
-        buttonPanel.add(finishButton);
         
         add(buttonPanel, BorderLayout.SOUTH);
         
@@ -122,18 +120,11 @@ public class StartupDialog extends JDialog {
                     tabbedPane.setSelectedIndex(index + 1);
                 }
             } else {
-                // If on the last tab, behave like the Begin Journey button
+                // If on the last tab, validate and save settings
                 if (validateAllTabs()) {
                     saveSettings();
                     dispose();
                 }
-            }
-        });
-        
-        finishButton.addActionListener(e -> {
-            if (validateAllTabs()) {
-                saveSettings();
-                dispose();
             }
         });
     }
@@ -161,9 +152,7 @@ public class StartupDialog extends JDialog {
             "harsh weather, limited supplies, illness, and other hardships that pioneers encountered.\n\n" +
             
             "Between 1841 and 1869, over 400,000 pioneers traveled these trails to reach new homes in " +
-            "the west. Their journeys fundamentally shaped American history.\n\n" +
-            
-            "Click 'Next' to begin creating your character and planning your journey west!"
+            "the west. Their journeys fundamentally shaped American history."
         );
         
         // Add components to the panel - simplified layout without image and tips
@@ -173,6 +162,12 @@ public class StartupDialog extends JDialog {
         
         introPanel.add(welcomeLabel, BorderLayout.NORTH);
         introPanel.add(contentPanel, BorderLayout.CENTER);
+        
+        // Add guidance text at the bottom
+        JTextArea guidanceText = createDescriptionArea(
+            "Click 'Next' to begin creating your character and planning your journey west!"
+        );
+        introPanel.add(guidanceText, BorderLayout.SOUTH);
     }
     
     /**
@@ -283,6 +278,12 @@ public class StartupDialog extends JDialog {
 
         // Add form panel to center
         characterPanel.add(formPanel, BorderLayout.CENTER);
+        
+        // Add guidance text at the bottom
+        JTextArea guidanceText = createDescriptionArea(
+            "Click 'Next' to add your family members who will join you on the journey."
+        );
+        characterPanel.add(guidanceText, BorderLayout.SOUTH);
     }
 
     /**
@@ -331,6 +332,12 @@ public class StartupDialog extends JDialog {
                         "repairs."
         );
         familyPanel.add(historicalNote, BorderLayout.SOUTH);
+        
+        // Add guidance text at the bottom
+        JTextArea guidanceText = createDescriptionArea(
+            "Click 'Next' to choose which trail you will follow to the west."
+        );
+        familyPanel.add(guidanceText, BorderLayout.SOUTH);
     }
     
     /**
@@ -422,6 +429,12 @@ public class StartupDialog extends JDialog {
 
         // Add the trails container to the main panel
         trailPanel.add(trailsContainer, BorderLayout.CENTER);
+        
+        // Add guidance text at the bottom
+        JTextArea guidanceText = createDescriptionArea(
+            "Click 'Next' to select your departure month and prepare for the journey."
+        );
+        trailPanel.add(guidanceText, BorderLayout.SOUTH);
     }
     
     /**
@@ -433,9 +446,7 @@ public class StartupDialog extends JDialog {
 
         // Add description at the top
         JTextArea descriptionArea = createDescriptionArea(
-                "Choose when to depart. The timing of your departure was crucial for pioneers.\n" +
-                        "Leave too early: face mud and flooding from spring rains.\n" +
-                        "Leave too late: risk being trapped in mountain snow.\n\n" +
+                "Choose when to depart. The timing of your departure was crucial for pioneers.\n\n" +
                         "Most emigrants departed between April and June."
         );
 
@@ -482,6 +493,12 @@ public class StartupDialog extends JDialog {
 
         // Add the months container to the main panel
         departurePanel.add(monthsContainer, BorderLayout.CENTER);
+        
+        // Add guidance text at the bottom
+        JTextArea guidanceText = createDescriptionArea(
+            "Click 'Next' to visit the market and prepare for your journey."
+        );
+        departurePanel.add(guidanceText, BorderLayout.SOUTH);
     }
     
     /**

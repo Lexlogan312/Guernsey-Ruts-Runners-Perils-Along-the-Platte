@@ -21,7 +21,7 @@ public class Market {
     private static final int TONGUE_PRICE = 15;
     private static final int WAGON_BOW_PRICE = 10;
     private static final int MEDICINE_PRICE = 15;
-    private static final int AMMUNITION_PRICE = 2;
+    private static final int AMMUNITION_PRICE = 10;
 
     private static final int MEDICINE_WEIGHT = 5;
     private static final int AMMO_WEIGHT = 3;
@@ -72,7 +72,7 @@ public class Market {
             System.out.println("2. Food ($1 per pound)");
             System.out.println("3. Wagon parts ($25 for wheels, $20 for axles, $15 for tongues, $10 for bow)");
             System.out.println("4. Medicine ($15 each)");
-            System.out.println("5. Ammunition ($2 per box of 20 rounds)");
+            System.out.println("5. Ammunition ($10 per box of 20 rounds)");
             System.out.println("6. Review purchases");
             System.out.println("7. Finish shopping");
 
@@ -449,33 +449,20 @@ public class Market {
         titleLabel.setForeground(TEXT_COLOR);
         topPanel.add(titleLabel, BorderLayout.NORTH);
 
-        JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 5));
-        infoPanel.setBackground(BACKGROUND_COLOR);
-
-        moneyLabel = new JLabel("Available Funds: $" + player.getMoney(), SwingConstants.CENTER);
-        moneyLabel.setFont(FontManager.getBoldWesternFont(16));
-        moneyLabel.setForeground(TEXT_COLOR);
-        infoPanel.add(moneyLabel);
-
-        weightCapacityLabel = new JLabel("Weight: " + inventory.getCurrentWeight() + "/" + inventory.getMaxWeightCapacity() + " lbs", SwingConstants.CENTER);
-        weightCapacityLabel.setFont(FontManager.getBoldWesternFont(16));
-        weightCapacityLabel.setForeground(TEXT_COLOR);
-        infoPanel.add(weightCapacityLabel);
-
-        topPanel.add(infoPanel, BorderLayout.CENTER);
-
         JTextArea introText = new JTextArea(
                 "Before departing, you'll need to purchase supplies for your journey. " +
                         "Choose wisely, as your survival depends on having adequate supplies. " +
-                        "You should aim to have at least 2 oxen, 200 pounds of food, 3 wagon parts, and 2 medicine kits."
+                        "You should aim to have at least 2 oxen, 200 pounds of food, 3 wagon parts, and 2 medicine kits, but more is recommended.\n\n" +
+                        "When you have purchased enough supplies, click 'Begin Journey' to start your adventure."
         );
         introText.setFont(FontManager.getWesternFont(14));
         introText.setForeground(TEXT_COLOR);
         introText.setBackground(PANEL_COLOR);
-        introText.setLineWrap(true);
         introText.setWrapStyleWord(true);
+        introText.setLineWrap(true);
         introText.setEditable(false);
-        introText.setBorder(new EmptyBorder(10, 10, 10, 10));
+        introText.setMargin(new Insets(5, 5, 5, 5));
+        introText.setOpaque(true);
         topPanel.add(introText, BorderLayout.SOUTH);
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
@@ -491,8 +478,30 @@ public class Market {
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
+        // Add funds and weight info at the top
         gbc.gridy = 0;
         gbc.gridx = 0;
+        gbc.gridwidth = 6;
+        gbc.anchor = GridBagConstraints.CENTER;
+        
+        JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 5));
+        infoPanel.setBackground(PANEL_COLOR);
+        
+        moneyLabel = new JLabel("Available Funds: $" + player.getMoney(), SwingConstants.CENTER);
+        moneyLabel.setFont(FontManager.getBoldWesternFont(16));
+        moneyLabel.setForeground(TEXT_COLOR);
+        infoPanel.add(moneyLabel);
+
+        weightCapacityLabel = new JLabel("Weight: " + inventory.getCurrentWeight() + "/" + inventory.getMaxWeightCapacity() + " lbs", SwingConstants.CENTER);
+        weightCapacityLabel.setFont(FontManager.getBoldWesternFont(16));
+        weightCapacityLabel.setForeground(TEXT_COLOR);
+        infoPanel.add(weightCapacityLabel);
+        
+        shoppingPanel.add(infoPanel, gbc);
+
+        // Add column headers
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
         gbc.anchor = GridBagConstraints.WEST;
         addStyledLabel(shoppingPanel, "Item", gbc, true);
 
@@ -518,7 +527,7 @@ public class Market {
                 "Oxen",
                 "Wagon Parts",  // Consolidated wagon parts
                 "Medicine Kits",
-                "Ammunition (boxes)"
+                "Ammunition (20 rounds)"
         };
 
         // Modified price display to show range for wagon parts
@@ -543,7 +552,7 @@ public class Market {
         };
 
         for (int i = 0; i < items.length; i++) {
-            gbc.gridy = i + 1;
+            gbc.gridy = i + 2;
 
             gbc.gridx = 0;
             gbc.anchor = GridBagConstraints.WEST;
@@ -606,7 +615,6 @@ public class Market {
                 SwingConstants.CENTER
         );
         insufficientSuppliesLabel.setFont(FontManager.getBoldWesternFont(14));
-        insufficientSuppliesLabel.setForeground(Color.RED);
         insufficientSuppliesLabel.setVisible(false);
         shoppingPanel.add(insufficientSuppliesLabel, gbc);
 

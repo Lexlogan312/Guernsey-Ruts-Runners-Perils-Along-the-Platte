@@ -231,7 +231,7 @@ public class Player {
         
         // If player is marked as dead, ensure a cause is set
         if (dead && (causeOfDeath == null || causeOfDeath.trim().isEmpty())) {
-            causeOfDeath = "unknown causes";
+            causeOfDeath = "poor health";
         }
     }
 

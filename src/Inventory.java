@@ -11,9 +11,13 @@ public class Inventory {
     private int medicine;
     private int ammunition;
     private int oxenHealth;
+    private int oxenFatigue;
     private final ArrayList<Item> items;
     
     private static final int MAX_WEIGHT_CAPACITY = 1500;
+    private static final int MAX_OXEN_FATIGUE = 100;
+    private static final int BASE_FATIGUE_RATE = 2;
+    private static final int WEIGHT_FATIGUE_FACTOR = 1;
     
     private static final int MEDICINE_WEIGHT = 5;
     private static final int AMMO_BOX_WEIGHT = 3;
@@ -28,6 +32,18 @@ public class Inventory {
     private final String[] WAGON_PARTS = new String[]{
             "Wheel", "Axle", "Tongue", "Bow"
     };
+    private final boolean[] WAGON_PARTS_BROKEN = new boolean[]{
+            false, false, false, false
+    };
+    private final int[] WAGON_PARTS_WEAR_RATES = new int[]{
+            2, 1, 1, 1  // Wheels wear out faster than other parts
+    };
+    private final String[] WAGON_PARTS_HISTORICAL_NOTES = new String[]{
+            "The rough terrain and constant movement took its toll on the wagon wheels, a common issue on the Oregon Trail.",
+            "The wooden axles, bearing the weight of the wagon and its contents, finally gave way under the strain.",
+            "The wagon tongue, essential for steering and connecting the oxen, succumbed to the rigors of the journey.",
+            "The wagon bows, supporting the canvas cover, weakened from exposure to the elements and constant movement."
+    };
 
     public Inventory() {
         this.food = 0;
@@ -39,6 +55,7 @@ public class Inventory {
         this.medicine = 0;
         this.ammunition = 0;
         this.oxenHealth = 100;
+        this.oxenFatigue = 0;
         this.items = new ArrayList<>();
     }
 
@@ -243,6 +260,10 @@ public class Inventory {
         return oxenHealth;
     }
 
+    public int getOxenFatigue() {
+        return oxenFatigue;
+    }
+
     public void decreaseOxenHealth(int amount) {
         this.oxenHealth -= amount;
         if (this.oxenHealth < 0) {
@@ -254,6 +275,41 @@ public class Inventory {
         this.oxenHealth += amount;
         if (this.oxenHealth > 100) {
             this.oxenHealth = 100;
+        }
+    }
+
+    public void updateOxenFatigue(int distanceTraveled, String weather, boolean isResting) {
+        if (isResting) {
+            oxenFatigue = Math.max(0, oxenFatigue - 10);
+            return;
+        }
+
+        int fatigueIncrease = BASE_FATIGUE_RATE + (distanceTraveled / 5);
+
+        if (weather.contains("Rain") || weather.contains("Snow")) {
+            fatigueIncrease += 2;
+        } else if (weather.contains("Storm")) {
+            fatigueIncrease += 4;
+        } else if (weather.contains("Hot")) {
+            fatigueIncrease += 3;
+        }
+
+        int weightOverCapacity = Math.max(0, getCurrentWeight() - MAX_WEIGHT_CAPACITY);
+        fatigueIncrease += (weightOverCapacity / 100) * WEIGHT_FATIGUE_FACTOR;
+
+        oxenFatigue = Math.min(MAX_OXEN_FATIGUE, oxenFatigue + fatigueIncrease);
+
+        if (oxenFatigue >= 80) {
+            decreaseOxenHealth(2);
+        } else if (oxenFatigue >= 60) {
+            decreaseOxenHealth(1);
+        }
+    }
+
+    public void restOxen() {
+        oxenFatigue = Math.max(0, oxenFatigue - 15);
+        if (oxenFatigue < 40) {
+            increaseOxenHealth(5);
         }
     }
 
@@ -309,9 +365,9 @@ public class Inventory {
 
     public double getSpoilRate(String name) {
         for (int i = 0; i < items.size(); i++) {
-            Item item = items.get(i); // Grab the Item from the list
-            if (item.getName().equalsIgnoreCase(name)) { // Compare name properly
-                return item.getSpoilRate(); // Return the spoil rate
+            Item item = items.get(i);
+            if (item.getName().equalsIgnoreCase(name)) {
+                return item.getSpoilRate();
             }
         }
         return 0;
@@ -387,6 +443,8 @@ public class Inventory {
      * @return String describing what broke, or null if nothing broke
      */
     public String checkForPartBreakage(GameController gameController) {
+        StringBuilder result = new StringBuilder();
+        
         // Base chance of part breaking
         double breakChance = 0.05; // 5% chance per travel day
         
@@ -397,41 +455,89 @@ public class Inventory {
         // Ensure break chance doesn't go negative
         if (breakChance < 0.01) breakChance = 0.01; // Minimum 1% chance
         
-        // Check if a part breaks
+        // Apply wear and tear to all parts
+        for (int i = 0; i < WAGON_PARTS.length; i++) {
+            if (!WAGON_PARTS_BROKEN[i]) {
+                // Reduce condition by wear rate
+                WAGON_PARTS_BREAKPERCENTAGE[i] -= WAGON_PARTS_WEAR_RATES[i];
+                
+                // If condition drops to 0 or below, part breaks
+                if (WAGON_PARTS_BREAKPERCENTAGE[i] <= 0) {
+                    WAGON_PARTS_BREAKPERCENTAGE[i] = 0;
+                    WAGON_PARTS_BROKEN[i] = true;
+                    result.append("A wagon ").append(WAGON_PARTS[i].toLowerCase()).append(" has broken from wear and tear!\n");
+                    result.append(WAGON_PARTS_HISTORICAL_NOTES[i]).append("\n");
+                    result.append("Check the health tab to repair it.\n");
+                }
+            }
+        }
+        
+        // Check for random breakage
         if (Math.random() < breakChance) {
             // Determine which part breaks
             int partIndex = (int)(Math.random() * WAGON_PARTS.length);
             String partName = WAGON_PARTS[partIndex];
             
-            // Apply the breakage
-            switch (partIndex) {
-                case 0: // Wheel
-                    if (wheels > 0) {
-                        wheels--;
-                        return "A wagon wheel broke";
-                    }
-                    break;
-                case 1: // Axle
-                    if (axles > 0) {
-                        axles--;
-                        return "A wagon axle broke";
-                    }
-                    break;
-                case 2: // Tongue
-                    if (tongues > 0) {
-                        tongues--;
-                        return "The wagon tongue broke";
-                    }
-                    break;
-                case 3: // Bow
-                    if (wagonBows > 0) {
-                        wagonBows--;
-                        return "A wagon bow broke";
-                    }
-                    break;
+            // Only break if not already broken
+            if (!WAGON_PARTS_BROKEN[partIndex]) {
+                WAGON_PARTS_BROKEN[partIndex] = true;
+                WAGON_PARTS_BREAKPERCENTAGE[partIndex] = 0;
+                result.append("A wagon ").append(partName.toLowerCase()).append(" has broken!\n");
+                result.append(WAGON_PARTS_HISTORICAL_NOTES[partIndex]).append("\n");
+                result.append("Check the health tab to repair it.\n");
             }
         }
         
-        return null; // Nothing broke
+        return result.length() > 0 ? result.toString() : null;
+    }
+
+    public boolean isPartBroken(String partName) {
+        switch(partName) {
+            case "Wheel": return WAGON_PARTS_BROKEN[0];
+            case "Axle": return WAGON_PARTS_BROKEN[1];
+            case "Bow": return WAGON_PARTS_BROKEN[2];
+            case "Tongue": return WAGON_PARTS_BROKEN[3];
+            default: return false;
+        }
+    }
+
+    public void repairPart(String partName) {
+        switch(partName) {
+            case "Wheel": 
+                if (wheels > 0) {
+                    WAGON_PARTS_BROKEN[0] = false;
+                    WAGON_PARTS_BREAKPERCENTAGE[0] = 100;
+                    useWheels(1);
+                }
+                break;
+            case "Axle": 
+                if (axles > 0) {
+                    WAGON_PARTS_BROKEN[1] = false;
+                    WAGON_PARTS_BREAKPERCENTAGE[1] = 100;
+                    useAxles(1);
+                }
+                break;
+            case "Bow": 
+                if (wagonBows > 0) {
+                    WAGON_PARTS_BROKEN[2] = false;
+                    WAGON_PARTS_BREAKPERCENTAGE[2] = 100;
+                    useWagonBows(1);
+                }
+                break;
+            case "Tongue": 
+                if (tongues > 0) {
+                    WAGON_PARTS_BROKEN[3] = false;
+                    WAGON_PARTS_BREAKPERCENTAGE[3] = 100;
+                    useTongues(1);
+                }
+                break;
+        }
+    }
+
+    public boolean hasBrokenParts() {
+        for (boolean broken : WAGON_PARTS_BROKEN) {
+            if (broken) return true;
+        }
+        return false;
     }
 }

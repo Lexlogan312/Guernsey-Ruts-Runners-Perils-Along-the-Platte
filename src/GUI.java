@@ -30,6 +30,7 @@ public class GUI extends JPanel {
     private JButton travelButton;
     private JButton restButton;
     private JButton huntButton;
+    private JButton healthButton;
     private JButton inventoryButton;
     private JButton tradeButton;
     private JButton quitButton;
@@ -195,6 +196,7 @@ public class GUI extends JPanel {
         travelButton = createStyledButton("Travel");
         restButton = createStyledButton("Rest");
         huntButton = createStyledButton("Hunt");
+        healthButton = createStyledButton("Health");
         inventoryButton = createStyledButton("Inventory");
         tradeButton = createStyledButton("Trade");
         quitButton = createStyledButton("Quit");
@@ -203,6 +205,7 @@ public class GUI extends JPanel {
         controlPanel.add(travelButton);
         controlPanel.add(restButton);
         controlPanel.add(huntButton);
+        controlPanel.add(healthButton);
         controlPanel.add(inventoryButton);
         controlPanel.add(tradeButton);
         controlPanel.add(quitButton);
@@ -279,8 +282,7 @@ public class GUI extends JPanel {
         travelButton.addActionListener(e -> gameController.travel());
         restButton.addActionListener(e -> gameController.rest());
         huntButton.addActionListener(e -> gameController.hunt());
-
-        // Other buttons could open dialogs
+        healthButton.addActionListener(e -> showHealthDialog());
         inventoryButton.addActionListener(e -> showInventoryDialog());
         tradeButton.addActionListener(e -> showTradeDialog());
         quitButton.addActionListener(e -> confirmQuit());
@@ -338,6 +340,7 @@ public class GUI extends JPanel {
             travelButton.setEnabled(gameRunning);
             restButton.setEnabled(gameRunning);
             huntButton.setEnabled(gameRunning && hasAmmo);
+            healthButton.setEnabled(gameRunning);
             inventoryButton.setEnabled(gameRunning); // Always allow viewing inventory if game is running
             tradeButton.setEnabled(canTrade);
             quitButton.setEnabled(true); // Always allow quitting
@@ -529,20 +532,7 @@ public class GUI extends JPanel {
         itemsPanel.add(medicineLabel);
         itemsPanel.add(ammoLabel);
 
-        // Add other items if present
-        if (inventory.getItems() != null && !inventory.getItems().isEmpty()) {
-            JLabel otherItemsTitle = new JLabel("Other Items:");
-            otherItemsTitle.setFont(FontManager.getBoldWesternFont(14));
-            otherItemsTitle.setForeground(HEADER_COLOR);
-            otherItemsTitle.setBorder(new EmptyBorder(10, 0, 5, 0));
-            itemsPanel.add(otherItemsTitle);
-
-            for (Item item : inventory.getItems()) {
-                JLabel itemLabel = createInventoryItemLabel(item.getName(), item.getDescription());
-                itemsPanel.add(itemLabel);
-            }
-        }
-
+        // Remove other items section
         JScrollPane scrollPane = new JScrollPane(itemsPanel);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(PANEL_COLOR);
@@ -610,6 +600,18 @@ public class GUI extends JPanel {
         } else {
             appendToOutput("You need to be at a fort or trading post to trade.");
         }
+    }
+
+    /**
+     * Shows health dialog
+     */
+    private void showHealthDialog() {
+        HealthDialog healthDialog = new HealthDialog(
+            (Frame) SwingUtilities.getWindowAncestor(this),
+            gameController.getPlayer(),
+            gameController.getInventory()
+        );
+        healthDialog.setVisible(true);
     }
 
     /**
