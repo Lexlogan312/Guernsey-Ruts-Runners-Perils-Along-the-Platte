@@ -491,8 +491,7 @@ public class TradingDialog extends JDialog {
         JSpinner quantitySpinner = new JSpinner(model);
         quantitySpinner.setFont(FontManager.getBoldWesternFont(14f));
         JComponent editor = quantitySpinner.getEditor();
-        if (editor instanceof JSpinner.DefaultEditor) {
-            JSpinner.DefaultEditor spinnerEditor = (JSpinner.DefaultEditor)editor;
+        if (editor instanceof JSpinner.DefaultEditor spinnerEditor) {
             spinnerEditor.getTextField().setForeground(TEXT_COLOR);
             spinnerEditor.getTextField().setBackground(PANEL_COLOR.brighter());
             spinnerEditor.getTextField().setHorizontalAlignment(JTextField.CENTER);

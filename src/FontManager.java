@@ -1,6 +1,4 @@
 import java.awt.*;
-import java.io.File;
-import java.io.InputStream;
 
 public class FontManager {
     public static Font WESTERN_FONT;

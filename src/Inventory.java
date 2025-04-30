@@ -2,7 +2,6 @@ import java.util.ArrayList;
 
 public class Inventory {
     private int food;
-    private String foodName;
     private int oxen;
     private int wheels;
     private int axles;
@@ -61,10 +60,6 @@ public class Inventory {
 
     public int getFood() {
         return food;
-    }
-
-    public String getFoodName(String name){
-        return this.foodName;
     }
 
     public void addFood(int amount) {
@@ -148,21 +143,6 @@ public class Inventory {
     
     public int getWagonParts() {
         return wheels + axles + tongues + wagonBows;
-    }
-    
-    public void addWagonParts(int amount) {
-        int remaining = amount;
-        
-        int halfRemaining = remaining / 2;
-        addWheels(halfRemaining);
-        remaining -= halfRemaining;
-        
-        addAxles(halfRemaining);
-        remaining -= halfRemaining;
-        
-        if (remaining > 0) {
-            addTongues(remaining);
-        }
     }
     
     public void useWagonParts(int amount) {
@@ -317,10 +297,6 @@ public class Inventory {
         items.add(item);
     }
 
-    public ArrayList<Item> getItems() {
-        return items;
-    }
-    
     public int getCurrentWeight() {
         int totalWeight = 0;
         
@@ -381,29 +357,6 @@ public class Inventory {
             }
         }
         return 0;
-    }
-
-    public void displayInventory() {
-        System.out.println("\n=== INVENTORY ===");
-        System.out.println("Load: " + getCurrentWeight() + "/" + MAX_WEIGHT_CAPACITY + " pounds");
-        System.out.println("Food: " + food + " pounds");
-        System.out.println("Oxen: " + oxen + " (Health: " + oxenHealth + "%)");
-        
-        System.out.println("Wagon parts:");
-        System.out.println("- Wheels: " + wheels);
-        System.out.println("- Axles: " + axles);
-        System.out.println("- Tongues: " + tongues);
-        System.out.println("- Wagon Bows: " + wagonBows);
-        
-        System.out.println("Medicine kits: " + medicine);
-        System.out.println("Ammunition: " + ammunition + " rounds");
-
-        if (!items.isEmpty()) {
-            System.out.println("\nOther items:");
-            for (Item item : items) {
-                System.out.println("- " + item.getName() + ": " + item.getDescription());
-            }
-        }
     }
 
     /**

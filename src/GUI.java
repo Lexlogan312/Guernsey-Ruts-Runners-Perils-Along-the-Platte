@@ -652,7 +652,6 @@ public class GUI extends JPanel {
         private final Color TRAIL_COLOR = new Color(139, 69, 19, 180); // Brown semi-transparent
         private final Font LANDMARK_FONT = FontManager.getBoldWesternFont(11f); // Smaller font
         private final Font TOOLTIP_FONT = FontManager.getWesternFont(12f);
-        private final Color LANDMARK_TEXT_SHADOW = new Color(0, 0, 0, 100);
         private final BasicStroke TRAIL_STROKE = new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
         private final BasicStroke LABEL_LINE_STROKE = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2}, 0);
 
@@ -1025,21 +1024,6 @@ public class GUI extends JPanel {
         }
 
 
-        /** Helper to find landmark name given a screen point (inefficient, use cautiously) */
-        private Landmark findLandmarkByScreenPoint(Point screenPoint) {
-            if (map == null || map.getLandmarks() == null || screenPoint == null) return null;
-            for (Landmark lm : map.getLandmarks()) {
-                Point storedPoint = landmarkScreenPositions.get(lm.getName());
-                // Use distance check for robustness instead of exact equals
-                if (storedPoint != null && storedPoint.distance(screenPoint) < 1.0) {
-                    return lm;
-                }
-            }
-            // Fallback: Find closest landmark if exact match fails? Might be too complex here.
-            return null;
-        }
-
-
         /** Draws the progress bar */
         private void drawProgressBar(Graphics2D g2d) {
             if (totalDistance <= 0) return; // Avoid division by zero
@@ -1239,18 +1223,6 @@ public class GUI extends JPanel {
                 repaint(); // Repaint needed to show/hide tooltip
             }
         }
-
-        /** Helper to find a Landmark object by its name */
-        private Landmark findLandmarkByName(String name) {
-            if (map == null || map.getLandmarks() == null || name == null) return null;
-            for (Landmark lm : map.getLandmarks()) {
-                if (name.equals(lm.getName())) { // Use equals for string comparison
-                    return lm;
-                }
-            }
-            return null;
-        }
-
 
         @Override
         protected void paintComponent(Graphics g) {
