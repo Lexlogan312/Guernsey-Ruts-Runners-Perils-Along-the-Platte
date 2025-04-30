@@ -398,7 +398,7 @@ public class GameController {
         // Get cause of death or use default if somehow not set
         String causeOfDeath = player.getCauseOfDeath();
         if (causeOfDeath == null || causeOfDeath.trim().isEmpty()) {
-            causeOfDeath = "unknown causes";
+            causeOfDeath = "poor health";
             player.setCauseOfDeath(causeOfDeath); // Set it for the DeathDialog
         }
         
@@ -446,18 +446,34 @@ public class GameController {
             return;
         }
 
+        // Check for broken parts
+        if (inventory.hasBrokenParts()) {
+            // Reduce travel speed by 50% if any parts are broken
+            adjustedDistance = (int)(adjustedDistance * 0.5);
+            result.append("Travel is slowed due to broken wagon parts.\n");
+        }
+
         String currentWeather = weather.getCurrentWeather();
         if (currentWeather.contains("Rain") || currentWeather.contains("Snow")) {
             adjustedDistance = (int)(adjustedDistance * 0.7); // 30% slower in rain/snow
         } else if (currentWeather.contains("Storm")) {
             adjustedDistance = (int)(adjustedDistance * 0.5); // 50% slower in storms
         }
+
+        // Update oxen fatigue based on travel distance and weather
+        inventory.updateOxenFatigue(adjustedDistance, currentWeather, false);
+
+        // Adjust travel distance based on oxen health and fatigue
+        double oxenHealthFactor = inventory.getOxenHealth() / 100.0;
+        double oxenFatigueFactor = 1.0 - (inventory.getOxenFatigue() / 200.0); // Fatigue reduces speed up to 50%
+        adjustedDistance = (int)(adjustedDistance * oxenHealthFactor * oxenFatigueFactor);
+
         // 🛠 TRAVEL happens first
         map.travel(adjustedDistance);
 
         String breakageResult = inventory.checkForPartBreakage(this);
         if (breakageResult != null) {
-            result.append(breakageResult).append(".\n");
+            result.append(breakageResult).append("\n");
         }
         
         // Apply food spoilage
@@ -520,6 +536,22 @@ public class GameController {
 
         // 🛠 Advance Day
         advanceDay(true);
+
+        // Notify listeners of travel results
+        if (result.length() > 0) {
+            notifyListeners(result.toString());
+        }
+
+        // Add trail updates for oxen condition
+        if (inventory.getOxenFatigue() >= 80) {
+            addTrailUpdate("Your oxen are severely fatigued and struggling to pull the wagon.");
+        } else if (inventory.getOxenFatigue() >= 60) {
+            addTrailUpdate("Your oxen are showing signs of fatigue.");
+        }
+
+        if (inventory.getOxenHealth() <= 30) {
+            addTrailUpdate("Your oxen are in poor health and need rest.");
+        }
     }
 
     /** Rest action for one day. */
@@ -571,6 +603,9 @@ public class GameController {
             }
         }
 
+        // Rest the oxen
+        inventory.restOxen();
+        addTrailUpdate("Your oxen have rested and recovered some strength.");
 
         advanceDay(true); // Advance time and check for events/crossings
     }
@@ -772,7 +807,7 @@ public class GameController {
         String causeOfDeath = player.getCauseOfDeath();
         // If the cause is still null or empty, default to "unknown causes" as a final fallback
         if (causeOfDeath == null || causeOfDeath.trim().isEmpty()) {
-            causeOfDeath = "unknown causes"; 
+            causeOfDeath = "poor health";
         }
         
         int days = time.getTotalDays();
@@ -926,5 +961,14 @@ public class GameController {
             default:
                 return 0.0;
         }
+    }
+
+    // Add this method to the GameController class if it doesn't exist
+    public void addTrailUpdate(String update) {
+        // Implementation of addTrailUpdate method
+        // This method should add the given update to the trail description
+        // and notify listeners of the update
+        // Implementation details depend on the specific implementation of the trail
+        // and how updates are tracked and notified to listeners.
     }
 }

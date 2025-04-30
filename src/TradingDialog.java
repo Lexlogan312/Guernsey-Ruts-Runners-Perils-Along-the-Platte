@@ -225,7 +225,7 @@ public class TradingDialog extends JDialog {
         int foodPrice = Math.max(1, (int)Math.round(1.5 * priceFactor));
         int partPrice = Math.max(20, (int)Math.round(25 * priceFactor));
         int medicinePrice = Math.max(15, (int)Math.round(20 * priceFactor));
-        int ammoPrice = Math.max(2, (int)Math.round(2.5 * priceFactor));
+        int ammoPrice = Math.max(8, (int)Math.round(10 * priceFactor));
         
         // Create buy buttons
         JPanel foodPanel = createTradeButton("Food - $" + foodPrice + " per pound", 
@@ -268,7 +268,7 @@ public class TradingDialog extends JDialog {
         int foodSellPrice = Math.max(1, (int)Math.round(0.75 * priceFactor));
         int partSellPrice = Math.max(10, (int)Math.round(12 * priceFactor));
         int medicineSellPrice = Math.max(7, (int)Math.round(10 * priceFactor));
-        int ammoSellPrice = Math.max(1, (int)Math.round(1.25 * priceFactor));
+        int ammoSellPrice = Math.max(5, (int)Math.round(7.5 * priceFactor));
         
         // Create sell buttons
         JPanel foodPanel = createTradeButton("Food - $" + foodSellPrice + " per pound" +
