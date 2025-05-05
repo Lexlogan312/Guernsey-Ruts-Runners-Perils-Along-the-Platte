@@ -4,18 +4,36 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 
+/**
+ * FortKearnyDialog Class of the Perils Along the Platte Game
+ * A dialog that introduces the player to their journey and provides historical context
+ * about Fort Kearny, the first major destination on the trail.
+ *
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file FortKearnyDialog.java
+ */
 public class FortKearnyDialog extends JDialog {
+    //The game controller instance for managing game state.
     private final GameController gameController;
 
-    // Colors - match EnhancedGUI
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
+
     private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
+
     private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
+
     private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
 
     /**
-     * Constructor
+     * Constructs a new FortKearnyDialog.
+     * Initializes the dialog with a fixed size and modal behavior.
+     * Sets up the UI components and historical content.
+     * 
+     * @param owner The parent frame for modal dialog positioning
+     * @param gameController The game controller instance for accessing game state
      */
     public FortKearnyDialog(Frame owner, GameController gameController) {
         super(owner, "Begin Your Journey", true);
@@ -29,6 +47,16 @@ public class FortKearnyDialog extends JDialog {
         setResizable(false); // Keep this dialog non-resizable for simplicity
     }
 
+    /**
+     * Initializes the dialog's user interface components.
+     * Creates and arranges panels for:
+     * - Title panel with journey title
+     * - Content panel with images and description
+     * - Trail overlook image (scaled to fit)
+     * - Wagon icon (scaled to fit)
+     * - Historical description text (scrollable)
+     * - Begin Journey button
+     */
     private void initUI() {
         setLayout(new BorderLayout(10, 10));
         getContentPane().setBackground(BACKGROUND_COLOR);

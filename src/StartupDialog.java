@@ -5,34 +5,62 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 
 /**
- * Startup dialog to collect player information and game settings
+ * StartupDialog Class of the Perils Along the Platte Game
+ * A multi-tab dialog that collects player information and game settings at startup.
+ * 
+ * The dialog consists of five tabs:
+ * 1. Introduction: Game overview and welcome message
+ * 2. Character: Player name, gender, and occupation selection
+ * 3. Family: Family member names (up to 3)
+ * 4. Trail: Trail selection (California or Mormon)
+ * 5. Departure: Departure month selection
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file StartupDialog.java
  */
 public class StartupDialog extends JDialog {
+    // The game controller instance for managing game state
     private final GameController gameController;
-    
-    // Panel components
+
+    // The main tabbed pane containing all setup panels
     private JTabbedPane tabbedPane;
+    
+    // The introduction panel with game overview
     private JPanel introPanel;
+    
+    // The character creation panel
     private JPanel characterPanel;
+    
+    // The family member setup panel
     private JPanel familyPanel;
+    
+    // The trail selection panel
     private JPanel trailPanel;
+    
+    // The departure month selection panel
     private JPanel departurePanel;
+    
+    // Combo box for occupation selection
     private JComboBox<String> occupationComboBox;
 
-
-    // Character fields
+    // Text field for player name input
     private JTextField nameField;
+    
+    // Radio button for male gender selection
     private JRadioButton maleButton;
 
-    // Family fields
+    // Text fields for family member names
     private final JTextField[] familyMemberFields = new JTextField[3];
 
+    // Radio buttons for trail selection
     private JRadioButton californiaTrailButton;
     private JRadioButton mormonTrailButton;
 
+    // Radio buttons for departure month selection
     private final JRadioButton[] monthButtons = new JRadioButton[5];
-    
-    // Colors - match EnhancedGUI
+
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
     private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
     private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
@@ -40,7 +68,10 @@ public class StartupDialog extends JDialog {
     private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
     
     /**
-     * Constructor
+     * Constructs a new StartupDialog.
+     * 
+     * @param owner The parent frame
+     * @param controller The game controller instance
      */
     public StartupDialog(Frame owner, GameController controller) {
         super(owner, "Begin Your Journey", true);
@@ -55,7 +86,12 @@ public class StartupDialog extends JDialog {
     }
     
     /**
-     * Initialize the UI components
+     * Initializes the UI components of the dialog.
+     * Sets up:
+     * - Dialog layout and properties
+     * - Tabbed pane with all panels
+     * - Title and navigation buttons
+     * - Event handlers for navigation
      */
     private void initializeUI() {
         // Set dialog properties
@@ -92,17 +128,15 @@ public class StartupDialog extends JDialog {
         // Add tabbed pane to center
         add(tabbedPane, BorderLayout.CENTER);
         
-        // Add next/back/finish buttons at bottom
+        // Add next/back buttons at bottom
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(BACKGROUND_COLOR);
         
         JButton backButton = createStyledButton("Back");
         JButton nextButton = createStyledButton("Next");
-        JButton finishButton = createStyledButton("Begin Journey");
         
         buttonPanel.add(backButton);
         buttonPanel.add(nextButton);
-        buttonPanel.add(finishButton);
         
         add(buttonPanel, BorderLayout.SOUTH);
         
@@ -122,24 +156,21 @@ public class StartupDialog extends JDialog {
                     tabbedPane.setSelectedIndex(index + 1);
                 }
             } else {
-                // If on the last tab, behave like the Begin Journey button
+                // If on the last tab, validate and save settings
                 if (validateAllTabs()) {
                     saveSettings();
                     dispose();
                 }
             }
         });
-        
-        finishButton.addActionListener(e -> {
-            if (validateAllTabs()) {
-                saveSettings();
-                dispose();
-            }
-        });
     }
     
     /**
-     * Creates the introduction panel
+     * Creates the introduction panel with:
+     * - Welcome message
+     * - Game overview text
+     * - Historical context
+     * - Navigation guidance
      */
     private void createIntroPanel() {
         introPanel = createStyledPanel();
@@ -161,9 +192,7 @@ public class StartupDialog extends JDialog {
             "harsh weather, limited supplies, illness, and other hardships that pioneers encountered.\n\n" +
             
             "Between 1841 and 1869, over 400,000 pioneers traveled these trails to reach new homes in " +
-            "the west. Their journeys fundamentally shaped American history.\n\n" +
-            
-            "Click 'Next' to begin creating your character and planning your journey west!"
+            "the west. Their journeys fundamentally shaped American history."
         );
         
         // Add components to the panel - simplified layout without image and tips
@@ -173,10 +202,19 @@ public class StartupDialog extends JDialog {
         
         introPanel.add(welcomeLabel, BorderLayout.NORTH);
         introPanel.add(contentPanel, BorderLayout.CENTER);
+        
+        // Add guidance text at the bottom
+        JTextArea guidanceText = createDescriptionArea(
+            "Click 'Next' to begin creating your character and planning your journey west!"
+        );
+        introPanel.add(guidanceText, BorderLayout.SOUTH);
     }
     
     /**
-     * Creates the character selection panel
+     * Creates the character creation panel with:
+     * - Name input field
+     * - Gender selection
+     * - Occupation selection with descriptions
      */
     private void createCharacterPanel() {
         characterPanel = createStyledPanel();
@@ -283,10 +321,18 @@ public class StartupDialog extends JDialog {
 
         // Add form panel to center
         characterPanel.add(formPanel, BorderLayout.CENTER);
+        
+        // Add guidance text at the bottom
+        JTextArea guidanceText = createDescriptionArea(
+            "Click 'Next' to add your family members who will join you on the journey."
+        );
+        characterPanel.add(guidanceText, BorderLayout.SOUTH);
     }
 
     /**
-     * Creates the family members panel
+     * Creates the family member setup panel with:
+     * - Up to 3 family member name fields
+     * - Optional family member input
      */
     private void createFamilyPanel() {
         familyPanel = createStyledPanel();
@@ -331,10 +377,19 @@ public class StartupDialog extends JDialog {
                         "repairs."
         );
         familyPanel.add(historicalNote, BorderLayout.SOUTH);
+        
+        // Add guidance text at the bottom
+        JTextArea guidanceText = createDescriptionArea(
+            "Click 'Next' to choose which trail you will follow to the west."
+        );
+        familyPanel.add(guidanceText, BorderLayout.SOUTH);
     }
     
     /**
-     * Creates the trail selection panel
+     * Creates the trail selection panel with:
+     * - California Trail option
+     * - Mormon Trail option
+     * - Trail descriptions and differences
      */
     private void createTrailPanel() {
         trailPanel = createStyledPanel();
@@ -422,10 +477,18 @@ public class StartupDialog extends JDialog {
 
         // Add the trails container to the main panel
         trailPanel.add(trailsContainer, BorderLayout.CENTER);
+        
+        // Add guidance text at the bottom
+        JTextArea guidanceText = createDescriptionArea(
+            "Click 'Next' to select your departure month and prepare for the journey."
+        );
+        trailPanel.add(guidanceText, BorderLayout.SOUTH);
     }
     
     /**
-     * Creates the departure month panel
+     * Creates the departure month selection panel with:
+     * - 5 month options (April through August)
+     * - Month descriptions and recommendations
      */
     private void createDeparturePanel() {
         departurePanel = createStyledPanel();
@@ -433,9 +496,7 @@ public class StartupDialog extends JDialog {
 
         // Add description at the top
         JTextArea descriptionArea = createDescriptionArea(
-                "Choose when to depart. The timing of your departure was crucial for pioneers.\n" +
-                        "Leave too early: face mud and flooding from spring rains.\n" +
-                        "Leave too late: risk being trapped in mountain snow.\n\n" +
+                "Choose when to depart. The timing of your departure was crucial for pioneers.\n\n" +
                         "Most emigrants departed between April and June."
         );
 
@@ -482,10 +543,19 @@ public class StartupDialog extends JDialog {
 
         // Add the months container to the main panel
         departurePanel.add(monthsContainer, BorderLayout.CENTER);
+        
+        // Add guidance text at the bottom
+        JTextArea guidanceText = createDescriptionArea(
+            "Click 'Next' to visit the market and prepare for your journey."
+        );
+        departurePanel.add(guidanceText, BorderLayout.SOUTH);
     }
     
     /**
-     * Creates a standardized description text area
+     * Creates a styled text area for descriptions.
+     * 
+     * @param text The text to display
+     * @return A styled JTextArea with the specified text
      */
     private JTextArea createDescriptionArea(String text) {
         JTextArea area = new JTextArea(text);
@@ -501,7 +571,9 @@ public class StartupDialog extends JDialog {
     }
     
     /**
-     * Creates a styled panel with borders
+     * Creates a styled panel with consistent appearance.
+     * 
+     * @return A styled JPanel
      */
     private JPanel createStyledPanel() {
         JPanel panel = new JPanel();
@@ -514,7 +586,10 @@ public class StartupDialog extends JDialog {
     }
     
     /**
-     * Creates a styled button
+     * Creates a styled button with consistent appearance.
+     * 
+     * @param text The button text
+     * @return A styled JButton
      */
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
@@ -530,7 +605,10 @@ public class StartupDialog extends JDialog {
     }
     
     /**
-     * Validates the current tab
+     * Validates the current tab's input.
+     * 
+     * @param tabIndex The index of the tab to validate
+     * @return true if the tab's input is valid, false otherwise
      */
     private boolean validateCurrentTab(int tabIndex) {
         switch (tabIndex) {
@@ -568,7 +646,9 @@ public class StartupDialog extends JDialog {
     }
     
     /**
-     * Validates all tabs
+     * Validates all tabs' input before saving settings.
+     * 
+     * @return true if all input is valid, false otherwise
      */
     private boolean validateAllTabs() {
         for (int i = 0; i < tabbedPane.getTabCount(); i++) {
@@ -581,7 +661,12 @@ public class StartupDialog extends JDialog {
     }
     
     /**
-     * Saves all settings to the game controller
+     * Saves all settings to the game controller.
+     * Creates:
+     * - Player with selected attributes
+     * - Family members
+     * - Trail selection
+     * - Departure time
      */
     private void saveSettings() {
         // Save player info
@@ -620,9 +705,10 @@ public class StartupDialog extends JDialog {
     }
 
     /**
-     * Gets a detailed description for each job type
-     * @param jobName The job name
-     * @return A description of the job and its benefits
+     * Gets the description for a specific job.
+     * 
+     * @param jobName The name of the job
+     * @return The job's description
      */
     private String getJobDescription(String jobName) {
         switch (jobName) {

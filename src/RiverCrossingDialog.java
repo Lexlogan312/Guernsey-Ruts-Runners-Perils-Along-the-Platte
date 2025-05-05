@@ -10,7 +10,18 @@ import java.util.Random;
 import java.util.function.Consumer;
 
 /**
- * Dialog for river crossing decisions in the GUI
+ * RiverCrossingDialog Class of the Perils Along the Platte Game
+ * 
+ * A dialog that presents river crossing options to the player, including:
+ * - Ford the river (wade across)
+ * - Caulk the wagon and float across
+ * - Use a ferry (if available)
+ * - Wait for better conditions
+ * 
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file RiverCrossingDialog.java
  */
 public class RiverCrossingDialog extends JDialog {
     private final Player player;
@@ -37,16 +48,21 @@ public class RiverCrossingDialog extends JDialog {
     private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
 
     /**
-     * Constructor
-     * @param owner Parent frame
-     * @param player Player object
-     * @param inventory Inventory object
-     * @param weather Weather object
-     * @param notifier Function to call to send messages
+     * Constructs a new RiverCrossingDialog.
+     * Initializes the dialog with:
+     * - River characteristics (depth and width)
+     * - Weather effects on river conditions
+     * - Available crossing options
+     * - Risk assessment information
+     * 
+     * @param owner The parent frame (main game window)
+     * @param player The player character
+     * @param inventory The game's inventory system
+     * @param weather The current weather conditions
+     * @param notifier Function to send messages back to GameController
      */
     public RiverCrossingDialog(Frame owner, Player player, Inventory inventory, Weather weather, Consumer<String> notifier) {
         super(owner, "River Crossing", true); // Modal dialog
-
         this.player = player;
         this.inventory = inventory;
         this.weather = weather;
@@ -71,7 +87,13 @@ public class RiverCrossingDialog extends JDialog {
     }
 
     /**
-     * Initialize the user interface
+     * Initializes the dialog's user interface.
+     * Creates and arranges all UI components including:
+     * - Title panel with river name
+     * - River information display
+     * - Crossing options panel
+     * - Option buttons with descriptions
+     * - Weather effects display
      */
     private void initUI() {
         setLayout(new BorderLayout(10, 10));
@@ -160,7 +182,12 @@ public class RiverCrossingDialog extends JDialog {
     }
 
     /**
-     * Creates an option button with description using HTML for formatting.
+     * Creates an option button with formatted title and description.
+     * 
+     * @param title The button's main text
+     * @param description The detailed description of the option
+     * @param action The action to perform when the button is clicked
+     * @return A formatted JButton with the specified properties
      */
     private JButton createOptionButton(String title, String description, ActionListener action) {
         String htmlText = "<html><div style='text-align: center; padding: 5px;'>" +
@@ -183,7 +210,11 @@ public class RiverCrossingDialog extends JDialog {
         return button;
     }
 
-    /** Helper to safely send notification messages */
+    /**
+     * Sends a notification message to the GameController.
+     * 
+     * @param message The message to send
+     */
     private void notify(String message) {
         if (notifier != null) {
             notifier.accept(message);
@@ -193,13 +224,30 @@ public class RiverCrossingDialog extends JDialog {
     }
 
     /**
-     * Ford the river
+     * Attempts to ford the river by walking the wagon through.
+     * 
+     * Success depends on:
+     * - River depth (2-20 feet)
+     * - Oxen health and number
+     * - Weather conditions
+     * 
+     * Possible outcomes:
+     * - Success: Cross safely, possible minor food loss
+     * - Failure: Wagon stuck/overturned, significant resource loss
+     * - Critical failure: Possible drowning in deep water
+     * 
+     * Resource impacts:
+     * - Food: 10-30 lbs (success) or 50-150 lbs (failure)
+     * - Wagon parts: 0-1 parts (failure)
+     * - Medicine: 0-1 kits (failure)
+     * - Oxen health: 10-25% decrease (failure)
+     * - Player health: 10-25% decrease (failure)
      */
     private void fordRiver() {
         List<String> messages = new ArrayList<>(); // Collect messages
         messages.add("Attempting to ford the river...");
 
-        // ... (calculate successChance as before) ...
+        // Calculate successChance
         double successChance;
         if (depth <= 3) successChance = 0.95;
         else if (depth <= 6) successChance = 0.70;
@@ -249,7 +297,22 @@ public class RiverCrossingDialog extends JDialog {
     }
 
     /**
-     * Caulk and float across
+     * Attempts to caulk the wagon and float across the river.
+     * 
+     * Success depends on:
+     * - River width (50-350 feet)
+     * - Wagon condition
+     * - Weather conditions
+     * 
+     * Possible outcomes:
+     * - Success: Cross safely, minor resource loss
+     * - Failure: Wagon damaged, significant resource loss
+     * 
+     * Resource impacts:
+     * - Food: 5-15 lbs (success) or 30-80 lbs (failure)
+     * - Wagon parts: 0-2 parts (failure)
+     * - Medicine: 0-1 kits (failure)
+     * - Oxen health: 5-15% decrease (failure)
      */
     private void caulkAndFloat() {
         List<String> messages = new ArrayList<>();
@@ -312,7 +375,19 @@ public class RiverCrossingDialog extends JDialog {
     }
 
     /**
-     * Use ferry
+     * Attempts to use a ferry for crossing the river.
+     * 
+     * Requirements:
+     * - $10 fee
+     * - Ferry availability
+     * 
+     * Outcomes:
+     * - Success: Safe crossing with minimal resource loss
+     * - Failure: Cannot afford ferry or ferry unavailable
+     * 
+     * Resource impacts:
+     * - Money: $10 fee
+     * - Food: 0-5 lbs loss
      */
     private void useFerry() {
         List<String> messages = new ArrayList<>();
@@ -346,7 +421,17 @@ public class RiverCrossingDialog extends JDialog {
     }
 
     /**
-     * Wait for better conditions
+     * Waits for better river crossing conditions.
+     * 
+     * Effects:
+     * - Advances time by one day
+     * - May improve weather conditions
+     * - Reduces river depth by 1-3 feet
+     * - Consumes daily resources
+     * 
+     * Resource impacts:
+     * - Food: Normal daily consumption
+     * - Time: 1 day delay
      */
     private void waitForBetterConditions() {
         List<String> messages = new ArrayList<>();
@@ -403,7 +488,8 @@ public class RiverCrossingDialog extends JDialog {
     }
 
     /**
-     * Disable option buttons after a choice is made
+     * Disables all crossing option buttons.
+     * Called after a crossing attempt is made.
      */
     private void disableOptions() {
         if (optionsPanel == null) return;
@@ -415,9 +501,10 @@ public class RiverCrossingDialog extends JDialog {
     }
 
     /**
-     * Sets the name of the river crossing
-     * @param riverName The name of the river to cross
-     */
+     * Sets the name of the river to display in the dialog.
+     * 
+     * @param riverName The name of the river
+=     */
     public void setRiverName(String riverName) {
         this.riverName = riverName;
         // Update the title if the dialog components are already initialized
@@ -426,12 +513,10 @@ public class RiverCrossingDialog extends JDialog {
             
             // Try to update the title label if it exists
             for (Component comp : getContentPane().getComponents()) {
-                if (comp instanceof JPanel) {
-                    JPanel panel = (JPanel) comp;
+                if (comp instanceof JPanel panel) {
                     if (panel.getLayout() instanceof BorderLayout) {
                         for (Component innerComp : panel.getComponents()) {
-                            if (innerComp instanceof JLabel) {
-                                JLabel label = (JLabel) innerComp;
+                            if (innerComp instanceof JLabel label) {
                                 if (label.getFont() == FontManager.WESTERN_FONT_TITLE) {
                                     label.setText(riverName);
                                     break;
@@ -444,4 +529,4 @@ public class RiverCrossingDialog extends JDialog {
         }
     }
 
-} // End of RiverCrossingDialog class
+}

@@ -3,28 +3,47 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Dialog shown when the player dies
+ * DeathDialog Class of the Perils Along the Platte Game
+ * A dialog that appears when the player dies during their journey west.
+ * Displays:
+ * - Cause of death with historical context
+ * - Journey statistics (days traveled, distance covered)
+ * - Historical context about the specific cause of death
+ * - Visual elements (custom image or drawn tombstone)
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file DeathDialog.java
  */
 public class DeathDialog extends JDialog {
     
-    // Colors - match EnhancedGUI
-    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
-    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
-    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
-    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
+    // UI Colors for western theme
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown for borders
     
     // Path to custom death image
     private static final String CUSTOM_IMAGE_PATH = "images/Death Screen.png";
     
-    // Map of detailed death messages for different causes
+    /**
+     * Map of historical death descriptions for different causes of death.
+     * Contains detailed historical context about each type of death that
+     * pioneers might have experienced on the trail. The descriptions are
+     * based on historical records and pioneer diaries.
+     */
     private static final Map<String, String> DEATH_DETAILS = new HashMap<>();
     
+    /**
+     * Static initializer block that populates the DEATH_DETAILS map with
+     * historical descriptions for various causes of death. Each entry includes
+     * information about the cause, its effects, and historical context.
+     */
     static {
         // Initialize detailed death messages
         DEATH_DETAILS.put("cholera", "Cholera was one of the most feared diseases on the trail. " +
@@ -119,12 +138,14 @@ public class DeathDialog extends JDialog {
     }
     
     /**
-     * Constructor
-     * @param owner The parent frame
-     * @param causeOfDeath What killed the player
-     * @param days Number of days the journey took
-     * @param distance Distance traveled
-     * @param lastLocation Last known location
+     * Constructs a new DeathDialog to show death details and journey statistics.
+     * Initializes the dialog with a fixed size and modal behavior.
+     * 
+     * @param owner The parent frame for modal dialog positioning
+     * @param causeOfDeath The specific cause of the player's death
+     * @param days The number of days traveled before death
+     * @param distance The total distance covered in miles
+     * @param lastLocation The last known location before death
      */
     public DeathDialog(Frame owner, String causeOfDeath, int days, int distance, String lastLocation) {
         super(owner, "Game Over", true);
@@ -132,10 +153,24 @@ public class DeathDialog extends JDialog {
         initUI(causeOfDeath, days, distance, lastLocation);
         pack();
         setLocationRelativeTo(owner);
-        setSize(700, 650);
+        setSize(700, 700);
         setResizable(false);
     }
     
+    /**
+     * Initializes the dialog's user interface components.
+     * Creates and arranges panels for:
+     * - Death announcement with cause of death
+     * - Journey statistics (days, distance, location)
+     * - Historical context about the specific cause of death
+     * - Death image (custom or drawn)
+     * - Close button
+     *
+     * @param causeOfDeath The specific cause of death
+     * @param days The number of days traveled
+     * @param distance The distance covered in miles
+     * @param lastLocation The final location reached
+     */
     private void initUI(String causeOfDeath, int days, int distance, String lastLocation) {
         setLayout(new BorderLayout(10, 10));
         getContentPane().setBackground(BACKGROUND_COLOR);

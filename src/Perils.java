@@ -1,3 +1,16 @@
+/**
+ * Perils Class of the Perils Along the Platte Game
+ * Manages random events and challenges that occur during the journey.
+ * Handles various types of events including diseases, injuries, wagon problems,
+ * positive events, weather events, animal encounters, and gender-specific events.
+ * Provides a dynamic and unpredictable gameplay experience that affects the player's
+ * health, morale, and resources.
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file Perils.java
+ */
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.function.Consumer;
@@ -19,8 +32,15 @@ public class Perils {
     private ArrayList<String> weatherEvents;
     private ArrayList<String> animalEvents;
     private ArrayList<String> femaleSpecificEvents;
-    private ArrayList<String> maleSpecificEvents;;
+    private ArrayList<String> maleSpecificEvents;
 
+    /**
+     * Constructs a new Perils manager with the specified game components.
+     * @param player The player who will experience the events
+     * @param inventory The inventory that may be affected by events
+     * @param weather The weather system that may influence events
+     * @param time The time system for tracking event timing
+     */
     public Perils(Player player, Inventory inventory, Weather weather, Time time) {
         this.player = player;
         this.inventory = inventory;
@@ -32,14 +52,16 @@ public class Perils {
     }
     
     /**
-     * Set a message listener to handle notifications instead of System.out
+     * Sets a custom message listener to handle event notifications.
+     * @param listener The consumer that will handle message notifications
      */
     public void setMessageListener(Consumer<String> listener) {
         this.messageListener = listener;
     }
     
     /**
-     * Show a message through the listener or System.out
+     * Displays a message through the configured listener or System.out.
+     * @param message The message to display
      */
     private void showMessage(String message) {
         if (messageListener != null) {
@@ -49,6 +71,12 @@ public class Perils {
         }
     }
 
+    /**
+     * Initializes all possible event types and their variations.
+     * Creates lists of diseases, injuries, wagon problems, positive events,
+     * weather events, animal encounters, and gender-specific events.
+     * Includes job-specific variations for certain event types.
+     */
     private void initializeEvents() {
         // Initialize disease events
         diseases = new ArrayList<>();
@@ -129,6 +157,18 @@ public class Perils {
         maleSpecificEvents.add("successfully repaired wagon without parts");
     }
 
+    /**
+     * Generates a random event based on probability and player characteristics.
+     * Events have a 30% chance of occurring each day.
+     * Gender-specific events have a 15% chance if applicable.
+     * Regular events are distributed among six categories:
+     * 1. Diseases
+     * 2. Injuries
+     * 3. Wagon Problems
+     * 4. Positive Events
+     * 5. Weather Events
+     * 6. Animal Events
+     */
     public void generateRandomEvent() {
         // Determine if an event happens (70% chance)
         if (random.nextDouble() > 0.7) {
@@ -172,7 +212,10 @@ public class Perils {
     }
 
     /**
-     * Generate events specific to female characters
+     * Generates an event specific to female characters.
+     * Includes events like childbirth, women's council meetings,
+     * supply management issues, and caregiving challenges.
+     * Events can affect health, morale, and inventory.
      */
     private void generateFemaleSpecificEvent() {
         if (!player.getGender().equalsIgnoreCase("female")) return; // Only for female players
@@ -280,7 +323,10 @@ public class Perils {
     }
     
     /**
-     * Generate events specific to male characters
+     * Generates an event specific to male characters.
+     * Includes events like hunting injuries, physical strain,
+     * repair opportunities, and hunting success.
+     * Events can affect health, morale, and inventory.
      */
     private void generateMaleSpecificEvent() {
         if (!player.getGender().equalsIgnoreCase("male")) return; // Only for male players
@@ -416,6 +462,12 @@ public class Perils {
         showMessage(message);
     }
 
+    /**
+     * Generates a disease-related event.
+     * Diseases can range from cholera to morale depreciation.
+     * Effects vary based on the disease type and player's health.
+     * May require medicine to treat.
+     */
     private void generateDiseaseEvent() {
         String disease = diseases.get(random.nextInt(diseases.size()));
         String message = "Disease strikes! You have contracted " + disease + ".";
@@ -473,6 +525,12 @@ public class Perils {
         showMessage(message);
     }
 
+    /**
+     * Generates an injury-related event.
+     * Injuries can range from broken bones to cuts and concussions.
+     * Effects vary based on the injury type and severity.
+     * May require medicine to treat.
+     */
     private void generateInjuryEvent() {
         String injury = injuries.get(random.nextInt(injuries.size()));
         String message = "Injury! You suffered a " + injury + ".";
@@ -525,6 +583,12 @@ public class Perils {
         showMessage(message);
     }
 
+    /**
+     * Generates a wagon-related problem.
+     * Problems can include broken parts, getting stuck, or loose components.
+     * Effects vary based on the problem type and available parts.
+     * May require wagon parts to fix.
+     */
     private void generateWagonProblem() {
         String problem = wagonProblems.get(random.nextInt(wagonProblems.size()));
         String message = "Wagon Problem: " + problem + ".";
@@ -695,6 +759,12 @@ public class Perils {
         showMessage(message);
     }
 
+    /**
+     * Generates a positive event that benefits the player.
+     * Events can include finding supplies, meeting helpful people,
+     * discovering resources, or finding shortcuts.
+     * Effects typically improve morale and may add resources.
+     */
     private void generatePositiveEvent() {
         String event = positiveEvents.get(random.nextInt(positiveEvents.size()));
         String message = "Good Fortune: " + event + ".";
@@ -792,6 +862,12 @@ public class Perils {
         showMessage(message);
     }
     
+    /**
+     * Generates a weather-related event.
+     * Events can include storms, fog, snow, or dust storms.
+     * Effects vary based on the weather type and severity.
+     * May affect travel speed and resource consumption.
+     */
     private void generateWeatherEvent() {
         String event = weatherEvents.get(random.nextInt(weatherEvents.size()));
         String message = "Weather Event: " + event + ".";
@@ -957,6 +1033,13 @@ public class Perils {
         showMessage(message);
     }
 
+    /**
+     * Generates an animal-related event.
+     * Events can include dangerous encounters, food theft,
+     * or oxen disturbances.
+     * Effects vary based on the animal type and situation.
+     * May affect health, morale, and resources.
+     */
     private void generateAnimalEvent() {
         String event = animalEvents.get(random.nextInt(animalEvents.size()));
         String message = "Animal Encounter: " + event + ".";

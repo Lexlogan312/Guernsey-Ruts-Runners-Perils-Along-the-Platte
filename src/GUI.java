@@ -13,32 +13,45 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * GUI implements the interface for the Oregon Trail game.
+ * GUI Class of the Perils Along the Platte Game
+ * Implements the user interface for the Oregon Trail game, providing a visual representation
+ * of the journey and interactive controls. The GUI includes:
+ * - A map panel showing the trail, landmarks, and player progress
+ * - A status panel displaying current game statistics
+ * - Control buttons for game actions
+ * - An output panel for game messages and updates
+ * The interface uses a western-themed design with custom fonts and colors.
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file GUI.java
  */
 public class GUI extends JPanel {
+    // The game controller that manages game state and logic.
     private final GameController gameController;
 
-    // Map panel components
+    // Map panel components for displaying the trail and landmarks.
     private MapPanel mapPanel;
 
-    // Status panel components
+    // Status panel components for displaying game statistics.
     private JPanel statusPanel;
     private final HashMap<String, JLabel> statusLabels = new HashMap<>();
 
-    // Control panel components
+    // Control panel components for game actions.
     private JPanel controlPanel;
     private JButton travelButton;
     private JButton restButton;
     private JButton huntButton;
+    private JButton healthButton;
     private JButton inventoryButton;
     private JButton tradeButton;
     private JButton quitButton;
 
-    // Output panel components
+    // Output panel components for game messages.
     private JPanel outputPanel;
     private JTextArea outputTextArea;
 
-    // Colors
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
     private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
     private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
@@ -46,7 +59,10 @@ public class GUI extends JPanel {
     private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
 
     /**
-     * Constructor
+     * Constructs a new GUI instance with the specified game controller.
+     * Initializes all UI components and sets up event listeners.
+     *
+     * @param controller The game controller that manages game state and logic
      */
     public GUI(GameController controller) {
         this.gameController = controller;
@@ -55,7 +71,13 @@ public class GUI extends JPanel {
     }
 
     /**
-     * Initialize UI components
+     * Initializes the user interface components and layout.
+     * Sets up the main panel with a GridBagLayout and creates all sub-panels:
+     * - Title label
+     * - Status panel
+     * - Map panel
+     * - Control panel
+     * - Output panel
      */
     private void initializeUI() {
         // Use GridBagLayout for the main panel to handle resizing better
@@ -118,9 +140,21 @@ public class GUI extends JPanel {
         add(outputPanel, gbc);
     }
 
-
     /**
-     * Creates the status panel with game stats using GridBagLayout for better spacing
+     * Creates the status panel that displays current game statistics.
+     * Uses GridBagLayout for flexible component arrangement.
+     * Displays information including:
+     * - Trail name
+     * - Current date
+     * - Days traveled
+     * - Current location
+     * - Distance traveled
+     * - Next landmark
+     * - Current weather
+     * - Player health
+     * - Food supply
+     * - Oxen health
+     * - Player's job
      */
     private void createStatusPanel() {
         statusPanel = new JPanel(new GridBagLayout()); // Use GridBagLayout
@@ -175,9 +209,13 @@ public class GUI extends JPanel {
         }
     }
 
-
     /**
-     * Creates the map panel
+     * Creates the map panel that displays the trail and player progress.
+     * The map panel shows:
+     * - The trail path
+     * - Landmarks and their names
+     * - The player's current position
+     * - A progress bar indicating journey completion
      */
     private void createMapPanel() {
         mapPanel = new MapPanel();
@@ -186,7 +224,15 @@ public class GUI extends JPanel {
     }
 
     /**
-     * Creates the control panel
+     * Creates the control panel containing action buttons.
+     * Includes buttons for:
+     * - Travel
+     * - Rest
+     * - Hunt
+     * - Health
+     * - Inventory
+     * - Trade
+     * - Quit
      */
     private void createControlPanel() {
         controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
@@ -195,6 +241,7 @@ public class GUI extends JPanel {
         travelButton = createStyledButton("Travel");
         restButton = createStyledButton("Rest");
         huntButton = createStyledButton("Hunt");
+        healthButton = createStyledButton("Health");
         inventoryButton = createStyledButton("Inventory");
         tradeButton = createStyledButton("Trade");
         quitButton = createStyledButton("Quit");
@@ -203,13 +250,19 @@ public class GUI extends JPanel {
         controlPanel.add(travelButton);
         controlPanel.add(restButton);
         controlPanel.add(huntButton);
+        controlPanel.add(healthButton);
         controlPanel.add(inventoryButton);
         controlPanel.add(tradeButton);
         controlPanel.add(quitButton);
     }
 
     /**
-     * Creates a styled button with western font and themed colors
+     * Creates a styled button with western-themed appearance.
+     * Applies custom font, colors, and border styling.
+     * Adds tooltips for button functionality.
+     *
+     * @param text The text to display on the button
+     * @return A styled JButton with the specified text
      */
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
@@ -234,7 +287,9 @@ public class GUI extends JPanel {
     }
 
     /**
-     * Creates the output panel
+     * Creates the output panel for displaying game messages and updates.
+     * Includes a titled border and a text area with custom styling.
+     * The text area is non-editable and uses a custom font.
      */
     private void createOutputPanel() {
         outputPanel = new JPanel(new BorderLayout());
@@ -266,9 +321,9 @@ public class GUI extends JPanel {
         outputPanel.add(outputScrollPane, BorderLayout.CENTER);
     }
 
-
     /**
-     * Set up event listeners
+     * Sets up event listeners for all interactive components.
+     * Configures action listeners for buttons and mouse listeners for the map.
      */
     private void setupEventListeners() {
         // Game controller listeners
@@ -279,15 +334,17 @@ public class GUI extends JPanel {
         travelButton.addActionListener(e -> gameController.travel());
         restButton.addActionListener(e -> gameController.rest());
         huntButton.addActionListener(e -> gameController.hunt());
-
-        // Other buttons could open dialogs
+        healthButton.addActionListener(e -> showHealthDialog());
         inventoryButton.addActionListener(e -> showInventoryDialog());
         tradeButton.addActionListener(e -> showTradeDialog());
         quitButton.addActionListener(e -> confirmQuit());
     }
 
     /**
-     * Appends text to the output area, ensuring it runs on the EDT
+     * Appends a message to the output text area.
+     * Ensures the text area scrolls to show new messages.
+     *
+     * @param message The message to append to the output
      */
     private void appendToOutput(String message) {
         SwingUtilities.invokeLater(() -> {
@@ -306,9 +363,9 @@ public class GUI extends JPanel {
         });
     }
 
-
     /**
-     * Updates all game state displays
+     * Updates the game state display.
+     * Refreshes all status labels and the map to reflect current game conditions.
      */
     public void updateGameState() {
         // Ensure updates run on the Event Dispatch Thread
@@ -338,6 +395,7 @@ public class GUI extends JPanel {
             travelButton.setEnabled(gameRunning);
             restButton.setEnabled(gameRunning);
             huntButton.setEnabled(gameRunning && hasAmmo);
+            healthButton.setEnabled(gameRunning);
             inventoryButton.setEnabled(gameRunning); // Always allow viewing inventory if game is running
             tradeButton.setEnabled(canTrade);
             quitButton.setEnabled(true); // Always allow quitting
@@ -356,9 +414,10 @@ public class GUI extends JPanel {
     }
 
     /**
-     * Gets a short description of the job bonus for display
-     * @param job The player's job
-     * @return A short description of the job bonus
+     * Gets a description of the bonus effects for a specific job.
+     *
+     * @param job The player's current job
+     * @return A string describing the job's special abilities and bonuses
      */
     private String getJobBonusDescription(Job job) {
         switch (job) {
@@ -384,7 +443,8 @@ public class GUI extends JPanel {
     }
 
     /**
-     * Updates status labels with current game values
+     * Updates all status labels with current game information.
+     * Retrieves data from the game controller and formats it for display.
      */
     private void updateStatusLabels() {
         Time time = gameController.getTime();
@@ -424,7 +484,12 @@ public class GUI extends JPanel {
     }
 
     /**
-     * Shortens text for display purposes, handling null input.
+     * Shortens text to fit within a specified maximum length.
+     * Adds ellipsis (...) if the text is too long.
+     *
+     * @param text The text to shorten
+     * @param maxLength The maximum allowed length
+     * @return The shortened text with ellipsis if needed
      */
     private String shortenText(String text, int maxLength) {
         if (text == null) {
@@ -437,7 +502,8 @@ public class GUI extends JPanel {
     }
 
     /**
-     * Shows inventory dialog (using JOptionPane for simplicity)
+     * Displays a dialog showing the player's current inventory.
+     * Lists all items and their quantities with formatted labels.
      */
     private void showInventoryDialog() {
         if (!gameController.isGameRunning()) return;
@@ -529,20 +595,7 @@ public class GUI extends JPanel {
         itemsPanel.add(medicineLabel);
         itemsPanel.add(ammoLabel);
 
-        // Add other items if present
-        if (inventory.getItems() != null && !inventory.getItems().isEmpty()) {
-            JLabel otherItemsTitle = new JLabel("Other Items:");
-            otherItemsTitle.setFont(FontManager.getBoldWesternFont(14));
-            otherItemsTitle.setForeground(HEADER_COLOR);
-            otherItemsTitle.setBorder(new EmptyBorder(10, 0, 5, 0));
-            itemsPanel.add(otherItemsTitle);
-
-            for (Item item : inventory.getItems()) {
-                JLabel itemLabel = createInventoryItemLabel(item.getName(), item.getDescription());
-                itemsPanel.add(itemLabel);
-            }
-        }
-
+        // Remove other items section
         JScrollPane scrollPane = new JScrollPane(itemsPanel);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(PANEL_COLOR);
@@ -576,7 +629,11 @@ public class GUI extends JPanel {
     }
 
     /**
-     * Helper method to create styled inventory item labels
+     * Creates a formatted label for an inventory item.
+     *
+     * @param name The name of the inventory item
+     * @param value The current quantity or value of the item
+     * @return A JLabel displaying the item information
      */
     private JLabel createInventoryItemLabel(String name, String value) {
         JLabel label = new JLabel(name + ": " + value);
@@ -589,9 +646,9 @@ public class GUI extends JPanel {
         return label;
     }
 
-
     /**
-     * Shows trade dialog if at a valid location
+     * Displays the trading dialog when at a trading post.
+     * Shows available items and their prices.
      */
     private void showTradeDialog() {
         if (!gameController.isGameRunning()) return;
@@ -613,7 +670,21 @@ public class GUI extends JPanel {
     }
 
     /**
-     * Shows quit confirmation dialog
+     * Displays a dialog showing the player's current health status.
+     * Includes health level, morale, and any active conditions.
+     */
+    private void showHealthDialog() {
+        HealthDialog healthDialog = new HealthDialog(
+            (Frame) SwingUtilities.getWindowAncestor(this),
+            gameController.getPlayer(),
+            gameController.getInventory()
+        );
+        healthDialog.setVisible(true);
+    }
+
+    /**
+     * Shows a confirmation dialog before quitting the game.
+     * Prompts the user to confirm their decision to exit.
      */
     private void confirmQuit() {
         int option = JOptionPane.showConfirmDialog(
@@ -629,9 +700,7 @@ public class GUI extends JPanel {
         }
     }
 
-    // ========================================================================
     // Inner class for the map panel
-    // ========================================================================
     private class MapPanel extends JPanel {
         private Image mapImage;
         private Map map; // Reference to the game's map object
@@ -650,7 +719,6 @@ public class GUI extends JPanel {
         private final Color TRAIL_COLOR = new Color(139, 69, 19, 180); // Brown semi-transparent
         private final Font LANDMARK_FONT = FontManager.getBoldWesternFont(11f); // Smaller font
         private final Font TOOLTIP_FONT = FontManager.getWesternFont(12f);
-        private final Color LANDMARK_TEXT_SHADOW = new Color(0, 0, 0, 100);
         private final BasicStroke TRAIL_STROKE = new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
         private final BasicStroke LABEL_LINE_STROKE = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2}, 0);
 
@@ -659,6 +727,10 @@ public class GUI extends JPanel {
         private int originalMapHeight = 0;
         private final Rectangle mapDrawArea = new Rectangle(); // Area where map image is drawn
 
+        /**
+         * Constructs a new map panel.
+         * Initializes the map image and sets up mouse listeners.
+         */
         public MapPanel() {
             setBackground(PANEL_COLOR); // Match GUI panel color
             setPreferredSize(new Dimension(800, 500)); // Initial preferred size
@@ -676,7 +748,10 @@ public class GUI extends JPanel {
             });
         }
 
-        /** Loads the map background image */
+        /**
+         * Loads the map image from resources.
+         * Scales the image to fit the panel while maintaining aspect ratio.
+         */
         private void loadMapImage() {
             try {
                 // Use ResourceLoader to load the map image
@@ -698,9 +773,10 @@ public class GUI extends JPanel {
             }
         }
 
-
         /**
-         * Updates the map display with current game state
+         * Updates the map display with current game state.
+         *
+         * @param gameMap The current game map object
          */
         public void updateMap(Map gameMap) {
             if (gameMap == null) {
@@ -735,7 +811,11 @@ public class GUI extends JPanel {
             repaint();
         }
 
-        /** Finds and caches the distance of Fort Kearny */
+        /**
+         * Finds the distance to Fort Kearny for progress calculation.
+         *
+         * @return The distance to Fort Kearny in miles
+         */
         private int findFortKearnyDistance() {
             if (map == null || map.getLandmarks() == null) return 0; // Default or error value
             for (Landmark lm : map.getLandmarks()) {
@@ -747,9 +827,11 @@ public class GUI extends JPanel {
             return 0; // Return 0 if not found, so all landmarks might show
         }
 
-
         /**
-         * Creates a buffered image of the map for smoother rendering
+         * Creates a buffered image for the map display.
+         * Enables smooth rendering and double buffering.
+         *
+         * @return A BufferedImage containing the map
          */
         private BufferedImage createBufferedMapImage() {
             // Ensure panel has valid dimensions
@@ -795,7 +877,12 @@ public class GUI extends JPanel {
             return buffer;
         }
 
-        /** Set rendering hints for quality */
+        /**
+         * Sets up the Graphics2D context for drawing.
+         * Configures rendering hints for quality and anti-aliasing.
+         *
+         * @param g2d The Graphics2D context to configure
+         */
         private void setupGraphics2D(Graphics2D g2d) {
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -803,7 +890,12 @@ public class GUI extends JPanel {
             g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         }
 
-        /** Draw the map background image or fallback */
+        /**
+         * Draws the map background image.
+         * Scales and positions the image within the panel.
+         *
+         * @param g2d The Graphics2D context for drawing
+         */
         private void drawMapBackground(Graphics2D g2d) {
             if (mapImage != null) {
                 g2d.drawImage(mapImage, mapDrawArea.x, mapDrawArea.y,
@@ -823,7 +915,11 @@ public class GUI extends JPanel {
         }
 
         /**
-         * Calculates the drawing area for the map image to preserve aspect ratio
+         * Calculates the area where the map image should be drawn.
+         * Maintains aspect ratio while fitting within panel bounds.
+         *
+         * @param panelWidth The width of the panel
+         * @param panelHeight The height of the panel
          */
         private void calculateMapDrawArea(int panelWidth, int panelHeight) {
             if (originalMapWidth <= 0 || originalMapHeight <= 0 || panelWidth <= 0 || panelHeight <= 0) {
@@ -865,7 +961,10 @@ public class GUI extends JPanel {
         }
 
         /**
-         * Scales image coordinates to screen coordinates based on mapDrawArea.
+         * Converts map coordinates to screen coordinates.
+         *
+         * @param imagePoint The point in map coordinates
+         * @return The corresponding point in screen coordinates
          */
         private Point scaleImagePointToScreen(Point imagePoint) {
             if (originalMapWidth <= 0 || originalMapHeight <= 0 || mapDrawArea.width <= 0 || mapDrawArea.height <= 0) {
@@ -889,10 +988,9 @@ public class GUI extends JPanel {
             return new Point(screenX, screenY);
         }
 
-
         /**
-         * Calculates and stores the screen positions for all landmarks
-         * based on their stored image coordinates and the current mapDrawArea.
+         * Updates the screen positions of all landmarks.
+         * Recalculates positions when the map is resized.
          */
         private void updateLandmarkScreenPositions() {
             landmarkScreenPositions.clear(); // Clear previous screen positions
@@ -909,7 +1007,8 @@ public class GUI extends JPanel {
         }
 
         /**
-         * Calculates the precise screen position for the wagon based on distance traveled.
+         * Calculates the current screen position of the wagon.
+         * Updates based on the player's progress along the trail.
          */
         private void calculateWagonScreenPosition() {
             if (map == null || landmarkScreenPositions.isEmpty() || map.getLandmarks() == null || totalDistance <= 0) {
@@ -980,10 +1079,11 @@ public class GUI extends JPanel {
             wagonScreenPosition = new Point(wagonX, wagonY);
         }
 
-
         /**
-         * Draws the trail paths on the map by connecting scaled landmark positions,
-         * starting from Fort Kearny. Colors indicate progress relative to the wagon.
+         * Draws the trail paths on the map.
+         * Shows the main trail and any alternate routes.
+         *
+         * @param g2d The Graphics2D context for drawing
          */
         private void drawTrailPaths(Graphics2D g2d) {
             if (map == null || landmarkScreenPositions.isEmpty() || map.getLandmarks() == null || fortKearnyDistance < 0) return;
@@ -1022,23 +1122,12 @@ public class GUI extends JPanel {
             }
         }
 
-
-        /** Helper to find landmark name given a screen point (inefficient, use cautiously) */
-        private Landmark findLandmarkByScreenPoint(Point screenPoint) {
-            if (map == null || map.getLandmarks() == null || screenPoint == null) return null;
-            for (Landmark lm : map.getLandmarks()) {
-                Point storedPoint = landmarkScreenPositions.get(lm.getName());
-                // Use distance check for robustness instead of exact equals
-                if (storedPoint != null && storedPoint.distance(screenPoint) < 1.0) {
-                    return lm;
-                }
-            }
-            // Fallback: Find closest landmark if exact match fails? Might be too complex here.
-            return null;
-        }
-
-
-        /** Draws the progress bar */
+        /**
+         * Draws the progress bar showing journey completion.
+         * Displays a visual indicator of distance traveled.
+         *
+         * @param g2d The Graphics2D context for drawing
+         */
         private void drawProgressBar(Graphics2D g2d) {
             if (totalDistance <= 0) return; // Avoid division by zero
 
@@ -1074,8 +1163,10 @@ public class GUI extends JPanel {
         }
 
         /**
-         * Draws landmark dots and labels, filtering for those at or after Fort Kearny.
-         * Does NOT draw the wagon icon here anymore.
+         * Draws all landmarks on the map.
+         * Shows landmark names and current location indicator.
+         *
+         * @param g2d The Graphics2D context for drawing
          */
         private void drawLandmarks(Graphics2D g2d) {
             if (map == null || landmarkScreenPositions.isEmpty() || map.getLandmarks() == null || fortKearnyDistance < 0) return;
@@ -1109,16 +1200,26 @@ public class GUI extends JPanel {
             }
         }
 
-        /** Draws the moving wagon icon at its calculated screen position */
+        /**
+         * Draws the moving wagon icon at the current position.
+         *
+         * @param g2d The Graphics2D context for drawing
+         */
         private void drawMovingWagon(Graphics2D g2d) {
             if (wagonScreenPosition != null) {
                 drawWagonIcon(g2d, wagonScreenPosition.x, wagonScreenPosition.y);
             }
         }
 
-
         /**
-         * Draws landmark name with basic collision avoidance.
+         * Draws a landmark name with connecting line.
+         * Handles text positioning and collision avoidance.
+         *
+         * @param g2d The Graphics2D context for drawing
+         * @param landmark The landmark to draw
+         * @param position The screen position of the landmark
+         * @param isCurrentLocation Whether this is the current location
+         * @param index The landmark's index for positioning
          */
         private void drawLandmarkName(Graphics2D g2d, Landmark landmark, Point position, boolean isCurrentLocation, int index) {
             String landmarkName = landmark.getName();
@@ -1161,11 +1262,14 @@ public class GUI extends JPanel {
             drawnLabelBounds.add(new Rectangle(bgX, bgY, bgWidth, bgHeight));
         }
 
-
         /**
-         * Draws a wagon icon at the specified location
+         * Draws the wagon icon at the specified position.
+         *
+         * @param g The Graphics context for drawing
+         * @param x The x-coordinate
+         * @param y The y-coordinate
          */
-        private void drawWagonIcon(Graphics2D g, int x, int y) {
+        private void drawWagonIcon(Graphics g, int x, int y) {
             try {
                 // Use ResourceLoader to load the wagon icon
                 ImageIcon icon = ResourceLoader.loadImage("images/Wagon Icon.png");
@@ -1192,9 +1296,11 @@ public class GUI extends JPanel {
             }
         }
 
-
         /**
-         * Checks if mouse is hovering over a landmark dot.
+         * Checks if the mouse is hovering over a landmark.
+         * Updates tooltip display accordingly.
+         *
+         * @param mousePoint The current mouse position
          */
         private void checkLandmarkHover(Point mousePoint) {
             String newTooltipText = null;
@@ -1238,18 +1344,6 @@ public class GUI extends JPanel {
             }
         }
 
-        /** Helper to find a Landmark object by its name */
-        private Landmark findLandmarkByName(String name) {
-            if (map == null || map.getLandmarks() == null || name == null) return null;
-            for (Landmark lm : map.getLandmarks()) {
-                if (name.equals(lm.getName())) { // Use equals for string comparison
-                    return lm;
-                }
-            }
-            return null;
-        }
-
-
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
@@ -1280,7 +1374,12 @@ public class GUI extends JPanel {
         }
 
         /**
-         * Draws a tooltip with landmark information, handling text wrapping and bounds.
+         * Draws a tooltip at the specified position.
+         * Shows additional information about landmarks on hover.
+         *
+         * @param g2d The Graphics2D context for drawing
+         * @param text The tooltip text to display
+         * @param position The screen position for the tooltip
          */
         private void drawTooltip(Graphics2D g2d, String text, Point position) {
             // (Keep the existing drawTooltip logic from the previous version)
@@ -1380,11 +1479,16 @@ public class GUI extends JPanel {
             }
         }
 
-        /** Checks if the current location is a trading post */
+        /**
+         * Checks if the current location is a trading post.
+         *
+         * @param locationName The name of the current location
+         * @return true if the location is a trading post, false otherwise
+         */
         public boolean isAtTradingPost(String locationName) {
             if (locationName == null) return false;
             return locationName.contains("Fort") || locationName.contains("Trading Post");
         }
 
-    } // End of MapPanel inner class
-} // End of GUI class
+    }
+}

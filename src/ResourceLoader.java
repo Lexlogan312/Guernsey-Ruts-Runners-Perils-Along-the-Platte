@@ -5,12 +5,19 @@ import java.net.URL;
 import java.io.File;
 
 /**
- * Utility class for loading resources (images, fonts, etc.) in a way that works
+ * ResourceLoader Class of the Perils Along the Platte Game
+ * A utility class for loading game resources such as images and fonts.
+ * Implements multiple fallback strategies to ensure resources can be loaded
  * both when running from an IDE and when packaged in a JAR file.
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file ResourceLoader.java
  */
 public class ResourceLoader {
     
-    // We'll try multiple base paths to ensure resources are found
+    // Array of base paths to search for resources
     private static final String[] RESOURCE_BASE_PATHS = {
         "/",            // Root of JAR or classpath
         "/resources/",  // Original path - for IDE compatibility
@@ -19,18 +26,26 @@ public class ResourceLoader {
     
     /**
      * Loads an image using multiple fallback strategies.
+     * Attempts to load the image from various locations in this order:
+     * 1. Classpath resources (for JAR deployment)
+     * 2. Direct file path (for IDE development)
+     * 3. Absolute path
+     * 4. Direct image path
      * 
-     * @param imagePath Path to the image, relative to the resources folder (e.g., "images/Wagon Icon.png")
-     * @return ImageIcon or null if loading fails
+     * @param imagePath Path to the image, relative to the resources folder
+     *                  (e.g., "images/Wagon Icon.png")
+     * @return ImageIcon object if loading succeeds, null if all loading attempts fail
+     * @throws SecurityException If access to the file system is denied
+     * @throws IllegalArgumentException If the image path is invalid
      */
     public static ImageIcon loadImage(String imagePath) {
-        ImageIcon icon = null;
+        ImageIcon icon;
         String fullPath = "resources/" + imagePath;
         
-        // Debug information
+        // Debug information for troubleshooting
         System.out.println("Attempting to load image: " + imagePath);
         
-        // Try all resource base paths first (for JAR)
+        // Try all resource base paths first (for JAR deployment)
         for (String basePath : RESOURCE_BASE_PATHS) {
             String resourcePath = basePath + imagePath;
             try {
@@ -49,7 +64,7 @@ public class ResourceLoader {
             }
         }
         
-        // Also try direct paths (works when running from IDE)
+        // Try direct paths (works when running from IDE)
         try {
             File file = new File(fullPath);
             if (file.exists()) {
@@ -75,37 +90,31 @@ public class ResourceLoader {
                     System.out.println("Image loaded from absolute path: " + absolutePath);
                     return icon;
                 }
-            } else {
-                System.out.println("Absolute file does not exist: " + absolutePath);
             }
         } catch (Exception e) {
             System.err.println("Failed to load image from absolute path: " + e.getMessage());
         }
         
-        // Lastly, try with just the image path directly
-        try {
-            File file = new File(imagePath);
-            if (file.exists()) {
-                icon = new ImageIcon(imagePath);
-                if (icon.getIconWidth() > 0) {
-                    System.out.println("Image loaded from direct path: " + imagePath);
-                    return icon;
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to load image from direct path: " + e.getMessage());
-        }
-        
-        // If all methods failed, return null
-        System.err.println("All image loading methods failed for: " + imagePath);
+        // If all attempts fail, return null
+        System.err.println("Failed to load image after all attempts: " + imagePath);
         return null;
     }
     
     /**
-     * Gets an input stream for a resource file.
+     * Gets an InputStream for a resource file.
+     * Attempts to load the resource using multiple strategies:
+     * 1. Classpath resources (for JAR deployment)
+     * 2. Direct file path (for IDE development)
+     * 3. Absolute path
      * 
-     * @param resourcePath Path to the resource, relative to the resources folder (e.g., "fonts/Kirsty Rg.otf")
-     * @return InputStream or null if the resource cannot be found
+     * This method is useful for loading any type of resource file
+     * that needs to be read as a stream, such as configuration files
+     * or text resources.
+     * 
+     * @param resourcePath Path to the resource, relative to the resources folder
+     * @return InputStream for the resource if found, null if all loading attempts fail
+     * @throws SecurityException If access to the file system is denied
+     * @throws IllegalArgumentException If the resource path is invalid
      */
     public static InputStream getResourceAsStream(String resourcePath) {
         // Debug information
@@ -163,18 +172,30 @@ public class ResourceLoader {
     }
     
     /**
-     * Loads a font using multiple fallback strategies.
+     * Loads a font file using multiple fallback strategies.
+     * Attempts to load the font from various locations in this order:
+     * 1. Classpath resources (for JAR deployment)
+     * 2. Direct file path (for IDE development)
+     * 3. Absolute path
      * 
-     * @param fontPath Path to the font file, relative to the resources folder (e.g., "fonts/Kirsty Rg.otf")
-     * @return Font object or null if loading fails
+     * The method includes detailed logging to help diagnose loading issues
+     * and provides multiple fallback options to ensure the font can be loaded
+     * in different deployment scenarios.
+     * 
+     * @param fontPath Path to the font file, relative to the resources folder
+     *                 (e.g., "fonts/Kirsty Rg.otf")
+     * @return Font object if loading succeeds, null if all loading attempts fail
+     * @throws SecurityException If access to the file system is denied
+     * @throws IllegalArgumentException If the font path is invalid
+     * @throws FontFormatException If the font file is corrupted or in an unsupported format
      */
     public static Font loadFont(String fontPath) {
         try {
             // Debug information
             System.out.println("Attempting to load font: " + fontPath);
             
-            Font font = null;
-            
+            Font font;
+
             // Try loading from resource stream
             InputStream is = getResourceAsStream(fontPath);
             if (is != null) {
@@ -204,27 +225,5 @@ public class ResourceLoader {
             e.printStackTrace();
             return null;
         }
-    }
-    
-    /**
-     * Checks if a resource exists.
-     * 
-     * @param resourcePath Path to check, relative to the resources folder
-     * @return true if resource exists, false otherwise
-     */
-    public static boolean resourceExists(String resourcePath) {
-        // Try all potential paths
-        for (String basePath : RESOURCE_BASE_PATHS) {
-            if (ResourceLoader.class.getResource(basePath + resourcePath) != null) {
-                return true;
-            }
-        }
-        
-        // Try as file
-        if (new File("resources/" + resourcePath).exists() || new File(resourcePath).exists()) {
-            return true;
-        }
-        
-        return false;
     }
 } 

@@ -3,31 +3,42 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.io.File;
 
 /**
- * Dialog shown when the player successfully completes their journey
+ * CompletionDialog Class of the Perils Along the Platte Game
+ * A dialog that appears when the player successfully completes their journey west.
+ * Displays:
+ * - Journey completion message
+ * - Travel statistics (days, distance, arrival date)
+ * - Historical context about life after the journey
+ * - Visual elements (custom image or drawn wagon scene)
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file CompletionDialog.java
  */
 public class CompletionDialog extends JDialog {
     
-    // Colors - match EnhancedGUI
-    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
-    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
-    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
-    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
-    private final Color SUCCESS_COLOR = new Color(0, 100, 0);        // Dark green for success
+    // UI Colors for western theme
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown for borders
+    private final Color SUCCESS_COLOR = new Color(0, 100, 0);        // Dark green for success messages
     
     // Path to custom victory image
     private static final String CUSTOM_IMAGE_PATH = "images/Completion Screen.png";
     
     /**
-     * Constructor
-     * @param owner The parent frame
-     * @param destination Final destination reached
-     * @param days Number of days the journey took
-     * @param distance Distance traveled
-     * @param finalDate Final date when journey completed
+     * Constructs a new CompletionDialog to show journey completion details.
+     * Initializes the dialog with a fixed size and modal behavior.
+     * 
+     * @param owner The parent frame for modal dialog positioning
+     * @param destination The final destination reached by the player
+     * @param days The number of days the journey took
+     * @param distance The total distance traveled in miles
+     * @param finalDate The date when the journey was completed
      */
     public CompletionDialog(Frame owner, String destination, int days, int distance, String finalDate) {
         super(owner, "Journey Complete", true);
@@ -39,6 +50,23 @@ public class CompletionDialog extends JDialog {
         setResizable(false);
     }
     
+    /**
+     * Initializes the dialog's user interface components.
+     * Creates and arranges panels for:
+     * - Title display with success message
+     * - Journey statistics (days, distance, date)
+     * - Historical context about pioneer life
+     * - Victory image (custom or drawn)
+     * - Close button
+     * 
+     * The layout uses BorderLayout for main organization with nested panels
+     * for specific content areas. All components use western-themed styling.
+     * 
+     * @param destination The final destination reached
+     * @param days The number of days traveled
+     * @param distance The distance covered in miles
+     * @param finalDate The arrival date
+     */
     private void initUI(String destination, int days, int distance, String finalDate) {
         setLayout(new BorderLayout(10, 10));
         getContentPane().setBackground(BACKGROUND_COLOR);
@@ -206,14 +234,11 @@ public class CompletionDialog extends JDialog {
             successPanel.setBackground(PANEL_COLOR);
             successPanel.setPreferredSize(new Dimension(500, 200));
             imagePanel.add(successPanel, BorderLayout.CENTER);
-            customImageLoaded = true; // Set to true so we add the panel
         }
         
         // Only add the image panel if an image was loaded
-        if (customImageLoaded) {
-            contentPanel.add(imagePanel, BorderLayout.SOUTH);
-        }
-        
+        contentPanel.add(imagePanel, BorderLayout.SOUTH);
+
         add(contentPanel, BorderLayout.CENTER);
         
         // Button panel

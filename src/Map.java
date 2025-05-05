@@ -1,23 +1,107 @@
+/**
+ * Map Class of the Perils Along the Platte Game
+ * Manages the game's trail system, landmarks, and player position.
+ * Handles trail selection, landmark tracking, river crossings, and distance calculations.
+ * Provides historical accuracy for three major trails: Oregon, California, and Mormon.
+ *
+ * Features:
+ * - Three historically accurate trail routes
+ * - Dynamic landmark tracking and progression
+ * - River crossing simulation
+ * - Distance-based event triggers
+ * - Historical landmark descriptions
+ * - Trail-specific starting points
+ * - Progress tracking and validation
+ *
+ * The Map class serves as the game's geographical engine, managing:
+ * - Trail selection and initialization
+ * - Landmark placement and progression
+ * - River crossing events
+ * - Distance calculations and travel
+ * - Historical accuracy and context
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file Map.java
+ */
 import java.util.ArrayList;
 
 /**
  * Represents the game map, landmarks, and player position.
+ * This class manages all geographical aspects of the game, including:
+ * - Trail selection and initialization
+ * - Landmark tracking and progression
+ * - River crossing events
+ * - Distance calculations
+ * - Historical accuracy
+ *
  * CHANGES:
- * - Added resetRiverCrossing method.
+ * - Added resetRiverCrossing method for better event management
+ * - Enhanced river crossing tracking system
+ * - Improved landmark progression logic
  */
 public class Map {
+    /**
+     * The selected trail choice (1=Oregon, 2=California, 3=Mormon).
+     * Determines the starting point, landmarks, and available routes.
+     * Each trail offers unique historical context and challenges.
+     */
     private final int trailChoice;
+
+    /**
+     * List of landmarks along the selected trail.
+     * Each landmark contains:
+     * - Historical name and description
+     * - Distance from start
+     * - Coordinates for map display
+     * - Historical significance
+     */
     private final ArrayList<Landmark> landmarks;
+
+    /**
+     * Current position in the landmark list.
+     * Tracks the last passed landmark and determines
+     * the next available landmark for progression.
+     */
     private int currentLandmarkIndex;
+
+    /**
+     * Total distance traveled on the trail.
+     * Used for:
+     * - Progress tracking
+     * - Event triggering
+     * - Landmark arrival checks
+     * - River crossing detection
+     */
     private int distanceTraveled;
-    private boolean riverCrossingPending; // Renamed for clarity
-    
-    // Add named river crossings for historical accuracy
+
+    /**
+     * Flag indicating if a river crossing is pending.
+     * Set when player reaches a river crossing point
+     * and cleared after crossing is completed.
+     */
+    private boolean riverCrossingPending;
+
+    /**
+     * Inner class representing a river crossing point with historical information.
+     * Each crossing includes:
+     * - Distance from trail start
+     * - Historical name
+     * - Description of challenges
+     * - Historical context
+     */
     private class RiverCrossing {
         int distance;
         String name;
         String description;
         
+        /**
+         * Constructs a new RiverCrossing with historical details.
+         * @param distance The distance from the start of the trail
+         * @param name The name of the river crossing
+         * @param description Historical description of the crossing
+         */
         RiverCrossing(int distance, String name, String description) {
             this.distance = distance;
             this.name = name;
@@ -25,19 +109,48 @@ public class Map {
         }
     }
     
-    private ArrayList<RiverCrossing> pendingRiverCrossings = new ArrayList<>();
-    private RiverCrossing currentRiverCrossing; // The river crossing that was triggered
+    /**
+     * List of pending river crossings on the trail.
+     * Crossings are added based on historical locations
+     * and triggered when the player reaches their distance.
+     */
+    private final ArrayList<RiverCrossing> pendingRiverCrossings = new ArrayList<>();
 
+    /**
+     * The current active river crossing.
+     * Set when a crossing is triggered and cleared
+     * after the crossing is completed.
+     */
+    private RiverCrossing currentRiverCrossing;
+
+    /**
+     * Constructs a new Map for the specified trail.
+     * Initializes landmarks and river crossings based on the trail choice.
+     * Sets up the initial game state for travel and progression.
+     * 
+     * @param trailChoice The selected trail (1 = Oregon, 2 = California, 3 = Mormon)
+     */
     public Map(int trailChoice) {
         this.trailChoice = trailChoice;
         this.landmarks = new ArrayList<>();
         this.currentLandmarkIndex = 0;
         this.distanceTraveled = 0;
-        this.riverCrossingPending = false; // Initialize to false
+        this.riverCrossingPending = false;
         this.initializeLandmarks();
         this.initializeRiverCrossings();
     }
 
+    /**
+     * Initializes the landmarks for the selected trail.
+     * Sets up historical landmarks with their distances and descriptions.
+     * Each landmark includes:
+     * - Historical name and location
+     * - Distance from trail start
+     * - Map coordinates
+     * - Historical description
+     * 
+     * Landmarks are placed in chronological order of the journey.
+     */
     private void initializeLandmarks() {
         if (this.trailChoice == 1) {
             this.landmarks.add(new Landmark("Independence, Missouri", 0, 0, 0, "Independence was the primary starting point for the Oregon Trail. In the 1840s, it became a bustling outfitting and jumping-off point for westward travelers."));
@@ -88,7 +201,14 @@ public class Map {
     }
 
     /**
-     * Initializes the specific river crossing points based on trail choice
+     * Initializes the specific river crossing points based on trail choice.
+     * Sets up historically accurate river crossings with:
+     * - Precise distances from trail start
+     * - Historical names and descriptions
+     * - Challenge levels and context
+     * 
+     * River crossings are placed between major landmarks
+     * based on historical records and emigrant journals.
      */
     private void initializeRiverCrossings() {
         pendingRiverCrossings.clear();
@@ -131,6 +251,13 @@ public class Map {
         }
     }
 
+    /**
+     * Gets the name of the selected trail.
+     * Returns the full historical name of the trail
+     * based on the trail choice.
+     * 
+     * @return The name of the trail (Oregon Trail, California Trail, or Mormon Trail)
+     */
     public String getTrailName() {
         if (this.trailChoice == 1) {
             return "Oregon Trail";
@@ -143,10 +270,25 @@ public class Map {
         }
     }
 
+    /**
+     * Gets the starting location of the trail.
+     * Returns the historical starting point based on trail choice:
+     * - Oregon/California: Independence, Missouri
+     * - Mormon: Nauvoo, Illinois
+     * 
+     * @return The name of the starting landmark
+     */
     public String getStartingLocation() {
         return landmarks.isEmpty() ? "Unknown" : landmarks.get(0).getName();
     }
 
+    /**
+     * Gets the current location of the player.
+     * Returns the name of the last passed landmark
+     * or "Lost" if in an invalid state.
+     * 
+     * @return The name of the last passed landmark
+     */
     public String getCurrentLocation() {
         if (landmarks.isEmpty() || currentLandmarkIndex < 0 || currentLandmarkIndex >= landmarks.size()) {
             return "Lost"; // Or some other indicator of an invalid state
@@ -155,6 +297,13 @@ public class Map {
         return landmarks.get(currentLandmarkIndex).getName();
     }
 
+    /**
+     * Gets the next landmark ahead on the trail.
+     * Returns the name of the upcoming landmark
+     * or "End of Trail" if at the final destination.
+     * 
+     * @return The name of the next landmark, or "End of Trail" if at the end
+     */
     public String getNextLandmark() {
         int nextIndex = currentLandmarkIndex + 1;
         if (nextIndex < landmarks.size()) {
@@ -164,27 +313,38 @@ public class Map {
         }
     }
 
-    public int getDistanceToNextLandmark() {
-        int nextIndex = currentLandmarkIndex + 1;
-        if (nextIndex < landmarks.size()) {
-            int nextDistance = landmarks.get(nextIndex).getDistance();
-            return Math.max(0, nextDistance - this.distanceTraveled); // Ensure non-negative
-        } else {
-            return 0; // No more landmarks
-        }
-    }
-
+    /**
+     * Gets the final destination of the trail.
+     * Returns the historical endpoint based on trail choice:
+     * - Oregon: Oregon City
+     * - California: Sacramento
+     * - Mormon: Salt Lake City
+     * 
+     * @return The name of the destination landmark
+     */
     public String getDestination() {
         return landmarks.isEmpty() ? "Unknown" : landmarks.get(landmarks.size() - 1).getName();
     }
 
+    /**
+     * Gets the total distance traveled on the trail.
+     * Returns the cumulative distance covered since
+     * starting the journey.
+     * 
+     * @return The distance traveled in miles
+     */
     public int getDistanceTraveled() {
         return distanceTraveled;
     }
 
     /**
-     * Updates distance traveled and checks for potential river crossings.
-     * @param milesTraveled The distance covered in the current step.
+     * Updates the distance traveled and checks for river crossings.
+     * Handles:
+     * - Distance accumulation
+     * - River crossing detection
+     * - Progress validation
+     * 
+     * @param milesTraveled The distance covered in the current step
      */
     public void travel(int milesTraveled) {
         if (milesTraveled <= 0) return; // No travel occurred
@@ -197,7 +357,10 @@ public class Map {
     }
     
     /**
-     * Checks if the player has crossed a designated river crossing point
+     * Checks if the player has crossed a designated river crossing point.
+     * Compares previous and current distances to determine
+     * if a river crossing has been reached.
+     * 
      * @param previousDistance Distance before travel
      * @param currentDistance Distance after travel
      */
@@ -231,23 +394,23 @@ public class Map {
 
     /**
      * Checks if a river crossing event has been triggered.
-     * @return true if a river crossing needs to be handled.
+     * @return true if a river crossing needs to be handled
      */
     public boolean checkForRiverCrossing() {
         return this.riverCrossingPending;
     }
     
     /**
-     * Gets the name of the current river crossing
-     * @return name of the current river crossing or "River Crossing" if none
+     * Gets the name of the current river crossing.
+     * @return The name of the current river crossing, or "River Crossing" if none
      */
     public String getCurrentRiverCrossingName() {
         return currentRiverCrossing != null ? currentRiverCrossing.name : "River Crossing";
     }
     
     /**
-     * Gets the description of the current river crossing
-     * @return description of the current river crossing or empty string if none
+     * Gets the description of the current river crossing.
+     * @return The historical description of the current river crossing
      */
     public String getCurrentRiverCrossingDescription() {
         return currentRiverCrossing != null ? currentRiverCrossing.description : "";
@@ -262,8 +425,8 @@ public class Map {
     }
 
     /**
-     * Checks if the distance traveled has reached or passed the next landmark.
-     * @return true if the next landmark's distance threshold is met.
+     * Checks if the player has reached a landmark.
+     * @return true if the player has reached a landmark
      */
     public boolean hasReachedLandmark() {
         int nextIndex = currentLandmarkIndex + 1;
@@ -275,8 +438,7 @@ public class Map {
     }
 
     /**
-     * Advances the current landmark index. Should be called after confirming
-     * hasReachedLandmark() is true and handling the arrival event.
+     * Advances to the next landmark on the trail.
      */
     public void advanceToNextLandmark() {
         if (currentLandmarkIndex < landmarks.size() - 1) {
@@ -287,8 +449,8 @@ public class Map {
     }
 
     /**
-     * Checks if the player has reached the final landmark.
-     * @return true if the current landmark index points to the last landmark.
+     * Checks if the player has reached the final destination.
+     * @return true if the player has reached the destination
      */
     public boolean hasReachedDestination() {
         // Check if distance traveled meets or exceeds the final landmark's distance
@@ -303,21 +465,17 @@ public class Map {
     }
 
     /**
-     * Displays historical info for the current landmark (to console - GUI handles display)
+     * Gets the list of all landmarks on the trail.
+     * @return ArrayList of Landmark objects
      */
-    public void displayHistoricalInfo() {
-        if (landmarks.isEmpty() || currentLandmarkIndex < 0 || currentLandmarkIndex >= landmarks.size()) {
-            System.out.println("No historical information available for current location.");
-            return;
-        }
-        System.out.println("\n=== " + getCurrentLocation() + " ===");
-        System.out.println(landmarks.get(currentLandmarkIndex).getDescription());
-    }
-
     public ArrayList<Landmark> getLandmarks() {
         return this.landmarks;
     }
 
+    /**
+     * Gets the index of the current landmark.
+     * @return The index of the current landmark
+     */
     public int getCurrentLandmarkIndex() {
         return this.currentLandmarkIndex;
     }
@@ -326,10 +484,8 @@ public class Map {
     // public Landmark getCurrentLandmark(int location) { ... }
 
     /**
-     * Sets the current location by landmark name. Primarily used for initialization or debugging.
-     * Also updates distance traveled to match the landmark's distance.
-     *
-     * @param landmarkName The name of the landmark to set as current
+     * Sets the current location to a specific landmark.
+     * @param landmarkName The name of the landmark to set as current location
      */
     public void setCurrentLocation(String landmarkName) {
         for (int i = 0; i < landmarks.size(); i++) {
