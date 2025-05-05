@@ -8,7 +8,17 @@ import java.awt.event.ActionListener;
 import java.util.Random;
 
 /**
- * Dialog for trading at landmarks in the GUI
+ * TradingDialog Class of the Perils Along the Platte Game
+ * 
+ * A dialog that manages trading interactions at landmarks, including:
+ * - Buying supplies from local traders
+ * - Selling excess supplies for money
+ * - Bartering with other travelers
+ * 
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file TradingDialog.java
  */
 public class TradingDialog extends JDialog {
     private final Player player;
@@ -30,7 +40,17 @@ public class TradingDialog extends JDialog {
     private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
 
     /**
-     * Constructor
+     * Constructs a new TradingDialog.
+     * Initializes the dialog with:
+     * - Player information and funds
+     * - Inventory management
+     * - Dynamic pricing system
+     * - Gender-based price adjustments
+     * - Job-specific discounts
+     * 
+     * @param owner The parent frame (main game window)
+     * @param player The player character
+     * @param inventory The game's inventory system
      */
     public TradingDialog(Frame owner, Player player, Inventory inventory) {
         super(owner, "Trading Post", true);
@@ -57,7 +77,14 @@ public class TradingDialog extends JDialog {
     }
     
     /**
-     * Initialize the user interface
+     * Initializes the dialog's user interface.
+     * Creates and arranges all UI components including:
+     * - Title and information panel
+     * - Money display
+     * - Trading options panel
+     * - Action panel for specific trades
+     * - Result display area
+     * - Navigation buttons
      */
     private void initUI() {
         setLayout(new BorderLayout(10, 10));
@@ -180,9 +207,14 @@ public class TradingDialog extends JDialog {
     }
     
     /**
-     * Creates an option button with description
+     * Creates an option button with formatted title and description.
+     * 
+     * @param title The button's main text
+     * @param description The detailed description of the option
+     * @param action The action to perform when the button is clicked
+     * @return A formatted JButton with the specified properties
      */
-    private JButton createOptionButton(String title, String description, java.awt.event.ActionListener action) {
+    private JButton createOptionButton(String title, String description, ActionListener action) {
         JButton button = new JButton();
         button.setLayout(new BorderLayout());
         button.setBackground(PANEL_COLOR);
@@ -209,7 +241,12 @@ public class TradingDialog extends JDialog {
     }
     
     /**
-     * Show buy options panel
+     * Displays the buy options panel.
+     * Shows available items for purchase with:
+     * - Current market prices
+     * - Quantity selection
+     * - Total cost calculation
+     * - Weight capacity checks
      */
     private void showBuyOptions() {
         actionPanel.removeAll();
@@ -252,7 +289,12 @@ public class TradingDialog extends JDialog {
     }
     
     /**
-     * Show sell options panel
+     * Displays the sell options panel.
+     * Shows items available for sale with:
+     * - Current market prices
+     * - Available quantities
+     * - Total value calculation
+     * - Historical context
      */
     private void showSellOptions() {
         actionPanel.removeAll();
@@ -299,7 +341,12 @@ public class TradingDialog extends JDialog {
     }
     
     /**
-     * Show barter options
+     * Displays the barter options panel.
+     * Shows available bartering opportunities:
+     * - Food for wagon parts
+     * - Food for medicine
+     * - Medicine for ammunition
+     * - Historical trading context
      */
     private void showBarterOptions() {
         actionPanel.removeAll();
@@ -412,10 +459,14 @@ public class TradingDialog extends JDialog {
     }
     
     /**
-     * Create a trade option button with description
+     * Creates a trade button panel with description and action button.
+     * 
+     * @param description The item description and price
+     * @param buttonText The button text
+     * @param action The action to perform when clicked
+     * @return A JPanel containing the trade option
      */
-    private JPanel createTradeButton(String description, String buttonText, 
-                                     java.awt.event.ActionListener action) {
+    private JPanel createTradeButton(String description, String buttonText, ActionListener action) {
         JPanel panel = new JPanel(new BorderLayout(10, 0));
         panel.setBackground(PANEL_COLOR);
         panel.setBorder(new EmptyBorder(5, 10, 5, 10));
@@ -447,7 +498,11 @@ public class TradingDialog extends JDialog {
     }
     
     /**
-     * Get quantity via styled dialog
+     * Gets the quantity of an item to trade.
+     * 
+     * @param item The item name
+     * @param maxAllowed The maximum quantity allowed
+     * @return The selected quantity
      */
     private int getQuantity(String item, int maxAllowed) {
         // Determine if we're buying or selling based on the context
@@ -570,7 +625,8 @@ public class TradingDialog extends JDialog {
     }
     
     /**
-     * Update money display
+     * Updates the money display label.
+     * Shows current available funds with proper formatting.
      */
     private void updateMoneyDisplay() {
         moneyLabel.setText("Available Funds: $" + player.getMoney());
@@ -578,6 +634,11 @@ public class TradingDialog extends JDialog {
     
     // Buy methods
     
+    /**
+     * Buys food supplies.
+     * 
+     * @param price The price per pound
+     */
     private void buyFood(int price) {
         int quantity = getQuantity("pounds of food", -1);
         if (quantity <= 0) return;
@@ -598,6 +659,11 @@ public class TradingDialog extends JDialog {
                           "Many emigrants also gathered wild fruits, hunted game, and fished to supplement their rations.");
     }
     
+    /**
+     * Buys wagon parts.
+     * 
+     * @param basePrice The base price per part
+     */
     private void buyWagonParts(int basePrice) {
         // Create styled part selection dialog instead of using JOptionPane
         JDialog partDialog = new JDialog(this, "Select Wagon Part", true);
@@ -726,7 +792,12 @@ public class TradingDialog extends JDialog {
             buyWagonBows(10);
         }
     }
-    
+
+    /**
+     * Buys wheels for the wagon.
+     *
+     * @param price The price per wheel
+     */
     private void buyWheels(int price) {
         int quantity = getQuantity("wheels", -1);
         if (quantity <= 0) return;
@@ -756,7 +827,12 @@ public class TradingDialog extends JDialog {
                           "that could come loose in dry weather. Emigrants often soaked wheels in rivers overnight " +
                           "to make the wood expand and tighten the fit of the tire.");
     }
-    
+
+    /**
+     * Buys axles for the wagon.
+     *
+     * @param price The price per axle
+     */
     private void buyAxles(int price) {
         int quantity = getQuantity("axles", -1);
         if (quantity <= 0) return;
@@ -786,7 +862,12 @@ public class TradingDialog extends JDialog {
                           "They were subject to tremendous stress and could snap when crossing rough terrain " +
                           "or when wagons were overloaded. A broken axle could strand travelers for days.");
     }
-    
+
+    /**
+     * Buys tongues for the wagon.
+     *
+     * @param price The price per tongue
+     */
     private void buyTongues(int price) {
         int quantity = getQuantity("tongues", -1);
         if (quantity <= 0) return;
@@ -816,7 +897,12 @@ public class TradingDialog extends JDialog {
                           "oxen's yoke. They could break when the wagon jackknifed or when crossing steep terrain. " +
                           "Many emigrants carried a spare tongue as they were essential for wagon movement.");
     }
-    
+
+    /**
+     * Buys wagon bows for the wagon.
+     *
+     * @param price The price per bow
+     */
     private void buyWagonBows(int price) {
         int quantity = getQuantity("wagon bows", -1);
         if (quantity <= 0) return;
@@ -847,7 +933,12 @@ public class TradingDialog extends JDialog {
                           "by low-hanging branches. The canvas cover protected supplies from weather and provided " +
                           "minimal shelter at night.");
     }
-    
+
+    /**
+     * Buys medicine kits.
+     *
+     * @param price The price per kit
+     */
     private void buyMedicine(int price) {
         int quantity = getQuantity("medicine kits", -1);
         if (quantity <= 0) return;
@@ -877,7 +968,12 @@ public class TradingDialog extends JDialog {
                           "with outbreaks in 1849, 1850, and 1852 that killed thousands. Other common " +
                           "ailments included dysentery, mountain fever, scurvy, and various injuries.");
     }
-    
+
+    /**
+     * Buys ammunition.
+     *
+     * @param price The price per box of 20 rounds
+     */
     private void buyAmmunition(int price) {
         int quantity = getQuantity("boxes of ammunition", -1);
         if (quantity <= 0) return;
@@ -909,8 +1005,12 @@ public class TradingDialog extends JDialog {
                           "smaller game provided important food sources along certain stretches of the trail.");
     }
     
-    // Sell methods
-    
+
+    /**
+     * Sells food supplies.
+     * 
+     * @param price The price per pound
+     */
     private void sellFood(int price) {
         int maxFood = inventory.getFood();
         if (maxFood <= 0) {
@@ -932,6 +1032,11 @@ public class TradingDialog extends JDialog {
                          "there might be a surplus, lowering prices.");
     }
     
+    /**
+     * Sells wagon parts.
+     * 
+     * @param basePrice The base price per part
+     */
     private void sellWagonParts(int basePrice) {
         // Create styled part selection dialog instead of using JOptionPane
         JDialog partDialog = new JDialog(this, "Select Wagon Part", true);
@@ -1082,6 +1187,11 @@ public class TradingDialog extends JDialog {
         }
     }
     
+    /**
+     * Sells wagon wheels.
+     * 
+     * @param price The price per wheel
+     */
     private void sellWheels(int price) {
         int maxWheels = inventory.getWheels();
         if (maxWheels <= 0) {
@@ -1103,6 +1213,11 @@ public class TradingDialog extends JDialog {
                          "that required special skills and equipment.");
     }
     
+    /**
+     * Sells wagon axles.
+     * 
+     * @param price The price per axle
+     */
     private void sellAxles(int price) {
         int maxAxles = inventory.getAxles();
         if (maxAxles <= 0) {
@@ -1124,6 +1239,11 @@ public class TradingDialog extends JDialog {
                          "spare axles, as a broken one could halt progress entirely.");
     }
     
+    /**
+     * Sells wagon tongues.
+     * 
+     * @param price The price per tongue
+     */
     private void sellTongues(int price) {
         int maxTongues = inventory.getTongues();
         if (maxTongues <= 0) {
@@ -1145,6 +1265,11 @@ public class TradingDialog extends JDialog {
                          "making it prone to breakage.");
     }
     
+    /**
+     * Sells wagon bows.
+     * 
+     * @param price The price per bow
+     */
     private void sellWagonBows(int price) {
         int maxBows = inventory.getWagonBows();
         if (maxBows <= 0) {
@@ -1166,6 +1291,11 @@ public class TradingDialog extends JDialog {
                          "from the elements and could lead to damaged supplies.");
     }
     
+    /**
+     * Sells medicine kits.
+     * 
+     * @param price The price per kit
+     */
     private void sellMedicine(int price) {
         int maxMedicine = inventory.getMedicine();
         if (maxMedicine <= 0) {
@@ -1187,6 +1317,11 @@ public class TradingDialog extends JDialog {
                          "and various herbal remedies. Disease was the leading cause of death on the trail.");
     }
     
+    /**
+     * Sells ammunition.
+     * 
+     * @param price The price per box of 20 rounds
+     */
     private void sellAmmunition(int price) {
         int maxBoxes = inventory.getAmmunition() / 20;
         if (maxBoxes <= 0) {
@@ -1208,11 +1343,12 @@ public class TradingDialog extends JDialog {
                          "Most emigrants carried muzzle-loading rifles or muskets. Ammunition had to be carefully " +
                          "conserved, as supplies along the trail were limited.");
     }
-    
-    // Barter methods
-    
+
     /**
-     * Shows a styled confirmation dialog for successful trades
+     * Shows a trade confirmation dialog.
+     * 
+     * @param title The dialog title
+     * @param message The confirmation message
      */
     private void showTradeConfirmation(String title, String message) {
         // Create a styled dialog similar to other UI elements
@@ -1274,6 +1410,17 @@ public class TradingDialog extends JDialog {
         confirmDialog.setVisible(true);
     }
 
+    /**
+     * Performs a barter trade of food for wagon parts.
+     * 
+     * Requirements:
+     * - Sufficient food (50 lbs)
+     * - Available wagon parts
+     * 
+     * Outcomes:
+     * - Success: Trade completed
+     * - Failure: Insufficient resources
+     */
     private void barterFoodForPart() {
         if (inventory.getFood() < 50) {
             resultArea.setText("You don't have enough food for this trade! You need at least 50 pounds.");
@@ -1319,6 +1466,17 @@ public class TradingDialog extends JDialog {
         );
     }
     
+    /**
+     * Performs a barter trade of food for medicine.
+     * 
+     * Requirements:
+     * - Sufficient food (30 lbs)
+     * - Available medicine kits
+     * 
+     * Outcomes:
+     * - Success: Trade completed
+     * - Failure: Insufficient resources
+     */
     private void barterFoodForMedicine() {
         if (inventory.getFood() < 30) {
             resultArea.setText("You don't have enough food for this trade! You need at least 30 pounds.");
@@ -1341,6 +1499,17 @@ public class TradingDialog extends JDialog {
         );
     }
     
+    /**
+     * Performs a barter trade of medicine for ammunition.
+     * 
+     * Requirements:
+     * - Medicine kit available
+     * - Ammunition available
+     * 
+     * Outcomes:
+     * - Success: Trade completed
+     * - Failure: Insufficient resources
+     */
     private void barterMedicineForAmmo() {
         if (inventory.getMedicine() < 2) {
             resultArea.setText("You don't have enough medicine kits for this trade! You need at least 2.");

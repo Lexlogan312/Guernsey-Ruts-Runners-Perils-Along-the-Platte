@@ -1,12 +1,34 @@
+/**
+ * Main Class of the Perils Along the Platte Game
+ * Entry point for the game application that initializes and starts the game.
+ * 
+ * The Main class handles:
+ * - Application startup and configuration
+ * - GUI initialization and setup
+ * - Game resource loading
+ * - Game state initialization
+ * - Startup sequence management
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file Main.java
+ */
 import javax.swing.*;
 import java.awt.*;
 
 public class Main {
 
+    /**
+     * Main entry point for the application.
+     * Sets up the Swing environment and creates the main game instance.
+     * 
+     * @param args Command line arguments (not used)
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
-                // Set look and feel to system default for better native appearance
+                // Use system's native look and feel for better integration
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
                 System.err.println("Warning: Could not set system look and feel.");
@@ -17,73 +39,81 @@ public class Main {
         });
     }
 
+    /**
+     * Constructor for the Main class.
+     * Initializes the game application by calling initializeApp().
+     */
     public Main() {
         initializeApp();
     }
 
+    /**
+     * Initializes the game application by:
+     * 1. Creating the main window
+     * 2. Loading custom fonts
+     * 3. Setting up the game controller
+     * 4. Creating the GUI
+     * 5. Showing the startup sequence of dialogs
+     * 6. Starting the game
+     * 
+     * Startup sequence:
+     * 1. StartupDialog: Get player information and game settings
+     * 2. Market: Allow player to purchase initial supplies
+     * 3. FortKearnyDialog: Show journey introduction
+     * 4. Journey: Simulate initial journey to Fort Kearny
+     * 5. Main Game: Display the main game window
+     * 
+     * @throws RuntimeException if game setup is incomplete
+     */
     private void initializeApp() {
-        // Create frame
+        // Create and configure the main window
         JFrame frame = new JFrame("Perils Along the Platte");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Load custom font
+        // Initialize game resources and components
         FontManager.loadCustomFonts();
-
-        // Create game controller
         GameController gameController = new GameController();
-
-        // Create and add GUI component
         GUI gameGUI = new GUI(gameController);
         frame.getContentPane().add(gameGUI);
 
-        // Set frame size and center on screen
-        frame.setSize(1200, 800); // Initial size
-        frame.setMinimumSize(new Dimension(1000, 700)); // Set a minimum size
-        frame.setResizable(true); // **** ALLOW RESIZING ****
+        // Configure window properties
+        frame.setSize(1200, 800);
+        frame.setMinimumSize(new Dimension(1000, 700));
+        frame.setResizable(true);
         frame.setLocationRelativeTo(null);
 
-        // --- Game Initialization Sequence ---
-
-        // 1. Show the startup dialog to get player info, trail, month
+        // Game initialization sequence
+        // 1. Get player information and game settings
         StartupDialog startupDialog = new StartupDialog(frame, gameController);
-        startupDialog.setVisible(true); // Blocks until closed
+        startupDialog.setVisible(true);
 
-        // Check if essential info was set (e.g., if user closed dialog early)
+        // Validate that essential game settings were configured
         if (gameController.getPlayer() == null || gameController.getTrail() == null || gameController.getTime() == null) {
             System.err.println("Game setup incomplete. Exiting.");
             System.exit(1);
         }
 
+        // 2. Initialize game state with player choices
+        gameController.startNewGame();
 
-        // 2. Initialize the game logic now that settings are chosen
-        gameController.startNewGame(); // Initializes internal state
-
-        // 3. Show the market dialog for initial purchases
-        // Need to ensure the frame is visible *before* showing modal dialogs based on it
-        // A bit of a workaround: make frame visible briefly, then hide, show dialogs, then show finally.
-        // Or, pass null as owner for initial dialogs if frame isn't ready. Let's try passing frame.
-        // frame.setVisible(true); // Make frame visible so dialogs have an owner
-
+        // 3. Show market for initial supplies
         Market market = new Market(gameController.getPlayer(), gameController.getInventory());
         JDialog marketDialog = new JDialog(frame, "Market", true);
-        marketDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE); // Ensure it closes properly
+        marketDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         marketDialog.add(market.createMarketPanel());
         marketDialog.pack();
-        marketDialog.setSize(800, 600); // Set size after packing
+        marketDialog.setSize(800, 600);
         marketDialog.setLocationRelativeTo(frame);
-        marketDialog.setVisible(true); // Blocks until closed
+        marketDialog.setVisible(true);
 
-        // 4. Show the Fort Kearny journey intro dialog
+        // 4. Show journey introduction
         FortKearnyDialog fortKearnyDialog = new FortKearnyDialog(frame, gameController);
-        fortKearnyDialog.setVisible(true); // Blocks until closed
+        fortKearnyDialog.setVisible(true);
 
-        // 5. Simulate the journey to Fort Kearny (this will show the summary dialog)
+        // 5. Simulate initial journey to Fort Kearny
         gameController.journeyToFortKearny();
 
-        // 6. Make sure the main GUI is updated *before* showing the frame
-        // The journeyToFortKearny method now calls notifyGameStateChanged after its summary dialog closes.
-
-        // 7. Finally, show the main game frame
+        // 6. Display the main game window
         frame.setVisible(true);
     }
 }

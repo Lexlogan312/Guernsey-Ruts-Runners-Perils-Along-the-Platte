@@ -1,3 +1,14 @@
+/**
+ * Market Class of the Perils Along the Platte Game
+ * Manages the trading system and resource management interface.
+ * Handles the purchase of supplies, including food, oxen, wagon parts, medicine, and ammunition.
+ * Provides a graphical user interface for trading and tracks inventory capacity and costs.
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file Market.java
+ */
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -11,7 +22,10 @@ import javax.swing.text.StyledDocument;
 
 public class Market {
     private final Player player;
+
     private final Inventory inventory;
+
+    // Price constants
     private static final int OXEN_PRICE = 40;
     private static final int FOOD_PRICE = 1;
     private static final int WHEEL_PRICE = 20;
@@ -21,54 +35,99 @@ public class Market {
     private static final int MEDICINE_PRICE = 15;
     private static final int AMMUNITION_PRICE = 10;
 
+    // Weight constants
     private static final int MEDICINE_WEIGHT = 5;
     private static final int AMMO_WEIGHT = 3;
-
     private static final int WHEEL_WEIGHT = 50;
     private static final int AXLE_WEIGHT = 40;
     private static final int TONGUE_WEIGHT = 30;
     private static final int WAGON_BOW_WEIGHT = 10;
 
+    // Available food types for purchase
     private static final String[] FOOD_TYPES = {
             "Flour", "Bacon", "Dried Beans", "Rice", "Coffee", "Sugar", "Dried Fruit", "Hardtack"
     };
+    
+    // Weight per unit of each food type in pounds
     private static final int[] FOOD_WEIGHTS = {
             25, 15, 10, 5, 2, 5, 2, 20
     };
 
+    // Spoilage rate for each food type (0.0 to 1.0)
     private static final double[] FOOD_SPOILRATE = {
             .05, .15, .02, .03, .005, .04, .1, .01
     };
 
-    // GUI Components
+    // Label displaying available funds
     private JLabel moneyLabel;
+
+    // Label displaying current and maximum weight capacity
     private JLabel weightCapacityLabel;
+    
+    // Text fields for entering purchase quantities
     private JTextField[] quantityFields;
+    
+    // Labels displaying total cost for each item
     private JLabel[] totalCostLabels;
+    
+    // Labels displaying current inventory for each item
     private JLabel[] currentInventoryLabels;
+    
+    // Label for displaying insufficient supplies warning
     private JLabel insufficientSuppliesLabel;
 
-    private final Color BACKGROUND_COLOR = new Color(240, 220, 180);
-    private final Color PANEL_COLOR = new Color(200, 170, 130);
-    private final Color TEXT_COLOR = new Color(80, 30, 0);
-    private final Color HEADER_COLOR = new Color(120, 60, 0);
-    private final Color ACCENT_COLOR = new Color(160, 100, 40);
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown for borders
+    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Darker brown for headers
 
+    /**
+     * Constructs a new Market with the specified player and inventory.
+     * Initializes the trading interface and validates starting conditions.
+     * 
+     * @param player The player who will be making purchases (must not be null)
+     * @param inventory The inventory to be updated with purchases (must not be null)
+     */
     public Market(Player player, Inventory inventory) {
         this.player = player;
         this.inventory = inventory;
     }
 
+    /**
+     * Checks if the player has the minimum required supplies to start the journey.
+     * Validates:
+     * - Oxen count
+     * - Food quantity
+     * - Wagon parts
+     * - Medicine kits
+     * 
+     * @return true if the player has:
+     *         - At least 2 oxen
+     *         - At least 200 pounds of food
+     *         - At least 3 wagon parts
+     *         - At least 2 medicine kits
+     */
     private boolean canStartJourney() {
-        // Need at least 2 oxen, 200 pounds of food, and some of each type of wagon part
         return inventory.getOxen() >= 2 &&
                 inventory.getFood() >= 200 &&
-                inventory.getWagonParts() >= 3 &&  // Changed from individual parts check to total wagon parts
+                inventory.getWagonParts() >= 3 &&
                 inventory.getMedicine() >= 2;
     }
 
+    /**
+     * Creates the main market panel with all trading options.
+     * Builds the user interface including:
+     * - Title and introduction
+     * - Available funds and weight capacity
+     * - Item purchase interface
+     * - Current inventory display
+     * - Buy buttons
+     * 
+     * @return A JPanel containing the complete market interface
+     */
     public JPanel createMarketPanel() {
-        quantityFields = new JTextField[5]; // Changed from 8 to 5 (consolidated wagon parts)
+        quantityFields = new JTextField[5];
         totalCostLabels = new JLabel[5];
         currentInventoryLabels = new JLabel[5];
 
@@ -269,6 +328,11 @@ public class Market {
         return mainPanel;
     }
 
+    /**
+     * Updates the total cost display for a specific item.
+     * 
+     * @param itemIndex The index of the item to update
+     */
     private void updateTotalCost(int itemIndex) {
         try {
             int quantity = Integer.parseInt(quantityFields[itemIndex].getText());
@@ -281,7 +345,10 @@ public class Market {
     }
 
     /**
-     * Gets the price for an item based on index
+     * Gets the price of an item based on its index.
+     * 
+     * @param index The index of the item
+     * @return The price of the item in dollars
      */
     private int getItemPrice(int index) {
         switch (index) {
@@ -295,7 +362,10 @@ public class Market {
     }
 
     /**
-     * Gets current inventory amount based on index
+     * Gets the current inventory count for an item.
+     * 
+     * @param index The index of the item
+     * @return A string representation of the current inventory
      */
     private String getCurrentInventory(int index) {
         switch (index) {
@@ -308,6 +378,11 @@ public class Market {
         }
     }
 
+    /**
+     * Processes the purchase of an item.
+     * 
+     * @param itemIndex The index of the item to purchase
+     */
     private void buyItem(int itemIndex) {
         try {
             int quantity = Integer.parseInt(quantityFields[itemIndex].getText());
@@ -404,6 +479,12 @@ public class Market {
         }
     }
 
+    /**
+     * Applies job-specific price adjustments to the base price.
+     * 
+     * @param basePrice The original price before adjustments
+     * @return The adjusted price after applying job bonuses
+     */
     private int applyJobPriceAdjustment(int basePrice) {
         // Apply Merchant discount if applicable
         if (player.getJob() == Job.MERCHANT) {
@@ -415,7 +496,7 @@ public class Market {
     }
     
     /**
-     * Updates prices in the GUI based on job bonuses
+     * Updates all displayed prices based on the player's job.
      */
     private void updatePricesForJob() {
         // Apply merchant discount to all displayed prices if applicable
@@ -436,7 +517,11 @@ public class Market {
     }
 
     /**
-     * Calculate the weight of an item purchase
+     * Calculates the weight of a specific quantity of an item.
+     * 
+     * @param itemIndex The index of the item
+     * @param quantity The quantity to calculate weight for
+     * @return The total weight in pounds
      */
     private int calculateItemWeight(int itemIndex, int quantity) {
         switch (itemIndex) {
@@ -451,6 +536,12 @@ public class Market {
         }
     }
 
+    /**
+     * Shows a dialog for selecting food types and quantities.
+     * 
+     * @param totalPoundsToBuy The total pounds of food to distribute
+     * @return The total cost of the food purchase
+     */
     private int showFoodSelectionDialog(int totalPoundsToBuy) {
         Window parentWindow = SwingUtilities.getWindowAncestor(moneyLabel);
         JDialog foodDialog;
@@ -655,7 +746,11 @@ public class Market {
     }
 
     /**
-     * Show dialog for selecting specific wagon parts to purchase
+     * Shows a dialog for selecting wagon parts.
+     * 
+     * @param totalPartsToBuy The total number of parts to distribute
+     * @param totalCost The total cost of the parts
+     * @return true if the purchase was completed, false if cancelled
      */
     private boolean showWagonPartsSelectionDialog(int totalPartsToBuy, int totalCost) {
         Window parentWindow = SwingUtilities.getWindowAncestor(moneyLabel);
@@ -939,6 +1034,14 @@ public class Market {
         return result[0];
     }
 
+    /**
+     * Adds a styled label to a panel.
+     * 
+     * @param panel The panel to add the label to
+     * @param text The text to display
+     * @param gbc The GridBagConstraints for layout
+     * @param isHeader Whether the label is a header
+     */
     private void addStyledLabel(JPanel panel, String text, GridBagConstraints gbc, boolean isHeader) {
         JLabel label = new JLabel(text);
         label.setFont(isHeader ?
@@ -948,6 +1051,12 @@ public class Market {
         panel.add(label, gbc);
     }
 
+    /**
+     * Creates a styled button with consistent appearance.
+     * 
+     * @param text The button text
+     * @return A styled JButton
+     */
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         button.setFont(FontManager.getBoldWesternFont(14));
@@ -961,6 +1070,9 @@ public class Market {
         return button;
     }
 
+    /**
+     * Dialog for purchasing food items.
+     */
     private class FoodPurchaseDialog extends JDialog {
         private final boolean isWarning;
 
@@ -1038,6 +1150,9 @@ public class Market {
         }
     }
 
+    /**
+     * Dialog for purchasing wagon parts.
+     */
     private class WagonPartsPurchaseDialog extends JDialog {
         private final boolean isWarning;
 

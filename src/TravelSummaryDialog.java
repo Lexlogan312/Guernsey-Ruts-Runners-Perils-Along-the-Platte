@@ -8,11 +8,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Dialog to show a summary of travel events after Fort Kearny journey
- * CHANGES:
- * - Constructor now accepts consumption totals (food, parts, medicine, ammo).
- * - Added a "Resources Consumed" section to display these totals.
- * - Ensured text area backgrounds match panel color.
+ * TravelSummaryDialog Class of the Perils Along the Platte Game
+ * 
+ * A dialog that displays a comprehensive summary of the player's journey to Fort Kearny, including:
+ * - Journey statistics (days traveled, distance covered)
+ * - Resource consumption details
+ * - Landmarks encountered
+ * - Significant events
+ * 
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file TravelSummaryDialog.java
  */
 public class TravelSummaryDialog extends JDialog {
     private final List<String> events;
@@ -34,20 +41,22 @@ public class TravelSummaryDialog extends JDialog {
     private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
 
     /**
-     * Constructor
-     * @param owner The parent frame
-     * @param events List of general event descriptions that occurred
-     * @param landmarksPassed List of Landmark objects passed before Fort Kearny
-     * @param days Number of days the journey took
-     * @param distance Distance traveled to Fort Kearny
-     * @param foodConsumed Total food consumed during this leg
-     * @param partsUsed Total wagon parts used
-     * @param medicineUsed Total medicine used
-     * @param ammoUsed Total ammunition used
+     * Constructs a new TravelSummaryDialog.
+     * Initializes the dialog with journey details and resource consumption data.
+     * 
+     * @param owner The parent frame (main game window)
+     * @param events List of event descriptions that occurred during the journey
+     * @param landmarksPassed List of Landmark objects encountered
+     * @param days Number of days spent on the journey
+     * @param distance Total distance traveled in miles
+     * @param foodConsumed Total pounds of food consumed
+     * @param partsUsed Total number of wagon parts used
+     * @param medicineUsed Total number of medicine kits used
+     * @param ammoUsed Total rounds of ammunition used
      */
     public TravelSummaryDialog(Frame owner, List<String> events, List<Landmark> landmarksPassed,
                                int days, int distance, int foodConsumed, int partsUsed,
-                               int medicineUsed, int ammoUsed) { // Added consumption params
+                               int medicineUsed, int ammoUsed) {
         super(owner, "Journey to Fort Kearny", true);
         this.events = events;
         this.landmarksPassed = landmarksPassed;
@@ -69,6 +78,16 @@ public class TravelSummaryDialog extends JDialog {
         setResizable(true); // Allow resizing
     }
 
+    /**
+     * Initializes the dialog's user interface.
+     * Creates and arranges all UI components including:
+     * - Title and header panel
+     * - Journey summary section
+     * - Resource consumption section
+     * - Landmarks section
+     * - Events section
+     * - Navigation controls
+     */
     private void initUI() {
         setLayout(new BorderLayout(10, 10));
         getContentPane().setBackground(BACKGROUND_COLOR);
@@ -230,7 +249,12 @@ public class TravelSummaryDialog extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    /** Helper method to create a standard section panel */
+    /**
+     * Creates a section panel with a titled border.
+     * 
+     * @param title The section title
+     * @return A JPanel with the specified title and styling
+     */
     private JPanel createSectionPanel(String title) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false); // Make transparent to show container background
@@ -243,7 +267,12 @@ public class TravelSummaryDialog extends JDialog {
         return panel;
     }
 
-    /** Helper method to create a styled text area */
+    /**
+     * Creates a styled text area with consistent formatting.
+     * 
+     * @param initialText The initial text to display
+     * @return A JTextArea with the specified text and styling
+     */
     private JTextArea createStyledTextArea(String initialText) {
         JTextArea textArea = new JTextArea(initialText);
         textArea.setFont(FontManager.getWesternFont(14));
@@ -258,7 +287,13 @@ public class TravelSummaryDialog extends JDialog {
         return textArea;
     }
 
-    /** Helper method to create consumption labels */
+    /**
+     * Creates a consumption label with consistent formatting.
+     * 
+     * @param labelText The label text describing the resource
+     * @param valueText The value text showing the amount consumed
+     * @return A JLabel with the specified text and styling
+     */
     private JLabel createConsumptionLabel(String labelText, String valueText) {
         JLabel label = new JLabel(labelText + " " + valueText);
         label.setFont(FontManager.getWesternFont(14));

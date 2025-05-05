@@ -1,3 +1,16 @@
+/**
+ * HealthDialog Class of the Perils Along the Platte Game
+ * Displays a comprehensive health status dialog showing the condition of:
+ * - Player health and morale
+ * - Family members' health
+ * - Wagon parts condition and repair options
+ * - Oxen team health and fatigue
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file HealthDialog.java
+ */
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -5,7 +18,6 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 
 public class HealthDialog extends JDialog {
-    // Colors - match EnhancedGUI
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
     private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
     private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
@@ -16,6 +28,17 @@ public class HealthDialog extends JDialog {
     private final JFrame parent;
     private final Player player;
 
+    /**
+     * Constructs a new HealthDialog.
+     * Initializes the dialog with the current health status of:
+     * - Player and family
+     * - Wagon parts
+     * - Oxen team
+     * 
+     * @param parent The parent frame (main game window)
+     * @param player The player character
+     * @param inventory The game's inventory system
+     */
     public HealthDialog(Frame parent, Player player, Inventory inventory) {
         super(parent, "Health Status", true);
         this.parent = (JFrame) parent;
@@ -29,6 +52,15 @@ public class HealthDialog extends JDialog {
         setResizable(false);
     }
 
+    /**
+     * Initializes the dialog's user interface.
+     * Creates and arranges all UI components including:
+     * - Title panel
+     * - Health sections
+     * - Repair buttons
+     * - Status displays
+     * - Close button
+     */
     private void initUI() {
         setLayout(new BorderLayout(10, 10));
         getContentPane().setBackground(BACKGROUND_COLOR);
@@ -190,6 +222,18 @@ public class HealthDialog extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    /**
+     * Creates a health section panel with title and content.
+     * Each section displays information about a specific health aspect:
+     * - Player health
+     * - Family health
+     * - Wagon health
+     * - Oxen health
+     * 
+     * @param title The section title
+     * @param content The health information to display
+     * @return A JPanel containing the health section
+     */
     private JPanel createHealthSection(String title, String content) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(PANEL_COLOR);
@@ -216,6 +260,15 @@ public class HealthDialog extends JDialog {
         return panel;
     }
 
+    /**
+     * Calculates the overall condition of the wagon.
+     * Considers multiple factors:
+     * - Average condition of all parts
+     * - Number of spare parts available
+     * - Presence of broken parts
+     * 
+     * @return A descriptive string of the wagon's condition
+     */
     private String getWagonCondition() {
         // Calculate average condition of all parts
         int totalCondition = inventory.getWagonPartBreakpercentage("Wheel") +
@@ -257,6 +310,15 @@ public class HealthDialog extends JDialog {
         }
     }
 
+    /**
+     * Calculates the condition of the oxen team.
+     * Evaluates based on:
+     * - Health percentage
+     * - Fatigue level
+     * - Number of oxen
+     * 
+     * @return A descriptive string of the oxen team's condition
+     */
     private String getOxenCondition() {
         int health = inventory.getOxenHealth();
         if (health >= 80) return "Excellent";
@@ -266,6 +328,16 @@ public class HealthDialog extends JDialog {
         return "Critical";
     }
 
+    /**
+     * Creates a repair button for a specific wagon part.
+     * The button is only created if:
+     * - The part is broken
+     * - Spare parts are available
+     * 
+     * @param text The button text
+     * @param partName The name of the part to repair
+     * @return A JButton for repairing the specified part
+     */
     private JButton createRepairButton(String text, String partName) {
         JButton button = new JButton(text);
         button.setFont(FontManager.getWesternFont(12));
