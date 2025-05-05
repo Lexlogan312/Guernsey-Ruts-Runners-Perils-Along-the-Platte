@@ -1,3 +1,23 @@
+/**
+ * GameController Class of the Perils Along the Platte Game
+ * Central controller class that manages game state, player actions, and game progression.
+ * Handles all major game mechanics including:
+ * - Travel and journey management
+ * - Resource consumption and management
+ * - Event generation and handling
+ * - Player health and morale
+ * - Weather and environmental effects
+ * - Game state tracking and updates
+ * - Landmark and river crossing events
+ * - Hunting and resting mechanics
+ * - Market interactions
+ * - Trail-specific gameplay variations
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file GameController.java
+ */
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -5,102 +25,126 @@ import java.util.function.Consumer;
 import java.awt.Frame;
 
 public class GameController {
+    // Tracks player stats, family, and health
     private Player player;
+
+    // Manages locations, landmarks, and travel progress
     private Map map;
+
+    // Handles supplies, items, and resource management
     private final Inventory inventory;
+
+    // Tracks date, season, and day/night cycles
     private Time time;
+
+    // Manages environmental conditions and effects
     private Weather weather;
+
+    // Handles random events and challenges
     private Perils perils;
+
+    // Tracks player's occupation and associated benefits
     private Job job;
 
-    // Trail setup
+    //The selected trail for the journey.
     private String trail;
 
-    // Game state
     private boolean gameStarted = false;
     private boolean isGameRunning = true;
 
-    // Event tracking for the initial journey
     private final ArrayList<String> initialJourneyEvents = new ArrayList<>();
     private final ArrayList<Landmark> initialLandmarksPassed = new ArrayList<>();
-    // Fields to track consumption during initial journey
     private int initialFoodConsumed = 0;
     private int initialPartsUsed = 0;
     private int initialMedicineUsed = 0;
     private int initialAmmoUsed = 0;
 
-    //Food types, and spoil rates
+    // List of available food items
     private static final String[] FOOD_TYPES = {
             "Flour", "Bacon", "Dried Beans", "Rice", "Coffee", "Sugar", "Dried Fruit", "Hardtack"
     };
+
+    // Corresponding spoilage rates (0.0 to 1.0)
     private static final double[] FOOD_SPOILRATE = {
             .05, .15, .02, .03, .005, .04, .1, .01
     };
 
-    //Wagon Parts
+    // Available wagon parts that can break or be replaced.
     private static final String[] WAGON_PARTS = {
             "Wheel", "Bow", "Tongue", "Axle"
     };
 
-    // Listeners
+    // Event listeners for game updates and state changes.
     private final ArrayList<Consumer<String>> messageListeners = new ArrayList<>();
     private final ArrayList<Runnable> gameStateListeners = new ArrayList<>();
 
     /**
-     * Constructor: Initializes default game state components.
-     * Actual game setup (player, trail, month) happens via GUI dialogs.
+     * Constructs a new GameController with default game state.
+     * Initializes core game components with default values that will be
+     * updated during game setup. Sets up the initial game environment
+     * before player customization.
      */
     public GameController() {
-        // Initialize with defaults, will be overwritten by dialogs
-        player = new Player("Player", "Male", job); // Default player
+        player = new Player("Player", "Male", job);
         inventory = new Inventory();
-        time = new Time(1848, 3); // Default to March 1848
-        map = new Map(1); // Default to Oregon Trail
+        time = new Time(1848, 3);
+        map = new Map(1);
         weather = new Weather(time.getMonth(), map.getStartingLocation());
-        perils = new Perils(player, inventory, weather, time); // Needs player, inventory, weather, time
-
-        // Set the message listener for Perils class right away
+        perils = new Perils(player, inventory, weather, time);
         perils.setMessageListener(this::notifyListeners);
     }
 
     /**
-     * Starts a new game - called after initial dialogs are complete.
-     * Initializes game state based on user choices.
+     * Starts a new game after initial setup is complete.
+     * Initializes game state based on player choices and validates
+     * all required components are properly initialized.
+     * Sets up the initial journey conditions and game state.
      */
     public void startNewGame() {
-        // This method assumes player, map, time, inventory, etc. have been
-        // properly initialized based on user selections from dialogs.
         gameStarted = true;
         isGameRunning = true;
 
-        // Re-initialize components that depend on player choices if needed
-        // (e.g., Perils might depend on player gender or family size indirectly)
         if (player != null && inventory != null && weather != null) {
             perils = new Perils(player, inventory, weather, time);
             perils.setMessageListener(this::notifyListeners);
         } else {
-            System.err.println("Error in startNewGame: Player, Inventory, or Weather is null.");
-            // Handle error - maybe show message and exit?
+            String error = "Error in startNewGame: Player, Inventory, or Weather is null.";
+            System.err.println(error);
             notifyListeners("ERROR: Failed to initialize game components fully.");
             isGameRunning = false;
         }
-
-        // No introductory messages sent from here anymore.
     }
 
-    // --- Listener Management ---
-
-    /** Adds a message listener (typically the GUI's output area). */
+    /**
+     * Adds a message listener to receive game event notifications.
+     * Listeners will receive updates about game events, status changes,
+     * and important messages. Messages are delivered on the EDT.
+     * 
+     * @param listener The Consumer<String> that will receive game messages
+     */
     public void addMessageListener(Consumer<String> listener) {
         messageListeners.add(listener);
     }
 
-    /** Adds a listener for game state changes (typically the GUI's update method). */
+    /**
+     * Adds a listener for game state changes.
+     * These listeners are notified when significant game state changes occur,
+     * such as completing a journey or reaching a landmark.
+     * State changes are delivered on the EDT.
+     * 
+     * @param listener The Runnable to be called when game state changes
+     */
     public void addGameStateListener(Runnable listener) {
         gameStateListeners.add(listener);
     }
 
-    /** Sends a message to all registered message listeners (ensures runs on EDT). */
+    /**
+     * Notifies all registered message listeners of a new message.
+     * Ensures the notification happens on the Event Dispatch Thread
+     * to maintain thread safety with Swing components.
+     * 
+     * @param message The message to send to all listeners
+     */
     private void notifyListeners(String message) {
         SwingUtilities.invokeLater(() -> {
             for (Consumer<String> listener : messageListeners) {
@@ -109,25 +153,38 @@ public class GameController {
         });
     }
 
-    // --- Game Setup Methods (Called by Dialogs) ---
-
-    /** Sets up player with name, gender and family members. */
+    /**
+     * Sets up the player with basic information and family members.
+     * Initializes the player character with their chosen attributes
+     * and sets up their family group for the journey.
+     * 
+     * @param name The player's name
+     * @param gender The player's gender
+     * @param familyMembers Array of family member names
+     * @param job The player's occupation
+     */
     public void playerSetup(String name, String gender, String[] familyMembers, Job job) {
         player = new Player(name, gender, job);
         player.setFamilyMembers(familyMembers);
-        // Re-initialize Perils if it depends on player details
         if (inventory != null && weather != null) {
             perils = new Perils(player, inventory, weather, time);
             perils.setMessageListener(this::notifyListeners);
         }
     }
 
-    /** Sets the trail choice and initializes the map. */
+    /**
+     * Sets the trail choice and initializes the map accordingly.
+     * Configures the game for the selected trail route, including
+     * starting location and available landmarks.
+     * 
+     * @param trailChoice The selected trail (1=Oregon, 2=California, 3=Mormon)
+     */
     public void selectTrail(int trailChoice) {
+        String departureLocation;
         switch (trailChoice) {
             case 1:
                 trail = "Oregon";
-                String departureLocation = "Independence, Missouri";
+                departureLocation = "Independence, Missouri";
                 break;
             case 2:
                 trail = "California";
@@ -137,15 +194,8 @@ public class GameController {
                 trail = "Mormon";
                 departureLocation = "Nauvoo, Illinois";
                 break;
-            default: // Default to Oregon if invalid
-                trail = "Oregon";
-                departureLocation = "Independence, Missouri";
-                trailChoice = 1;
-                System.err.println("Warning: Invalid trail choice received. Defaulting to Oregon Trail.");
-                break;
         }
-        map = new Map(trailChoice); // Initialize map based on choice
-        // Weather might depend on starting location, re-init if time already set
+        map = new Map(trailChoice);
         if (time != null) {
             weather = new Weather(time.getMonth(), map.getStartingLocation());
             if (player != null && inventory != null) {
@@ -155,49 +205,54 @@ public class GameController {
         }
     }
 
-    /** Sets the departure month and initializes time/weather/perils. */
+    /**
+     * Sets the departure month and initializes related game components.
+     * Configures the starting season and initial weather conditions
+     * based on the chosen departure month.
+     * 
+     * @param month The selected departure month (1-5, representing March-July)
+     */
     public void selectDepartureMonth(int month) {
         String[] months = {"March", "April", "May", "June", "July"};
-        if (month >= 1 && month <= 5) {
-            // 0=March, 1=April, etc.
-            int monthChoice = month - 1;
-            String departureMonth = months[monthChoice];
-            int monthNumber = monthChoice + 3; // March=3, April=4, etc.
-            time = new Time(1848, monthNumber);
+        int monthChoice = month - 1;
+        String departureMonth = months[monthChoice];
+        int monthNumber = monthChoice + 3;
+        time = new Time(1848, monthNumber);
 
-            // Ensure map is initialized before getting starting location
-            String startLoc = (map != null) ? map.getStartingLocation() : "Start";
-            weather = new Weather(monthNumber, startLoc);
+        String startLoc = (map != null) ? map.getStartingLocation() : "Start";
+        weather = new Weather(monthNumber, startLoc);
 
-            // Ensure player and inventory are initialized before Perils
-            if (player != null && inventory != null) {
-                perils = new Perils(player, inventory, weather, time);
-                perils.setMessageListener(this::notifyListeners);
-            } else {
-                System.err.println("Error initializing Perils in selectDepartureMonth: Player or Inventory is null.");
-            }
-        } else {
-            System.err.println("Invalid departure month selected: " + month + ". Defaulting to March.");
-            selectDepartureMonth(1); // Default to March if invalid
+        if (player != null && inventory != null) {
+            perils = new Perils(player, inventory, weather, time);
+            perils.setMessageListener(this::notifyListeners);
         }
     }
 
-    /** Called after the Market dialog closes (mostly for state update). */
+    /**
+     * Updates game state after visiting the market.
+     * Called when the market dialog is closed to refresh
+     * game state and notify listeners of changes.
+     */
     public void visitMarket() {
-        // Logic moved to Market.java GUI panel actions.
-        // This method remains as a placeholder in the sequence if needed.
-        notifyGameStateChanged(); // Update state in case money changed
+        notifyGameStateChanged();
     }
 
-    // --- Initial Journey Simulation ---
-
-    /** Simulates the journey to Fort Kearny and shows the summary dialog. */
+    /**
+     * Simulates the initial journey to Fort Kearny.
+     * Tracks events, resource consumption, and shows a summary dialog upon completion.
+     * This method handles the first leg of the journey, including:
+     * - Daily travel progress
+     * - Resource consumption
+     * - Random events
+     * - Landmark encounters
+     * - Health and morale changes
+     */
     public void journeyToFortKearny() {
-        if (!validateGameComponents()) return; // Check if game is ready
+        if (!validateGameComponents()) return;
 
         initialJourneyEvents.clear();
         initialLandmarksPassed.clear();
-        resetInitialConsumption(); // Reset counters
+        resetInitialConsumption();
 
         int fortKearnyDistance = findFortKearnyDistance();
         Landmark fortKearnyLandmark = findFortKearnyLandmark();
@@ -213,7 +268,6 @@ public class GameController {
         int daysToFortKearny = 0;
         int distanceCovered = 0;
 
-        // --- Simulation Loop ---
         while (distanceCovered < fortKearnyDistance && !player.isDead()) {
             daysToFortKearny++;
             time.advanceDay();
@@ -227,18 +281,17 @@ public class GameController {
 
             consumeDailyFood(daysToFortKearny);
             simulateDailyOxenFatigue();
-            simulateInitialJourneyEvent(daysToFortKearny); // Simulate random events
+            simulateInitialJourneyEvent(daysToFortKearny);
 
             if (player.isDead()) {
                 handleInitialJourneyDeath(daysToFortKearny);
-                return; // Stop simulation
+                return;
             }
         }
-        // --- End Simulation Loop ---
 
         if (!player.isDead()) {
-            map.travel(distanceCovered); // Update map's total distance
-            map.setCurrentLocation(fortKearnyLandmark.getName()); // Set location explicitly
+            map.travel(distanceCovered);
+            map.setCurrentLocation(fortKearnyLandmark.getName());
             notifyListeners("\n=== JOURNEY TO FORT KEARNY COMPLETE ===\n" +
                     "Arrived after " + daysToFortKearny + " days.");
         }
@@ -246,7 +299,11 @@ public class GameController {
         showTravelSummaryDialog(daysToFortKearny, distanceCovered);
     }
 
-    /** Helper to validate essential game components before simulation/actions. */
+    /**
+     * Validates that all required game components are properly initialized.
+     * 
+     * @return true if all components are valid, false otherwise
+     */
     private boolean validateGameComponents() {
         if (map == null || time == null || player == null || inventory == null || perils == null) {
             String missing = "";
@@ -257,13 +314,15 @@ public class GameController {
             if (perils == null) missing += "Perils ";
             notifyListeners("ERROR: Game not fully initialized. Missing: " + missing.trim());
             System.err.println("ERROR: Game not fully initialized. Missing: " + missing.trim());
-            isGameRunning = false; // Stop the game if critical components missing
+            isGameRunning = false;
             return false;
         }
         return true;
     }
 
-    /** Resets counters for initial journey consumption. */
+    /**
+     * Resets the tracking of initial resource consumption.
+     */
     private void resetInitialConsumption() {
         initialFoodConsumed = 0;
         initialPartsUsed = 0;
@@ -271,7 +330,11 @@ public class GameController {
         initialAmmoUsed = 0;
     }
 
-    /** Finds the distance to Fort Kearny. */
+    /**
+     * Finds the distance to Fort Kearny from the starting location.
+     * 
+     * @return The distance to Fort Kearny in miles
+     */
     private int findFortKearnyDistance() {
         if (map == null || map.getLandmarks() == null) return 0;
         for (Landmark lm : map.getLandmarks()) {
@@ -283,7 +346,11 @@ public class GameController {
         return 0;
     }
 
-    /** Finds the Fort Kearny Landmark object. */
+    /**
+     * Locates the Fort Kearny landmark in the map.
+     * 
+     * @return The Fort Kearny landmark object, or null if not found
+     */
     private Landmark findFortKearnyLandmark() {
         if (map == null || map.getLandmarks() == null) return null;
         for (Landmark lm : map.getLandmarks()) {
@@ -295,7 +362,11 @@ public class GameController {
         return null;
     }
 
-    /** Collects landmarks passed before Fort Kearny. */
+    /**
+     * Collects all landmarks between the starting location and Fort Kearny.
+     * 
+     * @param fortKearnyDist The distance to Fort Kearny
+     */
     private void collectInitialLandmarks(int fortKearnyDist) {
         if (map == null || map.getLandmarks() == null) return;
         for (Landmark landmark : map.getLandmarks()) {
@@ -307,52 +378,62 @@ public class GameController {
         }
     }
 
-    /** Calculates daily travel distance based on factors. */
+    /**
+     * Calculates the daily travel distance based on base speed and conditions.
+     * 
+     * @param base The base daily travel distance
+     * @return The adjusted daily travel distance
+     */
     private int calculateDailyDistance(int base) {
         int dailyDistance = base;
         dailyDistance = weather.adjustTravelDistance(dailyDistance);
-        dailyDistance = (int)(dailyDistance * Math.max(0.1, inventory.getOxenHealth() / 100.0)); // Min 10% speed even if health low
-        return Math.max(0, dailyDistance); // Can be 0 if oxen health is 0
+        dailyDistance = (int)(dailyDistance * Math.max(0.1, inventory.getOxenHealth() / 100.0));
+        return Math.max(0, dailyDistance);
     }
 
-    /** Handles daily food consumption and tracks total. */
+    /**
+     * Simulates daily food consumption during the initial journey.
+     * 
+     * @param currentDay The current day of the journey
+     */
     private void consumeDailyFood(int currentDay) {
-        int foodNeeded = player.getFamilySize() * 2; // Base 2 lbs per person per day
+        int foodNeeded = player.getFamilySize() * 2;
         int foodAvailable = inventory.getFood();
 
         if (foodAvailable >= foodNeeded) {
             inventory.consumeFood(foodNeeded);
             initialFoodConsumed += foodNeeded;
         } else {
-            // Consume remaining food
             inventory.consumeFood(foodAvailable);
             initialFoodConsumed += foodAvailable;
             
-            // Apply health penalty for insufficient food
-            int healthPenalty = 5 + (foodNeeded - foodAvailable); // Penalty increases with shortfall
-            // Pass "starvation" as the cause when health decreases due to lack of food
-            player.decreaseHealth(healthPenalty, "starvation"); 
+            int healthPenalty = 5 + (foodNeeded - foodAvailable);
+            player.decreaseHealth(healthPenalty, "starvation");
             initialJourneyEvents.add("Day " + currentDay + ": Ran low on food! Lost " + healthPenalty + " health.");
             
-            // Check if player died from starvation during initial journey
             if (player.isDead()) {
                 initialJourneyEvents.add("Tragically, you starved before reaching Fort Kearny.");
                 handleInitialJourneyDeath(currentDay);
-                // Stop simulation if player dies
             }
         }
     }
 
-    /** Simulates random oxen fatigue. */
+    /**
+     * Simulates daily oxen fatigue during travel.
+     */
     private void simulateDailyOxenFatigue() {
         if (Math.random() < 0.10) {
             inventory.decreaseOxenHealth(2);
         }
     }
 
-    /** Simulates a random event during the initial journey and tracks resource usage. */
+    /**
+     * Generates and handles random events during the initial journey.
+     * 
+     * @param currentDay The current day of the journey
+     */
     private void simulateInitialJourneyEvent(int currentDay) {
-        if (Math.random() < 0.25) { // Event chance
+        if (Math.random() < 0.25) {
             List<String> eventDetails = new ArrayList<>();
             Consumer<String> eventCaptureListener = eventText -> {
                 String cleaned = eventText.replace("\n", " ").replace("===", "").trim();
@@ -366,14 +447,13 @@ public class GameController {
             int medicineBefore = inventory.getMedicine();
             int ammoBefore = inventory.getAmmunition();
 
-            perils.generateRandomEvent(); // Event happens here
+            perils.generateRandomEvent();
 
-            // Track resources consumed *by the event*
             initialPartsUsed += Math.max(0, partsBefore - inventory.getWagonParts());
             initialMedicineUsed += Math.max(0, medicineBefore - inventory.getMedicine());
             initialAmmoUsed += Math.max(0, ammoBefore - inventory.getAmmunition());
 
-            perils.setMessageListener(originalListener); // Restore
+            perils.setMessageListener(originalListener);
 
             if (!eventDetails.isEmpty()) {
                 initialJourneyEvents.add("Day " + currentDay + ": " + String.join(" ", eventDetails));
@@ -381,24 +461,43 @@ public class GameController {
         }
     }
 
-    /** Handles player death during the initial journey simulation. */
+    /**
+     * Handles player death during the initial journey.
+     * 
+     * @param days The number of days traveled before death
+     */
     private void handleInitialJourneyDeath(int days) {
         isGameRunning = false;
         
-        // Get cause of death or use default if somehow not set
         String causeOfDeath = player.getCauseOfDeath();
         if (causeOfDeath == null || causeOfDeath.trim().isEmpty()) {
             causeOfDeath = "poor health";
-            player.setCauseOfDeath(causeOfDeath); // Set it for the DeathDialog
+            player.setCauseOfDeath(causeOfDeath);
         }
         
         String deathMessage = "Died of " + causeOfDeath + " after " + days + " days, before reaching Fort Kearny.";
         initialJourneyEvents.add(deathMessage);
         notifyListeners("\n" + deathMessage);
-        showDeathDialog(); // Show death dialog immediately
+        showDeathDialog();
     }
 
-    /** Shows the travel summary dialog after the initial journey. */
+    /**
+     * Notifies all game state listeners of a state change.
+     */
+    private void notifyGameStateChanged() {
+        SwingUtilities.invokeLater(() -> {
+            for (Runnable listener : gameStateListeners) {
+                listener.run();
+            }
+        });
+    }
+
+    /**
+     * Shows a dialog summarizing the initial journey to Fort Kearny.
+     * 
+     * @param days The number of days taken
+     * @param distance The distance traveled
+     */
     private void showTravelSummaryDialog(int days, int distance) {
         final int finalFood = initialFoodConsumed;
         final int finalParts = initialPartsUsed;
@@ -412,10 +511,9 @@ public class GameController {
                     days, distance, finalFood, finalParts, finalMeds, finalAmmo
             );
             summaryDialog.setVisible(true);
-            notifyGameStateChanged(); // Update main GUI after summary closes
+            notifyGameStateChanged();
         });
     }
-
 
     // --- Main Game Loop Actions (Called by GUI Buttons) ---
 
@@ -465,7 +563,7 @@ public class GameController {
         if (breakageResult != null) {
             result.append(breakageResult).append("\n");
         }
-        
+
         // Apply food spoilage
         inventory.applyFoodSpoilage(weather, this);
 
@@ -760,7 +858,7 @@ public class GameController {
         // Get the name and description of the current river crossing
         String riverName = map.getCurrentRiverCrossingName();
         String riverDescription = map.getCurrentRiverCrossingDescription();
-        
+
         notifyListeners("\n=== " + riverName.toUpperCase() + " ===\n" +
                 riverDescription + "\n\n" +
                 "You must cross the river.");
@@ -779,36 +877,6 @@ public class GameController {
         map.resetRiverCrossing(); // Reset flag after showing dialog
     }
 
-    /** Shows the death dialog. */
-    private void showDeathDialog() {
-        if (player == null || time == null || map == null) {
-            System.err.println("Cannot show death dialog: Game components not initialized.");
-            return;
-        }
-        
-        Frame parentFrame = findVisibleFrame();
-        if (parentFrame == null) {
-            System.err.println("Cannot show death dialog: No visible parent frame found.");
-            // Optionally, create a temporary frame or show a console message
-            return;
-        }
-
-        // Get the specific cause of death from the player object
-        String causeOfDeath = player.getCauseOfDeath();
-        // If the cause is still null or empty, default to "unknown causes" as a final fallback
-        if (causeOfDeath == null || causeOfDeath.trim().isEmpty()) {
-            causeOfDeath = "poor health";
-        }
-        
-        int days = time.getTotalDays();
-        int distance = map.getDistanceTraveled();
-        String location = map.getCurrentLocation();
-        
-        // Use the retrieved causeOfDeath when creating the dialog
-        DeathDialog deathDialog = new DeathDialog(parentFrame, causeOfDeath, days, distance, location);
-        deathDialog.setVisible(true); // Show the dialog
-    }
-
     /** Shows the completion dialog. */
     private void showCompletionDialog() {
         final String completionMessage = "\nCONGRATULATIONS!\n" +
@@ -823,14 +891,45 @@ public class GameController {
         });
     }
 
-    /** Helper to find the main visible frame for dialog ownership. */
+    /**
+     * Shows a dialog when the player dies.
+     */
+    private void showDeathDialog() {
+        if (player == null || time == null || map == null) {
+            System.err.println("Cannot show death dialog: Game components not initialized.");
+            return;
+        }
+        
+        Frame parentFrame = findVisibleFrame();
+        if (parentFrame == null) {
+            System.err.println("Cannot show death dialog: No visible parent frame found.");
+            return;
+        }
+
+        String causeOfDeath = player.getCauseOfDeath();
+        if (causeOfDeath == null || causeOfDeath.trim().isEmpty()) {
+            causeOfDeath = "poor health";
+        }
+        
+        int days = time.getTotalDays();
+        int distance = map.getDistanceTraveled();
+        String location = map.getCurrentLocation();
+        
+        DeathDialog deathDialog = new DeathDialog(parentFrame, causeOfDeath, days, distance, location);
+        deathDialog.setVisible(true);
+    }
+
+    /**
+     * Finds a visible frame to use for dialogs.
+     * 
+     * @return A visible Frame object, or null if none found
+     */
     private Frame findVisibleFrame() {
         for (Frame frame : Frame.getFrames()) {
-            if (frame.isVisible() && frame.isActive()) { // Prefer active frame
+            if (frame.isVisible() && frame.isActive()) {
                 return frame;
             }
         }
-        // Fallback if no active frame found
         for (Frame frame : Frame.getFrames()) {
             if (frame.isVisible()) {
                 return frame;
@@ -838,59 +937,77 @@ public class GameController {
         }
         return null;
     }
-    // --- Getters for Game State (Used by GUI) ---
 
+    /**
+     * Gets the current player object.
+     * 
+     * @return The Player object
+     */
     public Player getPlayer() { return player; }
+
+    /**
+     * Gets the current map object.
+     * 
+     * @return The Map object
+     */
     public Map getMap() { return map; }
+
+    /**
+     * Gets the current inventory object.
+     * 
+     * @return The Inventory object
+     */
     public Inventory getInventory() { return inventory; }
+
+    /**
+     * Gets the current time object.
+     * 
+     * @return The Time object
+     */
     public Time getTime() { return time; }
+
+    /**
+     * Gets the current weather object.
+     * 
+     * @return The Weather object
+     */
     public Weather getWeather() { return weather; }
+
+    /**
+     * Checks if the game has been started.
+     * 
+     * @return true if the game has been started, false otherwise
+     */
     public boolean isGameStarted() { return gameStarted; }
-    // Add this method to the GameController class if it doesn't exist
+
+    /**
+     * Checks if the game is currently running.
+     * 
+     * @return true if the game is running, false otherwise
+     */
     public boolean isGameRunning() {
         return isGameRunning;
     }
-    
-    // Make sure this method exists and is properly implemented
-    public void notifyGameStateChanged() {
-        // Notify all GUI components that the game state has changed
-        SwingUtilities.invokeLater(() -> {
-            for (Runnable listener : gameStateListeners) {
-                listener.run();
-            }
-        });
-    }
 
-    // Add this inner class if it doesn't exist
-    public class GameState {
-        public final Player player;
-        public final Map map;
-        public final Inventory inventory;
-        public final Time time;
-        public final Weather weather;
-        public final boolean isRunning;
-        
-        public GameState(Player player, Map map, Inventory inventory, Time time, Weather weather, boolean isRunning) {
-            this.player = player;
-            this.map = map;
-            this.inventory = inventory;
-            this.time = time;
-            this.weather = weather;
-            this.isRunning = isRunning;
-        }
-    }
+    /**
+     * Gets the name of the selected trail.
+     * 
+     * @return The trail name
+     */
     public String getTrail() { return trail; }
 
-    /** Trigger a game state update manually if needed (e.g., after dialog). */
+    /**
+     * Updates the game state and notifies listeners.
+     */
     public void updateGameState() {
         notifyGameStateChanged();
     }
 
-
     /**
-     * Applies job-specific bonuses based on player's occupation
-     * @param jobEffect The type of effect to check for
-     * @return The bonus value (can be positive or negative)
+     * Gets the bonus effect for a specific job.
+     * 
+     * @param jobEffect The type of bonus to check
+     * @return The bonus value as a percentage
      */
     public double getJobBonus(String jobEffect) {
         Job playerJob = player.getJob();
@@ -898,54 +1015,42 @@ public class GameController {
         
         switch (jobEffect) {
             case "food_spoilage":
-                // Farmer: Food spoils 20-25% slower
                 return (playerJob == Job.FARMER) ? -0.225 : 0.0;
                 
             case "part_breakage":
-                // Blacksmith: Wagon parts break 20% less often
                 return (playerJob == Job.BLACKSMITH) ? -0.20 : 0.0;
                 
             case "repair_cost":
-                // Carpenter: Cheaper wagon repairs
                 return (playerJob == Job.CARPENTER) ? -0.25 : 0.0;
                 
             case "repair_speed":
-                // Carpenter: Faster wagon repairs
                 return (playerJob == Job.CARPENTER) ? 0.30 : 0.0;
                 
             case "repair_success":
-                // Carpenter: 10% more likely to successfully improvise repairs
                 return (playerJob == Job.CARPENTER) ? 0.10 : 0.0;
                 
             case "hunting_ammo_threshold":
-                // Hunter: Can hunt with less ammo
                 return (playerJob == Job.HUNTER) ? 0.25 : 0.0;
                 
             case "travel_speed":
-                // Hunter: +5% travel speed because better scouting
                 return (playerJob == Job.HUNTER) ? 0.05 : 0.0;
                 
             case "health_depletion":
-                // Doctor: Party health depletes slower by 10%
                 return (playerJob == Job.DOCTOR) ? -0.10 : 0.0;
                 
             case "morale_decrease":
-                // Teacher: Morale decreases slower over time
                 return (playerJob == Job.TEACHER) ? -0.15 : 0.0;
                 
             case "morale_healing":
-                // Preacher: Morale heals faster when resting
                 return (playerJob == Job.PREACHER) ? 0.25 : 0.0;
                 
             case "health_from_morale":
-                // Preacher: Slight boost to healing if morale is high
                 if (playerJob == Job.PREACHER && player.getMorale() > 75) {
                     return 0.15;
                 }
                 return 0.0;
                 
             case "merchant_discount":
-                // Merchant: Prices in stores are automatically cheaper (5-10% discount)
                 return (playerJob == Job.MERCHANT) ? -0.075 : 0.0;
                 
             default:
@@ -953,12 +1058,12 @@ public class GameController {
         }
     }
 
-    // Add this method to the GameController class if it doesn't exist
+    /**
+     * Adds a trail update message to the game log.
+     * 
+     * @param update The update message to add
+     */
     public void addTrailUpdate(String update) {
-        // Implementation of addTrailUpdate method
-        // This method should add the given update to the trail description
-        // and notify listeners of the update
-        // Implementation details depend on the specific implementation of the trail
-        // and how updates are tracked and notified to listeners.
+        notifyListeners(update);
     }
 }

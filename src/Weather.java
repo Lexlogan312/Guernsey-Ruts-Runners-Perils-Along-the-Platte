@@ -1,11 +1,45 @@
+/**
+ * Weather Class of the Perils Along the Platte Game
+ * Manages weather conditions and their effects on gameplay.
+ * Generates weather based on season and location, and provides methods
+ * to adjust travel distances and other game mechanics based on current conditions.
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file Weather.java
+ */
 public class Weather {
+    // The current weather condition description
     private String currentWeather;
-    private int severity; // 1-5 scale, 1 = best, 5 = worst
+    
+    // The severity of the current weather condition
+    private int severity;
 
+    /**
+     * Constructs a new Weather object based on the current month and location.
+     * Initializes weather conditions using historical patterns and location-specific factors.
+     * 
+     * @param month The current month (1-12)
+     * @param location The current location on the trail
+     */
     public Weather(int month, String location) {
         generateWeather(month, location != null ? location : "");
     }
 
+    /**
+     * Generates weather conditions based on season and location.
+     * Uses probability distributions to determine weather type and severity.
+     * 
+     * Weather probabilities are influenced by:
+     * - Seasonal patterns
+     * - Geographic location
+     * - Historical weather data
+     * - Random variation
+     * 
+     * @param month The current month (1-12)
+     * @param location The current location on the trail
+     */
     private void generateWeather(int month, String location) {
         // Base probability factors for different weather types based on month
         double rainProbability = 0.0;
@@ -100,8 +134,13 @@ public class Weather {
 
         total += clearProbability;
         if (random < total) {
-            currentWeather = "Clear";
-            severity = 1;
+            if (Math.random() < 0.3) {
+                currentWeather = "Hot and clear";
+                severity = 3;
+            } else {
+                currentWeather = "Clear";
+                severity = 1;
+            }
             return;
         }
 
@@ -112,40 +151,85 @@ public class Weather {
             return;
         }
 
-        // Fog or other
-        currentWeather = "Foggy";
-        severity = 3;
+        total += fogProbability;
+        if (random < total) {
+            currentWeather = "Foggy";
+            severity = 3;
+            return;
+        }
+
+        // Default to clear weather if no other conditions met
+        currentWeather = "Clear";
+        severity = 1;
     }
 
+    /**
+     * Gets the current weather condition.
+     * Returns a descriptive string of the current weather state.
+     * 
+     * @return The current weather description
+     */
     public String getCurrentWeather() {
         return currentWeather;
     }
 
+    /**
+     * Gets the severity of the current weather.
+     * Returns a value from 1-5 indicating the impact of the weather.
+     * 
+     * @return The weather severity (1-5, where 1 is best and 5 is worst)
+     */
     public int getSeverity() {
         return severity;
     }
 
+    /**
+     * Adjusts the base travel distance based on current weather conditions.
+     * Applies weather-specific modifiers to the base travel distance.
+     * 
+     * Weather modifiers:
+     * - Clear: 100% of base distance
+     * - Cloudy: 90% of base distance
+     * - Light rain: 80% of base distance
+     * - Heavy rain: 50% of base distance
+     * - Snow: 60% of base distance
+     * - Blizzard: 30% of base distance
+     * - Foggy: 70% of base distance
+     * - Hot and clear: 80% of base distance
+     * 
+     * @param baseMiles The base distance to travel
+     * @return The adjusted travel distance
+     */
     public int adjustTravelDistance(int baseMiles) {
-        double factor = 1.0;
-
-        switch (severity) {
-            case 1: // Perfect weather
-                factor = 1.2; // 20% bonus
+        double modifier = 1.0;
+        
+        switch (currentWeather) {
+            case "Blizzard":
+                modifier = 0.3;
                 break;
-            case 2: // Minor impediment
-                factor = 1.0; // No change
+            case "Heavy rain":
+                modifier = 0.5;
                 break;
-            case 3: // Moderate challenge
-                factor = 0.8; // 20% reduction
+            case "Snow":
+                modifier = 0.6;
                 break;
-            case 4: // Significant challenge
-                factor = 0.6; // 40% reduction
+            case "Foggy":
+                modifier = 0.7;
                 break;
-            case 5: // Severe weather
-                factor = 0.3; // 70% reduction
+            case "Light rain":
+                modifier = 0.8;
+                break;
+            case "Cloudy":
+                modifier = 0.9;
+                break;
+            case "Hot and clear":
+                modifier = 0.8;
+                break;
+            case "Clear":
+                modifier = 1.0;
                 break;
         }
-
-        return (int)(baseMiles * factor);
+        
+        return (int)(baseMiles * modifier);
     }
 }
