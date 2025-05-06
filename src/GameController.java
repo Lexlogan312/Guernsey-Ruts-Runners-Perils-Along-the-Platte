@@ -21,7 +21,6 @@
 
 import javax.swing.*;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.function.Consumer;
 import java.awt.Frame;
@@ -97,6 +96,7 @@ public class GameController {
      * before player customization.
      */
     public GameController() {
+        // Initialize game components
         player = new Player("Player", "Male", job);
         inventory = new Inventory();
         time = new Time(1848, 3);
@@ -116,6 +116,7 @@ public class GameController {
      * Sets up the initial journey conditions and game state.
      */
     public void startNewGame() {
+        // Start the game
         gameStarted = true;
         isGameRunning = true;
 
@@ -195,19 +196,16 @@ public class GameController {
      * @param trailChoice The selected trail (1=Oregon, 2=California, 3=Mormon)
      */
     public void selectTrail(int trailChoice) {
-        String departureLocation;
+        // Set the trail
         switch (trailChoice) {
             case 1:
                 trail = "Oregon";
-                departureLocation = "Independence, Missouri";
                 break;
             case 2:
                 trail = "California";
-                departureLocation = "Independence, Missouri";
                 break;
             case 3:
                 trail = "Mormon";
-                departureLocation = "Nauvoo, Illinois";
                 break;
         }
         map = new Map(trailChoice);
@@ -228,9 +226,7 @@ public class GameController {
      * @param month The selected departure month (1-5, representing March-July)
      */
     public void selectDepartureMonth(int month) {
-        String[] months = {"March", "April", "May", "June", "July"};
         int monthChoice = month - 1;
-        String departureMonth = months[monthChoice];
         int monthNumber = monthChoice + 3;
         time = new Time(1848, monthNumber);
 
@@ -258,15 +254,6 @@ public class GameController {
         if(map != null && this.time != null){
             this.time.setTrailName(map.getTrailName().toUpperCase());
         }
-        notifyGameStateChanged();
-    }
-
-    /**
-     * Updates game state after visiting the market.
-     * Called when the market dialog is closed to refresh
-     * game state and notify listeners of changes.
-     */
-    public void visitMarket() {
         notifyGameStateChanged();
     }
 
@@ -556,7 +543,6 @@ public class GameController {
 
         int baseDistance = 15;
         int adjustedDistance = calculateDailyDistance(baseDistance);
-        double speedBonus = getJobBonus("travel_speed");
 
         StringBuilder result = new StringBuilder();
 
@@ -967,49 +953,6 @@ public class GameController {
     }
 
     /**
-     * Helper method to get a location-specific historical fact.
-     * This is useful when arriving at a new landmark or important location.
-     *
-     * @return A formatted historical fact about the current location
-     */
-    public String getLocationHistoricalFact() {
-        if (!isGameRunning || !validateGameComponents()) return "";
-
-        // Update the historical display manager with current context
-        String currentLocation = map.getCurrentLocation();
-        historicalDisplayManager.updateContext(currentLocation);
-
-        // Get a fact specific to the current location
-        return historicalDisplayManager.getLocationSpecificFact();
-    }
-
-    /**
-     * Creates and shows a journal popup in the UI when new historical information is discovered.
-     * This can be called when passing landmarks, during special events, etc.
-     *
-     * @param factType The type of fact to display ("pioneer", "trail", "survival", "location")
-     * @return The formatted fact for display in a popup
-     */
-    public String showHistoricalPopup(String factType) {
-        if (!isGameRunning || !validateGameComponents()) return "";
-
-        // Update context
-        String currentLocation = map.getCurrentLocation();
-        String currentActivity = isTraveling ? "travel" : "rest"; // Default activity based on state
-        historicalDisplayManager.updateContext(currentLocation, currentActivity);
-
-        String fact;
-        if ("location".equals(factType.toLowerCase())) {
-            fact = historicalDisplayManager.getLocationSpecificFact();
-        } else {
-            fact = historicalDisplayManager.getRandomFactByType(factType);
-        }
-
-        // Return the formatted popup content
-        return historicalDisplayManager.createHistoricalFactPopup(fact);
-    }
-
-    /**
      * Method to be called during travel to add historical facts to the journal.
      * This should be called from your travel() method.
      */
@@ -1022,8 +965,6 @@ public class GameController {
 
         // 15% chance to learn a new fact during travel
         if (Math.random() < 0.15) {
-            String fact = historicalDisplayManager.getContextualHistoricalFact();
-            // The fact is already logged in the history by getContextualHistoricalFact()
 
             // Notify the player about the new journal entry
             notifyListeners("You learned something new! Check your journal for details.");
@@ -1187,7 +1128,8 @@ public class GameController {
         currentSpeedMultiplier = 1.0;
     }
 
-    // --- Daily Update and Event Handling ---
+    // Daily Update and Event Handling
+
     /**
      * Advances game time by one day and handles end-of-day events.
      * @param checkEvents If true, check for perils and river crossings.

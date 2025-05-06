@@ -215,7 +215,6 @@ public class ResourceLoader {
                     }
                 } catch (Exception e) {
                     System.err.println("Failed to create font from stream: " + e.getMessage());
-                    e.printStackTrace();
                 }
             }
             
@@ -223,7 +222,6 @@ public class ResourceLoader {
             return null;
         } catch (Exception e) {
             System.err.println("Failed to load font: " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
     }

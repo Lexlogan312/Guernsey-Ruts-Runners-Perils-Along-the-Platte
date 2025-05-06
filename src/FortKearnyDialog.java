@@ -112,7 +112,6 @@ public class FortKearnyDialog extends JDialog {
             }
         } catch (Exception e) {
             System.err.println("Error loading overlook image: " + e.getMessage());
-            e.printStackTrace();
         }
         
         // Add wagon image at the bottom
@@ -143,7 +142,6 @@ public class FortKearnyDialog extends JDialog {
             }
         } catch (Exception e) {
             System.err.println("Error loading wagon image: " + e.getMessage());
-            e.printStackTrace();
         }
         
         // Add both image panels to the vertical layout

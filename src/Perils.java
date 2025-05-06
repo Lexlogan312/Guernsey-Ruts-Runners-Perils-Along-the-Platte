@@ -148,6 +148,7 @@ public class Perils {
         femaleSpecificEvents.add("made extra money sewing for other travelers");
         femaleSpecificEvents.add("befriended other pioneer families");
         femaleSpecificEvents.add("negotiated a better trading deal");
+        femaleSpecificEvents.add("increased family morale");
         
         // Initialize male-specific events
         maleSpecificEvents = new ArrayList<>();

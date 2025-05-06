@@ -302,12 +302,6 @@ public class StartupDialog extends JDialog {
                 "Teacher - Teachers boost morale through education. Benefit: Party morale decreases more slowly.",
                 "Preacher - Preachers provide spiritual guidance. Benefit: Improved healing and morale boost."
         };
-        
-        // These are the actual values we'll use for job creation
-        String[] occupations = {
-                "Farmer", "Blacksmith", "Carpenter", "Merchant",
-                "Doctor", "Hunter", "Teacher", "Preacher"
-        };
 
         occupationComboBox = new JComboBox<>(occupationLabels);
         occupationComboBox.setFont(FontManager.getWesternFont(14f));

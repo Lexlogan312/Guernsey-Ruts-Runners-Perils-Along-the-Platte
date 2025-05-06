@@ -38,89 +38,6 @@ public class TrailLogManager {
     }
 
     /**
-     * Get all log entries
-     *
-     * @return ArrayList of all log entries
-     */
-    public ArrayList<LogEntry> getAllEntries() {
-        return new ArrayList<>(trailLog);
-    }
-
-    /**
-     * Get recent log entries
-     *
-     * @param count Number of recent entries to retrieve
-     * @return List of recent log entries
-     */
-    public List<LogEntry> getRecentEntries(int count) {
-        int startIndex = Math.max(0, trailLog.size() - count);
-        return trailLog.subList(startIndex, trailLog.size());
-    }
-
-    /**
-     * Get log entries of a specific category
-     *
-     * @param category The category to filter by
-     * @return List of log entries matching the category
-     */
-    public List<LogEntry> getEntriesByCategory(LogCategory category) {
-        ArrayList<LogEntry> filteredEntries = new ArrayList<>();
-        for (LogEntry entry : trailLog) {
-            if (entry.getCategory() == category) {
-                filteredEntries.add(entry);
-            }
-        }
-        return filteredEntries;
-    }
-
-    /**
-     * Get entries from a specific date range
-     *
-     * @param startTime Start of date range
-     * @param endTime   End of date range
-     * @return List of log entries within the date range
-     */
-    public List<LogEntry> getEntriesInDateRange(Time startTime, Time endTime) {
-        ArrayList<LogEntry> filteredEntries = new ArrayList<>();
-        for (LogEntry entry : trailLog) {
-            Time entryTime = entry.getTime();
-            if (entryTime.getTotalDays() >= startTime.getTotalDays() && 
-                entryTime.getTotalDays() <= endTime.getTotalDays()) {
-                filteredEntries.add(entry);
-            }
-        }
-        return filteredEntries;
-    }
-
-    /**
-     * Export the trail log as a formatted journal
-     *
-     * @return Formatted string representation of the trail log
-     */
-    public String exportTrailJournal() {
-        StringBuilder journal = new StringBuilder();
-        journal.append("=== ").append(gameTime.getTrailName()).append(" JOURNEY JOURNAL ===\n");
-        journal.append("Date: ").append(gameTime.getMonthName()).append(" ")
-              .append(gameTime.getDay()).append(", ")
-              .append(gameTime.getYear()).append("\n\n");
-        
-        for (LogEntry entry : trailLog) {
-            journal.append(entry.getDate().getMonthName())
-                  .append(" ")
-                  .append(entry.getDate().getDay())
-                  .append(", ")
-                  .append(entry.getDate().getYear())
-                  .append(" - ")
-                  .append(entry.getLocation())
-                  .append("\n")
-                  .append(entry.getMessage())
-                  .append("\n\n");
-        }
-        
-        return journal.toString();
-    }
-
-    /**
      * Represents a single log entry in the trail journal
      */
     public static class LogEntry {
@@ -138,18 +55,6 @@ public class TrailLogManager {
 
         public Time getDate() {
             return date;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public String getLocation() {
-            return location;
-        }
-
-        public LogCategory getCategory() {
-            return category;
         }
 
         public Time getTime() {
