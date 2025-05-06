@@ -141,9 +141,7 @@ public class CompletionDialog extends JDialog {
         // Now this will go at the bottom instead of the left
         JPanel imagePanel = new JPanel(new BorderLayout());
         imagePanel.setBackground(PANEL_COLOR);
-        
-        boolean customImageLoaded = false;
-        
+
         // Try to load custom image using ResourceLoader
         try {
             ImageIcon customIcon = ResourceLoader.loadImage(CUSTOM_IMAGE_PATH);
@@ -162,7 +160,6 @@ public class CompletionDialog extends JDialog {
                 imageLabel.setHorizontalAlignment(JLabel.CENTER); // Center the image
                 imageLabel.setBorder(null); // Remove any borders on the image label
                 imagePanel.add(imageLabel, BorderLayout.CENTER);
-                customImageLoaded = true;
             }
         } catch (Exception e) {
             System.err.println("Error loading custom completion image: " + e.getMessage());

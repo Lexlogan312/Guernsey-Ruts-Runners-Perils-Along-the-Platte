@@ -236,9 +236,6 @@ public class Market {
                 "$" + AMMUNITION_PRICE
         };
 
-        // Average price for wagon parts calculation
-        int wagonPartsAvgPrice = (WHEEL_PRICE + AXLE_PRICE + TONGUE_PRICE + WAGON_BOW_PRICE) / 4;
-
         for (int i = 0; i < items.length; i++) {
             gbc.gridy = i + 2;
 

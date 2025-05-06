@@ -33,7 +33,6 @@ public class Main {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
                 System.err.println("Warning: Could not set system look and feel.");
-                e.printStackTrace();
             }
 
             new Main();

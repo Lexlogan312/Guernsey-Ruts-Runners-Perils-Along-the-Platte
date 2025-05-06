@@ -31,7 +31,6 @@ import java.util.List;
 public class GUI extends JPanel {
     // The game controller that manages game state and logic.
     private final GameController gameController;
-    private final TrailLogManager trailLog;
 
     // Map panel components for displaying the trail and landmarks.
     private MapPanel mapPanel;
@@ -70,7 +69,6 @@ public class GUI extends JPanel {
      */
     public GUI(GameController controller) {
         this.gameController = controller;
-        this.trailLog = controller.getTrailLog();
         initializeUI();
         setupEventListeners();
     }
@@ -870,7 +868,6 @@ public class GUI extends JPanel {
             this.map = gameMap; // Store reference to the current map object
 
             // Update game state variables used for drawing
-            String currentLocationName = map.getCurrentLocation();
             distanceTraveled = map.getDistanceTraveled();
             if (map.getLandmarks() != null && !map.getLandmarks().isEmpty()) {
                 totalDistance = map.getLandmarks().get(map.getLandmarks().size()-1).getDistance();

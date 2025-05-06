@@ -8,7 +8,6 @@ public class HistoricalData {
     private ArrayList<String> pioneerFacts;
     private ArrayList<String> trailFacts;
     private ArrayList<String> survivalTips;
-    private ArrayList<String> landmarkDescriptions;
     private final Random random;
 
     // Journal tracking structures
@@ -36,23 +35,6 @@ public class HistoricalData {
         viewedTrailFacts = new HashMap<>();
         viewedSurvivalTips = new HashMap<>();
         viewedLandmarkDescriptions = new HashMap<>();
-    }
-
-    // Methods to add custom historical data
-    public void addPioneerFact(String fact) {
-        pioneerFacts.add(fact);
-    }
-
-    public void addTrailFact(String fact) {
-        trailFacts.add(fact);
-    }
-
-    public void addSurvivalTip(String tip) {
-        survivalTips.add(tip);
-    }
-
-    public void addLandmarkDescription(String description) {
-        landmarkDescriptions.add(description);
     }
 
     private void initializePioneerFacts() {
@@ -106,7 +88,6 @@ public class HistoricalData {
         private final int year;
         private final int month;
         private final int day;
-        private final String trailName;
 
         public JournalEntry(String content, String location, String activity, String type, Time time) {
             this.content = content;
@@ -116,7 +97,6 @@ public class HistoricalData {
             this.year = time.getYear();
             this.month = time.getMonth();
             this.day = time.getDay();
-            this.trailName = time.getTrailName();
         }
 
         public String getContent() { return content; }
@@ -145,7 +125,6 @@ public class HistoricalData {
         public int getYear() { return year; }
         public int getMonth() { return month; }
         public int getDay() { return day; }
-        public String getTrailName() { return trailName; }
 
         @Override
         public String toString() {
@@ -188,11 +167,6 @@ public class HistoricalData {
         return formattedFact;
     }
 
-    // Overload for backward compatibility
-    public String getRandomPioneerFact() {
-        return getRandomPioneerFact("Unknown", "Unknown");
-    }
-
     public String getRandomTrailFact(String currentLocation, String currentActivity) {
         String fact = trailFacts.get(random.nextInt(trailFacts.size()));
         String formattedFact = fact;
@@ -200,21 +174,11 @@ public class HistoricalData {
         return formattedFact;
     }
 
-    // Overload for backward compatibility
-    public String getRandomTrailFact() {
-        return getRandomTrailFact("Unknown", "Unknown");
-    }
-
     public String getRandomSurvivalTip(String currentLocation, String currentActivity) {
         String tip = survivalTips.get(random.nextInt(survivalTips.size()));
         String formattedTip = "Survival Tips: \n" + tip;
         trackFactPresentation(tip, "Survival Tip", currentLocation, currentActivity);
         return formattedTip;
-    }
-
-    // Overload for backward compatibility
-    public String getRandomSurvivalTip() {
-        return getRandomSurvivalTip("Unknown", "Unknown");
     }
 
     // Modified general method with tracking
@@ -230,11 +194,6 @@ public class HistoricalData {
             default:
                 return null;
         }
-    }
-
-    // Overload for backward compatibility
-    public String getRandomHistoricalData() {
-        return getRandomHistoricalData("Unknown", "Unknown");
     }
 
     // Modified contextual method with tracking
@@ -318,11 +277,6 @@ public class HistoricalData {
 
     // Journal retrieval methods
 
-    // Get all journal entries
-    public ArrayList<JournalEntry> getAllJournalEntries() {
-        return journalEntries;
-    }
-
     // Get entries by type
     public ArrayList<JournalEntry> getEntriesByType(String type) {
         ArrayList<JournalEntry> filteredEntries = new ArrayList<>();
@@ -339,17 +293,6 @@ public class HistoricalData {
         ArrayList<JournalEntry> filteredEntries = new ArrayList<>();
         for (JournalEntry entry : journalEntries) {
             if (entry.getLocation().equalsIgnoreCase(location)) {
-                filteredEntries.add(entry);
-            }
-        }
-        return filteredEntries;
-    }
-
-    // Get entries by activity
-    public ArrayList<JournalEntry> getEntriesByActivity(String activity) {
-        ArrayList<JournalEntry> filteredEntries = new ArrayList<>();
-        for (JournalEntry entry : journalEntries) {
-            if (entry.getActivity().equalsIgnoreCase(activity)) {
                 filteredEntries.add(entry);
             }
         }
@@ -378,7 +321,7 @@ public class HistoricalData {
     // Get percentage of all facts viewed
     public double getPercentageOfFactsViewed() {
         int totalFacts = pioneerFacts.size() + trailFacts.size() +
-                survivalTips.size() + landmarkDescriptions.size();
+                survivalTips.size();
         int viewedFacts = getUniqueFactsViewedCount();
 
         if (totalFacts == 0) return 0.0;

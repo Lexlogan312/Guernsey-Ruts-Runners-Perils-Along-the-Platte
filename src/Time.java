@@ -170,10 +170,6 @@ public class Time {
         return day;
     }
 
-    public void setDay(int day) {
-        this.day = day;
-    }
-
     /**
      * Gets the total number of days that have passed since the start of the game.
      * This counter is incremented each time advanceDay() is called.

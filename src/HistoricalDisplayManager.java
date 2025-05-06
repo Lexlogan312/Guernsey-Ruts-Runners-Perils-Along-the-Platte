@@ -44,73 +44,6 @@ public class HistoricalDisplayManager {
     }
 
     /**
-     * Update just the current activity, keeping the current location
-     * @param activity Current activity (e.g., "travel", "rest", "hunt", etc.)
-     */
-    public void updateActivity(String activity) {
-        if (activity != null && !activity.isEmpty()) {
-            this.currentActivity = activity;
-        }
-    }
-
-    /**
-     * Get a formatted version of the latest historical fact for display in the UI
-     * @return Formatted historical fact as HTML or rich text for UI display
-     */
-    public String getLatestHistoricalFactForDisplay() {
-        // Get the latest historical fact from the trail log
-        List<TrailLogManager.LogEntry> historicalEntries =
-                trailLog.getEntriesByCategory(TrailLogManager.LogCategory.HISTORICAL_FACT);
-
-        if (historicalEntries.isEmpty()) {
-            return ""; // No historical facts logged yet
-        }
-
-        TrailLogManager.LogEntry latestEntry = historicalEntries.getLast();
-
-        // Format it for display
-        return "<html><div style='width: 300px; padding: 10px; background-color: #f7f3e9; border: 1px solid #d2b48c;'>" +
-                "<h3 style='color: #8b4513; margin-top: 0;'>Historical Note</h3>" +
-                "<p style='font-style: italic;'>" + latestEntry.getMessage() + "</p>" +
-                "<p style='color: #666; text-align: right; margin-bottom: 0;'>" + latestEntry.getFormattedDate() + "</p>" +
-                "</div></html>";
-    }
-
-    /**
-     * Get a random historical fact for a specific category
-     * This is useful for displaying information in a help screen or tutorial
-     * @param category The category of fact to retrieve
-     * @return A formatted historical fact
-     */
-    public String getRandomFactByType(String category) {
-        String fact = switch (category.toLowerCase()) {
-            case "pioneer" -> historicalData.getRandomPioneerFact(currentLocation, currentActivity);
-            case "trail" -> historicalData.getRandomTrailFact(currentLocation, currentActivity);
-            case "survival" -> historicalData.getRandomSurvivalTip(currentLocation, currentActivity);
-            default -> historicalData.getRandomHistoricalData(currentLocation, currentActivity);
-        };
-
-        // Log the fact in the trail log
-        trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
-
-        // Format for display
-        return fact;
-    }
-
-    /**
-     * Get a location-specific historical fact
-     * @return A formatted location-specific fact
-     */
-    public String getLocationSpecificFact() {
-        String fact = historicalData.getLocationSpecificData(currentLocation);
-
-        // Log the fact in the trail log with the current activity
-        trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
-
-        return fact;
-    }
-
-    /**
      * Get contextual historical information based on current activity
      * @return A formatted contextual historical fact
      */
@@ -122,46 +55,6 @@ public class HistoricalDisplayManager {
         String fact = historicalData.getContextualHistoricalData(activity, currentLocation);
 
         // Log the fact in the trail log
-        trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
-
-        return fact;
-    }
-
-    /**
-     * Get all historical facts for a specific category as a formatted report
-     * This is useful for the player to browse through all facts they've encountered
-     * @param category The category to retrieve
-     * @return A formatted report of all facts in the category
-     */
-    public String getHistoricalReport(TrailLogManager.LogCategory category) {
-        List<TrailLogManager.LogEntry> entries = trailLog.getEntriesByCategory(category);
-
-        if (entries.isEmpty()) {
-            return "No historical information has been recorded in this category yet.";
-        }
-
-        StringBuilder report = new StringBuilder();
-        report.append("==== Historical Information ====\n\n");
-
-        for (TrailLogManager.LogEntry entry : entries) {
-            report.append(entry.getFormattedDate()).append(":\n");
-            report.append(entry.getMessage()).append("\n\n");
-        }
-
-        return report.toString();
-    }
-
-    /**
-     * Create a popup notification for a new historical fact
-     * @param fact The historical fact to display
-     * @return A formatted notification for display in a popup
-     */
-    public String createHistoricalFactPopup(String fact) {
-        // Make sure we're using a valid activity value
-        String activity = (currentActivity != null && !currentActivity.isEmpty()) ? 
-                         currentActivity : "general";
-                         
-        // Log the fact in the trail log with proper location and activity
         trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
 
         return fact;
@@ -239,32 +132,6 @@ public class HistoricalDisplayManager {
 
         StringBuilder report = new StringBuilder();
         report.append("==== Today's Journal Entries ====\n\n");
-
-        for (HistoricalData.JournalEntry entry : entries) {
-            report.append("Location: ").append(entry.getLocation()).append("\n");
-            report.append("Activity: ").append(entry.getActivity()).append("\n");
-            report.append("Type: ").append(entry.getType()).append("\n\n");
-            report.append(entry.getContent()).append("\n\n");
-            report.append("----------------------------\n\n");
-        }
-
-        return report.toString();
-    }
-
-    /**
-     * Get journal entries for a specific date
-     * @param date The date to retrieve journal entries for
-     * @return A formatted string of journal entries for the specified date
-     */
-    public String getJournalByDate(Time date) {
-        List<HistoricalData.JournalEntry> entries = historicalData.getEntriesByDate(date);
-
-        if (entries.isEmpty()) {
-            return "No historical information has been recorded for this date.";
-        }
-
-        StringBuilder report = new StringBuilder();
-        report.append("==== Journal Entries for ").append(date.getMonthName()).append(" ").append(date.getDay()).append(", ").append(date.getYear()).append(" ====\n\n");
 
         for (HistoricalData.JournalEntry entry : entries) {
             report.append("Location: ").append(entry.getLocation()).append("\n");

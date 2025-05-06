@@ -30,8 +30,6 @@ public class FontManager {
      * Registers the loaded fonts with the graphics environment for system-wide availability.
      * 
      * @throws Exception if the regular font fails to load
-     * @throws SecurityException if font registration is not allowed
-     * @throws FontFormatException if the font file is corrupted or in an unsupported format
      */
     public static void loadCustomFonts() {
         try {
