@@ -1,10 +1,22 @@
+/**
+ * HistoricalDisplayManager Class of the Perils Along the Platte Game
+ * Formats and presents historical data for display in the game interface.
+ * 
+ * This class handles:
+ * - Formatting historical facts and journal entries for UI display
+ * - Contextual presentation of historical information based on game state
+ * - Generation of journal reports filtered by location, fact type, or date
+ * - Creation of knowledge summary reports to track player progress
+ * - Coordination between historical data and trail log systems
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file HistoricalDisplayManager.java
+ */
+
 import java.util.List;
 
-/**
- * A utility class to manage the display of historical data in the game UI.
- * This helps with formatting and displaying historical facts in a UI-friendly way.
- * Enhanced to work with the journal tracking system in HistoricalData.
- */
 public class HistoricalDisplayManager {
     private final HistoricalData historicalData;
     private final TrailLogManager trailLog;

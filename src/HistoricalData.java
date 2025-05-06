@@ -1,4 +1,20 @@
-// First, let's create a class to store our historical data
+/**
+ * HistoricalData Class of the Perils Along the Platte Game
+ * Manages historical facts, survival tips, and journal entries for the game.
+ * 
+ * This class handles:
+ * - Storage and retrieval of historical facts about pioneers and the trail
+ * - Tracking of survival tips that players can discover
+ * - Management of a journal system to record player discoveries
+ * - Context-sensitive historical information based on location and activity
+ * - Progress tracking of historical knowledge gained during gameplay
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file HistoricalData.java
+ */
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;

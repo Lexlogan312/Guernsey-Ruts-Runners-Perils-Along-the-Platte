@@ -1,10 +1,22 @@
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Manages the trail log entries and historical notes for the game.
- * This class helps keep track of all updates that occur during the journey.
+ * TrailLogManager Class of the Perils Along the Platte Game
+ * Manages the trail log entries and event records during the journey.
+ * 
+ * This class handles:
+ * - Creation and storage of log entries for all game events
+ * - Categorization of events by type (travel, rest, hunt, etc.)
+ * - Tracking of player actions and game events with timestamps
+ * - Maintenance of a chronological record of the journey
+ * - Support for historical and journal features
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file TrailLogManager.java
  */
+
+import java.util.ArrayList;
+
 public class TrailLogManager {
     private ArrayList<LogEntry> trailLog;
     private int maxEntries;
