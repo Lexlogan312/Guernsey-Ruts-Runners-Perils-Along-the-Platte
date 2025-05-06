@@ -1,9 +1,3 @@
-import javax.swing.*;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import java.awt.*;
-
 /**
  * CompletionDialog Class of the Perils Along the Platte Game
  * A dialog that appears when the player successfully completes their journey west.
@@ -11,13 +5,19 @@ import java.awt.*;
  * - Journey completion message
  * - Travel statistics (days, distance, arrival date)
  * - Historical context about life after the journey
- * - Visual elements (custom image or drawn wagon scene)
  *
  * @author Alex Randall and Chase McCluskey
  * @version 1.0
  * @date 05/06/2025
  * @file CompletionDialog.java
  */
+
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import java.awt.*;
+
 public class CompletionDialog extends JDialog {
     
     // UI Colors for western theme
@@ -56,12 +56,7 @@ public class CompletionDialog extends JDialog {
      * - Title display with success message
      * - Journey statistics (days, distance, date)
      * - Historical context about pioneer life
-     * - Victory image (custom or drawn)
-     * - Close button
-     * 
-     * The layout uses BorderLayout for main organization with nested panels
-     * for specific content areas. All components use western-themed styling.
-     * 
+     *
      * @param destination The final destination reached
      * @param days The number of days traveled
      * @param distance The distance covered in miles
@@ -171,69 +166,6 @@ public class CompletionDialog extends JDialog {
             }
         } catch (Exception e) {
             System.err.println("Error loading custom completion image: " + e.getMessage());
-        }
-        
-        // If no custom image, use the drawn wagon
-        if (!customImageLoaded) {
-            // Create a sunset scene with wagon
-            JPanel successPanel = new JPanel() {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    super.paintComponent(g);
-                    Graphics2D g2d = (Graphics2D) g;
-                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    
-                    int width = getWidth();
-                    int height = getHeight();
-                    
-                    // Sky gradient (sunset)
-                    GradientPaint skyGradient = new GradientPaint(
-                        0, 0, new Color(255, 200, 100),
-                        0, height/2, new Color(255, 100, 50)
-                    );
-                    g2d.setPaint(skyGradient);
-                    g2d.fillRect(0, 0, width, height/2);
-                    
-                    // Ground
-                    g2d.setColor(new Color(120, 100, 40));
-                    g2d.fillRect(0, height/2, width, height/2);
-                    
-                    // Sun
-                    g2d.setColor(new Color(255, 200, 0));
-                    g2d.fillOval(width/2 - 20, height/4 - 20, 40, 40);
-                    
-                    // Mountain silhouettes
-                    g2d.setColor(new Color(80, 60, 30));
-                    int[] xPoints = {0, width/4, width/2, 3*width/4, width};
-                    int[] yPoints = {height/2, height/3, height/2 - 20, height/3 + 10, height/2};
-                    g2d.fillPolygon(xPoints, yPoints, 5);
-                    
-                    // Draw a simple wagon
-                    int wagonWidth = 60;
-                    int wagonHeight = 30;
-                    int wagonX = width/2 - wagonWidth/2;
-                    int wagonY = height/2 - wagonHeight - 5;
-                    
-                    // Wagon body
-                    g2d.setColor(new Color(139, 69, 19));
-                    g2d.fillRect(wagonX, wagonY, wagonWidth, wagonHeight);
-                    
-                    // Wagon cover
-                    g2d.setColor(new Color(210, 180, 140));
-                    g2d.fillArc(wagonX - 5, wagonY - 20, wagonWidth + 10, 50, 0, 180);
-                    
-                    // Wheels
-                    g2d.setColor(new Color(101, 67, 33));
-                    g2d.fillOval(wagonX + 5, wagonY + wagonHeight - 10, 20, 20);
-                    g2d.fillOval(wagonX + wagonWidth - 25, wagonY + wagonHeight - 10, 20, 20);
-                    g2d.setColor(Color.BLACK);
-                    g2d.drawOval(wagonX + 5, wagonY + wagonHeight - 10, 20, 20);
-                    g2d.drawOval(wagonX + wagonWidth - 25, wagonY + wagonHeight - 10, 20, 20);
-                }
-            };
-            successPanel.setBackground(PANEL_COLOR);
-            successPanel.setPreferredSize(new Dimension(500, 200));
-            imagePanel.add(successPanel, BorderLayout.CENTER);
         }
         
         // Only add the image panel if an image was loaded

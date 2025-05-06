@@ -1,3 +1,18 @@
+/**
+ * TravelSummaryDialog Class of the Perils Along the Platte Game
+ *
+ * A dialog that displays a comprehensive summary of the player's journey to Fort Kearny, including:
+ * - Journey statistics (days traveled, distance covered)
+ * - Resource consumption details
+ * - Landmarks encountered
+ * - Significant events
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file TravelSummaryDialog.java
+ */
+
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -7,20 +22,6 @@ import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * TravelSummaryDialog Class of the Perils Along the Platte Game
- * 
- * A dialog that displays a comprehensive summary of the player's journey to Fort Kearny, including:
- * - Journey statistics (days traveled, distance covered)
- * - Resource consumption details
- * - Landmarks encountered
- * - Significant events
- * 
- * @author Alex Randall and Chase McCluskey
- * @version 1.0
- * @date 05/06/2025
- * @file TravelSummaryDialog.java
- */
 public class TravelSummaryDialog extends JDialog {
     private final List<String> events;
     private final List<Landmark> landmarksPassed;

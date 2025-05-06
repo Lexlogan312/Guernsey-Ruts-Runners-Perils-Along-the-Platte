@@ -14,6 +14,7 @@
  * @date 05/06/2025
  * @file Main.java
  */
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -73,8 +74,7 @@ public class Main {
         // Initialize game resources and components
         FontManager.loadCustomFonts();
         GameController gameController = new GameController();
-        TrailLogManager trailLogManager = new TrailLogManager(null);
-        GUI gameGUI = new GUI(gameController, trailLogManager);
+        GUI gameGUI = new GUI(gameController);
         frame.getContentPane().add(gameGUI);
 
         // Configure window properties

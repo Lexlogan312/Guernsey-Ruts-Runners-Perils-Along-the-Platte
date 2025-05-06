@@ -11,6 +11,7 @@
  * @date 05/06/2025
  * @file HealthDialog.java
  */
+
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -18,11 +19,12 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 
 public class HealthDialog extends JDialog {
-    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
-    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
-    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
-    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
+    // UI Colors for western theme
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown for borders
+    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown for headers
 
     private final Inventory inventory;
     private final JFrame parent;
@@ -191,7 +193,8 @@ public class HealthDialog extends JDialog {
         JTextArea oxenTextArea = new JTextArea(oxenStatus.toString());
         oxenTextArea.setEditable(false);
         oxenTextArea.setBackground(PANEL_COLOR);
-        oxenTextArea.setFont(new Font("Serif", Font.PLAIN, 14));
+        oxenTextArea.setFont(FontManager.getWesternFont(14f));
+        oxenTextArea.setForeground(TEXT_COLOR);
         oxenHealthPanel.add(oxenTextArea, BorderLayout.CENTER);
 
         // Add the health sections panel to a scroll pane
@@ -349,7 +352,17 @@ public class HealthDialog extends JDialog {
         ));
         
         button.addActionListener(e -> {
+            // Consume the spare part first
+            switch(partName) {
+                case "Wheel": inventory.useWheels(1); break;
+                case "Axle": inventory.useAxles(1); break;
+                case "Tongue": inventory.useTongues(1); break;
+                case "Bow": inventory.useWagonBows(1); break;
+            }
+            
+            // Then repair the part
             inventory.repairPart(partName);
+            
             // Update the dialog
             dispose();
             new HealthDialog(parent, player, inventory).setVisible(true);

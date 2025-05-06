@@ -1,19 +1,3 @@
-import javax.swing.*;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.text.DefaultCaret;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 /**
  * GUI Class of the Perils Along the Platte Game
  * Implements the user interface for the Oregon Trail game, providing a visual representation
@@ -29,6 +13,21 @@ import java.util.List;
  * @date 05/06/2025
  * @file GUI.java
  */
+
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.text.DefaultCaret;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 public class GUI extends JPanel {
     // The game controller that manages game state and logic.
     private final GameController gameController;
@@ -56,11 +55,12 @@ public class GUI extends JPanel {
     private JPanel outputPanel;
     private JTextArea outputTextArea;
 
-    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
-    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
-    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
-    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
+    // UI Colors for western theme
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown for borders
+    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown for headers
 
     /**
      * Constructs a new GUI instance with the specified game controller.
@@ -68,9 +68,9 @@ public class GUI extends JPanel {
      *
      * @param controller The game controller that manages game state and logic
      */
-    public GUI(GameController controller, TrailLogManager trailLog) {
+    public GUI(GameController controller) {
         this.gameController = controller;
-        this.trailLog = trailLog;
+        this.trailLog = controller.getTrailLog();
         initializeUI();
         setupEventListeners();
     }
@@ -325,7 +325,7 @@ public class GUI extends JPanel {
         // Add text area to a scroll pane
         JScrollPane outputScrollPane = new JScrollPane(outputTextArea);
         outputScrollPane.setBorder(titledBorder);
-        
+
         outputPanel.add(outputScrollPane, BorderLayout.CENTER);
     }
 
@@ -389,7 +389,7 @@ public class GUI extends JPanel {
                 System.err.println("GUI Update skipped: GameController components not fully initialized.");
                 return;
             }
-            
+
             // Update status labels
             updateStatusLabels();
 
@@ -479,7 +479,7 @@ public class GUI extends JPanel {
         statusLabels.get("Health").setText(player.getHealthStatus());
         statusLabels.get("Food").setText(inventory.getFood() + " lbs");
         statusLabels.get("Oxen Health").setText(inventory.getOxenHealth() + "%");
-        
+
         // Add job information without prefix or bonus descriptions
         Job playerJob = player.getJob();
         if (playerJob != null) {
@@ -554,11 +554,11 @@ public class GUI extends JPanel {
         // Money info panel
         JPanel moneyPanel = new JPanel(new GridLayout(2, 1, 0, 5));
         moneyPanel.setBackground(PANEL_COLOR);
-        
+
         JLabel moneyLabel = new JLabel("Money: $" + player.getMoney(), JLabel.CENTER);
         moneyLabel.setFont(FontManager.getBoldWesternFont(16));
         moneyLabel.setForeground(TEXT_COLOR);
-        
+
         // Add job information with bonus
         Job playerJob = player.getJob();
         String jobDisplayText = "Job: ";
@@ -566,7 +566,7 @@ public class GUI extends JPanel {
             // Convert UPPERCASE to Regular Case
             String jobName = playerJob.toString();
             jobName = jobName.charAt(0) + jobName.substring(1).toLowerCase();
-            
+
             // Add job name without special symbols
             String jobBonusText = getJobBonusDescription(playerJob);
             if (jobBonusText != null && !jobBonusText.isEmpty()) {
@@ -577,14 +577,14 @@ public class GUI extends JPanel {
         } else {
             jobDisplayText += "None";
         }
-        
+
         JLabel jobLabel = new JLabel(jobDisplayText, JLabel.CENTER);
         jobLabel.setFont(FontManager.getBoldWesternFont(14));
         jobLabel.setForeground(TEXT_COLOR);
-        
+
         moneyPanel.add(moneyLabel);
         moneyPanel.add(jobLabel);
-        
+
         contentPanel.add(moneyPanel, BorderLayout.NORTH);
 
         // Inventory items panel (using GridLayout for organization)
@@ -677,7 +677,9 @@ public class GUI extends JPanel {
         journalTextArea.setFont(FontManager.getWesternFont(12f));
         journalTextArea.setForeground(TEXT_COLOR);
         journalTextArea.setBackground(BACKGROUND_COLOR);
-        //journalTextArea.setLineWrap(true);
+        journalTextArea.setLineWrap(true);
+        journalTextArea.setWrapStyleWord(true);
+        journalTextArea.setCaretPosition(journalTextArea.getDocument().getLength());
         journalTextArea.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(ACCENT_COLOR, 1),
                 new EmptyBorder(10, 10, 10, 10)
@@ -737,9 +739,9 @@ public class GUI extends JPanel {
      */
     private void showHealthDialog() {
         HealthDialog healthDialog = new HealthDialog(
-            (Frame) SwingUtilities.getWindowAncestor(this),
-            gameController.getPlayer(),
-            gameController.getInventory()
+                (Frame) SwingUtilities.getWindowAncestor(this),
+                gameController.getPlayer(),
+                gameController.getInventory()
         );
         healthDialog.setVisible(true);
     }
@@ -818,7 +820,7 @@ public class GUI extends JPanel {
             try {
                 // Use ResourceLoader to load the map image
                 ImageIcon icon = ResourceLoader.loadImage("images/Pixel Map.png");
-                
+
                 if (icon != null && icon.getImageLoadStatus() == MediaTracker.COMPLETE && icon.getIconWidth() > 0) {
                     mapImage = icon.getImage();
                     originalMapWidth = icon.getIconWidth();
@@ -1010,13 +1012,13 @@ public class GUI extends JPanel {
                 // Center the map drawing area within the panel
                 int x = (panelWidth - drawWidth) / 2;
                 int y = (panelHeight - drawHeight) / 2;
-                
+
                 // Ensure consistent pixel positioning
                 x = Math.max(0, x);
                 y = Math.max(0, y);
-                
+
                 mapDrawArea.setBounds(x, y, drawWidth, drawHeight);
-                
+
                 // After calculating a new draw area, ensure we recalculate landmark positions
                 updateLandmarkScreenPositions();
             }
@@ -1152,7 +1154,7 @@ public class GUI extends JPanel {
 
             g2d.setStroke(TRAIL_STROKE);
             g2d.setColor(TRAIL_COLOR);
-            
+
             Point prevPoint = null;
             List<Landmark> landmarks = map.getLandmarks();
             boolean foundStart = false; // Flag to indicate if we've found Fort Kearny or later
@@ -1291,9 +1293,9 @@ public class GUI extends JPanel {
             int textHeight = fm.getHeight();
             int ascent = fm.getAscent();
             int padding = 4; // Padding around text
-            
+
             int textX, textY;
-            
+
             // Use custom position if provided
             Point customLabelPos = scaleImagePointToScreen(new Point(landmark.getLabelX(), landmark.getLabelY()));
             textX = customLabelPos.x;
@@ -1338,7 +1340,7 @@ public class GUI extends JPanel {
 
                 if (icon != null && icon.getImageLoadStatus() == MediaTracker.COMPLETE && icon.getIconWidth() > 0) {
                     Image wagonImage = icon.getImage();
-                    
+
                     // Scale the wagon icon
                     int wagonSize = 75; // Smaller icon size
 
@@ -1348,13 +1350,7 @@ public class GUI extends JPanel {
                     throw new Exception("Failed to load wagon icon using ResourceLoader");
                 }
             } catch (Exception e) {
-                // Fallback to simple wagon shape if image fails to load
-                System.err.println("Error loading wagon icon, drawing fallback: " + e.getMessage());
-                g.setColor(new Color(139, 69, 19)); // Brown
-                g.fillRect(x - 10, y - 4, 20, 8); // Wagon body
-                g.setColor(Color.BLACK);
-                g.fillOval(x - 8, y + 4, 6, 6); // Left wheel
-                g.fillOval(x + 2, y + 4, 6, 6); // Right wheel
+                System.err.println("Error loading wagon icon: " + e.getMessage());
             }
         }
 
@@ -1444,10 +1440,7 @@ public class GUI extends JPanel {
          * @param position The screen position for the tooltip
          */
         private void drawTooltip(Graphics2D g2d, String text, Point position) {
-            // (Keep the existing drawTooltip logic from the previous version)
-            // ... (text wrapping, bounds calculation, drawing background/text) ...
-            // Enable antialiasing
-            setupGraphics2D(g2d); // Use helper for rendering hints
+            setupGraphics2D(g2d);
 
             g2d.setFont(TOOLTIP_FONT);
             FontMetrics fm = g2d.getFontMetrics();

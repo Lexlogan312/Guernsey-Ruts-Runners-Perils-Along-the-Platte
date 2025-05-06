@@ -9,6 +9,7 @@
  * @date 05/06/2025
  * @file Market.java
  */
+
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -76,6 +77,7 @@ public class Market {
     // Label for displaying insufficient supplies warning
     private JLabel insufficientSuppliesLabel;
 
+    // UI Colors for western theme
     private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
     private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
     private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text

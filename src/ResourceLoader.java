@@ -1,9 +1,3 @@
-import javax.swing.*;
-import java.awt.*;
-import java.io.InputStream;
-import java.net.URL;
-import java.io.File;
-
 /**
  * ResourceLoader Class of the Perils Along the Platte Game
  * A utility class for loading game resources such as images and fonts.
@@ -15,6 +9,13 @@ import java.io.File;
  * @date 05/06/2025
  * @file ResourceLoader.java
  */
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.InputStream;
+import java.net.URL;
+import java.io.File;
+
 public class ResourceLoader {
     
     // Array of base paths to search for resources

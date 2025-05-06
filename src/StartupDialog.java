@@ -1,13 +1,7 @@
-import javax.swing.*;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import java.awt.*;
-
 /**
  * StartupDialog Class of the Perils Along the Platte Game
  * A multi-tab dialog that collects player information and game settings at startup.
- * 
+ *
  * The dialog consists of five tabs:
  * 1. Introduction: Game overview and welcome message
  * 2. Character: Player name, gender, and occupation selection
@@ -20,6 +14,13 @@ import java.awt.*;
  * @date 05/06/2025
  * @file StartupDialog.java
  */
+
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import java.awt.*;
+
 public class StartupDialog extends JDialog {
     // The game controller instance for managing game state
     private final GameController gameController;
@@ -61,12 +62,13 @@ public class StartupDialog extends JDialog {
     // Radio buttons for departure month selection
     private final JRadioButton[] monthButtons = new JRadioButton[5];
 
-    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
-    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
-    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
-    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
-    
+    // UI Colors for western theme
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown for borders
+    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown for headers
+
     /**
      * Constructs a new StartupDialog.
      * 
@@ -599,7 +601,7 @@ public class StartupDialog extends JDialog {
         button.setFocusPainted(false);
         button.setBorder(new CompoundBorder(
             new LineBorder(ACCENT_COLOR, 2),
-            new EmptyBorder(5, 25, 5, 25)
+            new EmptyBorder(5, 10, 5, 10)
         ));
         return button;
     }

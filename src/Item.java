@@ -8,6 +8,7 @@
  * @date 05/06/2025
  * @file Item.java
  */
+
 public class Item {
     private final String name;
 
@@ -66,9 +67,5 @@ public class Item {
      */
     public int getWeight() {
         return weight;
-    }
-
-    public int reduceWeight(int amount){
-        return weight - amount;
     }
 }

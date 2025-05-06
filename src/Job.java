@@ -8,6 +8,7 @@
  * @date 05/06/2025
  * @file Job.java
  */
+
 public enum Job {
     /** 
      * Farmer: Specializes in food management and spoilage reduction.

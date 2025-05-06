@@ -1,5 +1,3 @@
-import java.awt.*;
-
 /**
  * FontManager Class of the Perils Along the Platte Game
  * Manages custom western-themed fonts for the game interface.
@@ -12,6 +10,9 @@ import java.awt.*;
  * @date 05/06/2025
  * @file FontManager.java
  */
+
+import java.awt.*;
+
 public class FontManager {
     //Regular western font for general text display
     public static Font WESTERN_FONT;

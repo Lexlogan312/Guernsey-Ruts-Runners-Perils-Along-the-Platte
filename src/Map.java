@@ -25,62 +25,23 @@
  * @date 05/06/2025
  * @file Map.java
  */
+
 import java.util.ArrayList;
 
-/**
- * Represents the game map, landmarks, and player position.
- * This class manages all geographical aspects of the game, including:
- * - Trail selection and initialization
- * - Landmark tracking and progression
- * - River crossing events
- * - Distance calculations
- * - Historical accuracy
- *
- * CHANGES:
- * - Added resetRiverCrossing method for better event management
- * - Enhanced river crossing tracking system
- * - Improved landmark progression logic
- */
 public class Map {
-    /**
-     * The selected trail choice (1=Oregon, 2=California, 3=Mormon).
-     * Determines the starting point, landmarks, and available routes.
-     * Each trail offers unique historical context and challenges.
-     */
+    // The selected trail choice (1=Oregon, 2=California, 3=Mormon)
     private final int trailChoice;
 
-    /**
-     * List of landmarks along the selected trail.
-     * Each landmark contains:
-     * - Historical name and description
-     * - Distance from start
-     * - Coordinates for map display
-     * - Historical significance
-     */
+    // List of landmarks along the selected trail
     private final ArrayList<Landmark> landmarks;
 
-    /**
-     * Current position in the landmark list.
-     * Tracks the last passed landmark and determines
-     * the next available landmark for progression.
-     */
+    // Current position in the landmark list
     private int currentLandmarkIndex;
 
-    /**
-     * Total distance traveled on the trail.
-     * Used for:
-     * - Progress tracking
-     * - Event triggering
-     * - Landmark arrival checks
-     * - River crossing detection
-     */
+    // Total distance traveled on the trail
     private int distanceTraveled;
 
-    /**
-     * Flag indicating if a river crossing is pending.
-     * Set when player reaches a river crossing point
-     * and cleared after crossing is completed.
-     */
+    // Flag indicating if a river crossing is pending
     private boolean riverCrossingPending;
 
     /**
@@ -109,18 +70,10 @@ public class Map {
         }
     }
     
-    /**
-     * List of pending river crossings on the trail.
-     * Crossings are added based on historical locations
-     * and triggered when the player reaches their distance.
-     */
+    // List of pending river crossings on the trail
     private final ArrayList<RiverCrossing> pendingRiverCrossings = new ArrayList<>();
 
-    /**
-     * The current active river crossing.
-     * Set when a crossing is triggered and cleared
-     * after the crossing is completed.
-     */
+    // The current active river crossing
     private RiverCrossing currentRiverCrossing;
 
     /**

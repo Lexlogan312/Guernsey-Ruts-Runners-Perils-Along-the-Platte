@@ -11,6 +11,7 @@
  * @date 05/06/2025
  * @file Perils.java
  */
+
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.function.Consumer;
@@ -397,7 +398,6 @@ public class Perils {
                 // (This could be implemented with a temporary player status flag)
                 if (player.getJob() == Job.BLACKSMITH || player.getJob() == Job.CARPENTER || random.nextDouble() < 0.3) {
                     message += "\nYour efforts might prevent future breakdowns.";
-                    // TODO: Add mechanism to slightly reduce future breakdown chance
                 }
                 break;
 

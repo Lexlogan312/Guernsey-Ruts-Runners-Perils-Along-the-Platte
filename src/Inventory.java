@@ -8,6 +8,7 @@
  * @date 05/06/2025
  * @file Inventory.java
  */
+
 import java.util.ArrayList;
 
 public class Inventory {
@@ -22,7 +23,7 @@ public class Inventory {
     private int ammunition;
 
     // Oxen condition
-    private int oxenHealth;
+    private int oxenHealth = 100;
     private int oxenFatigue;
 
     //List of items
@@ -76,7 +77,6 @@ public class Inventory {
         this.wagonBows = 0;
         this.medicine = 0;
         this.ammunition = 0;
-        this.oxenHealth = 100;
         this.oxenFatigue = 0;
         this.items = new ArrayList<>();
     }
@@ -113,21 +113,6 @@ public class Inventory {
      */
     public void consumeFood(int amount) {
         this.food = Math.max(0, this.food - amount);
-    }
-
-    /**
-     * Consumes food from the inventory.
-     * Reduces the food supply by the specified amount, ensuring it never goes below zero.
-     * This method is called during daily food consumption and special events.
-     *
-     * @param amount The amount of food to consume in pounds
-     */
-    public void consumeFood(String foodName, int amount) {
-        for(int i = 0; i < items.size(); i++){
-            if(items.get(i).equals(foodName)){
-                items.get(i).reduceWeight(amount);
-            }
-        }
     }
 
     /**
@@ -354,7 +339,7 @@ public class Inventory {
                 return WAGON_PARTS_BREAKPERCENTAGE[i];
             }
         }
-        return 0;
+        return 100;
     }
     
     /**
@@ -764,5 +749,9 @@ public class Inventory {
             }
         }
         return false;
+    }
+
+    public void setOxenHealth(int health) {
+        this.oxenHealth = Math.max(0, Math.min(100, health));
     }
 }

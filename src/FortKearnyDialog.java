@@ -1,9 +1,3 @@
-import javax.swing.*;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import java.awt.*;
-
 /**
  * FortKearnyDialog Class of the Perils Along the Platte Game
  * A dialog that introduces the player to their journey and provides historical context
@@ -15,17 +9,22 @@ import java.awt.*;
  * @date 05/06/2025
  * @file FortKearnyDialog.java
  */
+
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import java.awt.*;
+
 public class FortKearnyDialog extends JDialog {
     //The game controller instance for managing game state.
     private final GameController gameController;
 
-    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
-
-    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
-
-    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-
-    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
+    // UI Colors for western theme
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown for borders
 
     /**
      * Constructs a new FortKearnyDialog.

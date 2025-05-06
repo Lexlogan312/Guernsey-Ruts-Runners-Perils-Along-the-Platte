@@ -18,6 +18,7 @@
  * @date 05/06/2025
  * @file GameController.java
  */
+
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -86,6 +87,9 @@ public class GameController {
     private final ArrayList<Consumer<String>> messageListeners = new ArrayList<>();
     private final ArrayList<Runnable> gameStateListeners = new ArrayList<>();
 
+    private boolean isTraveling = false;
+    private String currentSpeed = "Normal";
+
     /**
      * Constructs a new GameController with default game state.
      * Initializes core game components with default values that will be
@@ -93,9 +97,6 @@ public class GameController {
      * before player customization.
      */
     public GameController() {
-        Calendar startDate = Calendar.getInstance();
-        startDate.set(1848, Calendar.APRIL, 1);
-
         player = new Player("Player", "Male", job);
         inventory = new Inventory();
         time = new Time(1848, 3);
@@ -104,7 +105,7 @@ public class GameController {
         perils = new Perils(player, inventory, weather, time);
         perils.setMessageListener(this::notifyListeners);
         historicalDataManager = new HistoricalData(time);
-        trailLog = new TrailLogManager(startDate);
+        trailLog = new TrailLogManager(time);
         historicalDisplayManager = new HistoricalDisplayManager(historicalDataManager, trailLog);
     }
 
@@ -241,13 +242,7 @@ public class GameController {
             perils.setMessageListener(this::notifyListeners);
         }
 
-        Calendar actualStartDate = Calendar.getInstance();
-        actualStartDate.set(Calendar.YEAR, 1848);
-        actualStartDate.set(Calendar.MONTH, monthNumber - 1); // Calendar months are 0-based
-        actualStartDate.set(Calendar.DAY_OF_MONTH, 1);
-
-        trailLog.updateGameDate(actualStartDate);
-
+        trailLog.updateGameDate(time);
     }
 
     /**
@@ -537,7 +532,7 @@ public class GameController {
         });
     }
 
-    // --- Main Game Loop Actions (Called by GUI Buttons) ---
+    // Main Game Loop Actions (Called by GUI Buttons)
 
     /** Travel action for one day. */
     public void travel() {
@@ -578,7 +573,7 @@ public class GameController {
         double oxenFatigueFactor = 1.0 - (inventory.getOxenFatigue() / 200.0); // Fatigue reduces speed up to 50%
         adjustedDistance = (int)(adjustedDistance * oxenHealthFactor * oxenFatigueFactor);
 
-        // 🛠 TRAVEL happens first
+        // Travel happens first
         map.travel(adjustedDistance);
         addTravelJournalEntry();
 
@@ -590,15 +585,15 @@ public class GameController {
         // Apply food spoilage
         inventory.applyFoodSpoilage(weather, this);
 
-        // 🛠 Fatigue, Health decrease from normal trail wear
+        // Fatigue, Health decrease from normal trail wear
         player.decreaseHealth(5); // Base fatigue damage per day of travel
 
-        // 🛠 Health-based Risk Warning
+        // Health-based Risk Warning
         if (player.getHealth() <= 30) {
             notifyListeners("Your party is severely weakened. It is recommended to rest soon or risk breakdowns and deaths.");
         }
 
-        // 🛠 Blacksmith Wagon Part Check
+        // Blacksmith Wagon Part Check
         if (player.getJob() == Job.BLACKSMITH) {
             for (int i = 0; i < WAGON_PARTS.length; i++) {
                 int partHealth = inventory.getWagonPartBreakpercentage(WAGON_PARTS[i]);
@@ -608,17 +603,17 @@ public class GameController {
             }
         }
 
-        // 🛠 Random Injury Chance
+        // Random Injury Chance
         if (Math.random() < 0.1) {
             player.decreaseHealth(2);
             notifyListeners("The rough trail caused some minor injuries and fatigue.");
         }
 
-        // 🛠 Daily food consumption
+        // Daily food consumption
         int foodConsumedToday = player.getFamilySize() * 2;
         consumeDailyFood(time.getTotalDays() + 1);
 
-        // 🛠 Spoilage check on random food item
+        // Spoilage check on random food item
         int randomFood = (int)(Math.random() * FOOD_TYPES.length);
         String itemName = inventory.getItem(FOOD_TYPES[randomFood]);
 
@@ -636,7 +631,7 @@ public class GameController {
             }
         }
 
-        // 🛠 Small random injury chance
+        // Small random injury chance
         if (Math.random() < 0.1) {
             player.decreaseHealth(2);
             notifyListeners("The rough trail caused some minor injuries and fatigue.");
@@ -647,7 +642,7 @@ public class GameController {
 
         addTrailUpdate("Traveled " + adjustedDistance + " miles.", TrailLogManager.LogCategory.TRAVEL);
 
-        // 🛠 Advance Day
+        // Advance Day
         advanceDay(true);
 
         // Notify listeners of travel results
@@ -780,7 +775,7 @@ public class GameController {
 
         double baseSuccessChance = 0.6;
 
-        // 🛠 Apply Hunter bonus to success chance
+        // Apply Hunter bonus to success chance
         if (player.getJob() == Job.HUNTER) {
             notifyListeners(player.getName() + " is a hunter, there is 15% higher chance you get a kill shot.");
             baseSuccessChance += 0.15; // 15% bonus to success
@@ -807,7 +802,7 @@ public class GameController {
                 foodGained = 2 + (int)(Math.random() * 4);
             }
 
-            // 🛠 Apply Hunter bonus to food gained
+            // Apply Hunter bonus to food gained
             if (player.getJob() == Job.HUNTER) {
                 notifyListeners(player.getName() + " is a hunter, you gained 15% more food.");
                 foodGained = (int)(foodGained * 1.15); // 15% more food
@@ -888,6 +883,7 @@ public class GameController {
 
         // Log this journal viewing in the trail log
         trailLog.addLogEntry("Viewed journal (" + displayMode + ") at " + currentLocation,
+                currentLocation,
                 TrailLogManager.LogCategory.JOURNAL);
 
         return journalContent;
@@ -1005,11 +1001,12 @@ public class GameController {
         // Log the event
         trailLog.addLogEntry(
                 "Some of your " + foodName + " has spoiled." + "\n Time: " + time.getDay(),
+                map.getCurrentLocation(),
                 TrailLogManager.LogCategory.FOOD_SPOILAGE
         );
 
         // Remove the spoiled food from inventory or reduce quantity
-        inventory.consumeFood(foodName, 1);
+        inventory.consumeFood(1);
 
         // Notify the player
         notifyListeners(
@@ -1032,7 +1029,9 @@ public class GameController {
         // Log the event
         trailLog.addLogEntry(
                 "Your wagon's " + partName + " has broken." + "\nTime: " +
-                time.getDay(), TrailLogManager.LogCategory.PART_BREAKAGE
+                time.getDay(),
+                map.getCurrentLocation(),
+                TrailLogManager.LogCategory.PART_BREAKAGE
         );
 
         // Apply gameplay effects
@@ -1109,8 +1108,9 @@ public class GameController {
      * @param partName The name of the part that needs repair
      */
     private void showRepairDialog(String partName) {
-        RepairDialog dialog = new RepairDialog("Engine", this, inventory);
-        dialog.showDialog();
+        // Use HealthDialog's repair functionality instead
+        HealthDialog healthDialog = new HealthDialog(findVisibleFrame(), player, inventory);
+        healthDialog.setVisible(true);
     }
 
     /**
@@ -1119,50 +1119,46 @@ public class GameController {
      * @param partName The name of the part to repair
      */
     public void repairPart(String partName) {
-        // Find the index of the part in the WAGON_PARTS array
-        int partIndex = -1;
-        for (int i = 0; i < WAGON_PARTS.length; i++) {
-            if (WAGON_PARTS[i].equals(partName)) {
-                partIndex = i;
-                break;
-            }
+        // Check if we have the part in inventory first
+        boolean hasPart = false;
+        switch(partName) {
+            case "Wheel": hasPart = inventory.getWheels() > 0; break;
+            case "Bow": hasPart = inventory.getWagonBows() > 0; break;
+            case "Tongue": hasPart = inventory.getTongues() > 0; break;
+            case "Axle": hasPart = inventory.getAxles() > 0; break;
         }
 
-        if (partIndex != -1) {
-            // Use the spare part
-            switch(partName){
-                case "Wheel": inventory.useWheels(1); break;
-                case "Bow": inventory.useWagonBows(1);break;
-                case "Tongue": inventory.useTongues(1);break;
-                case "Axle": inventory.useAxles(1);break;
-            }
-            inventory.repairPart(partName);
-
-            // Restore travel capabilities
-            if (partName.equals("Wheel")) {
-                restoreSpeed();
-            } else if (partName.equals("Axle")) {
-                restoreSpeed();
-            } else if (partName.equals("Tongue")) {
-                restoreSpeed();
-            } else if (partName.equals("Bow")) {
-                restoreSpeed();
-            }
-
-            // Log and notify
-            trailLog.addLogEntry(
-                    "You've successfully repaired your wagon's " + partName + "." + "\nTime:" +
-                    time.getDay(), TrailLogManager.LogCategory.REPAIR
-            );
-
-            notifyListeners(
-                    "Repair Complete" +
-                    "You've successfully repaired your wagon's " + partName + "." + "\nTime: " + time.getDay()
-            );
-
-            // Update UI
-            updateGameState();
+        if (!hasPart) {
+            notifyListeners("Cannot repair: No spare " + partName + " available in inventory.");
+            return;
         }
+
+        // Use the spare part
+        switch(partName) {
+            case "Wheel": inventory.useWheels(1); break;
+            case "Bow": inventory.useWagonBows(1); break;
+            case "Tongue": inventory.useTongues(1); break;
+            case "Axle": inventory.useAxles(1); break;
+        }
+
+        inventory.repairPart(partName);
+        restoreSpeed();
+
+        // Log and notify
+        trailLog.addLogEntry(
+                "You've successfully repaired your wagon's " + partName + "." + "\nTime:" +
+                time.getDay(),
+                map.getCurrentLocation(),
+                TrailLogManager.LogCategory.REPAIR
+        );
+
+        notifyListeners(
+                "Repair Complete\n" +
+                "You've successfully repaired your wagon's " + partName + "." + "\nTime: " + time.getDay()
+        );
+
+        // Update UI
+        updateGameState();
     }
 
     public static void reduceSpeed(double multiplier) {
@@ -1445,6 +1441,31 @@ public class GameController {
      * Updates the game state and notifies listeners.
      */
     public void updateGameState() {
+        // Update oxen health based on travel and conditions
+        if (isTraveling) {
+            // Decrease health based on travel speed and terrain
+            int healthDecrease = 0;
+            switch (currentSpeed) {
+                case "Slow": healthDecrease = 1; break;
+                case "Normal": healthDecrease = 2; break;
+                case "Fast": healthDecrease = 3; break;
+            }
+            
+            // Additional decrease based on terrain
+            if (map != null) {
+                String terrain = map.getCurrentLocation();
+                if (terrain.contains("Mountain")) {
+                    healthDecrease += 2;
+                } else if (terrain.contains("River")) {
+                    healthDecrease += 1;
+                }
+            }
+            
+            // Apply health decrease
+            int currentHealth = inventory.getOxenHealth();
+            inventory.setOxenHealth(Math.max(0, currentHealth - healthDecrease));
+        }
+
         notifyGameStateChanged();
     }
 
@@ -1513,11 +1534,28 @@ public class GameController {
     }
 
     private void addTrailUpdate(String message, TrailLogManager.LogCategory category) {
-        trailLog.addLogEntry(message, category);
+        if (message == null || message.trim().isEmpty()) {
+            return; // Skip empty messages
+        }
+        
+        // Get current location
+        String location = map != null ? map.getCurrentLocation() : "Unknown Location";
+        
+        // Add the log entry with location
+        trailLog.addLogEntry(message, location, category);
         notifyListeners(message);
     }
 
     public String reviewTrailJournal() {
         return trailLog.exportTrailJournal();
+    }
+
+    /**
+     * Gets the current trail log manager.
+     * 
+     * @return The TrailLogManager instance
+     */
+    public TrailLogManager getTrailLog() {
+        return trailLog;
     }
 }
