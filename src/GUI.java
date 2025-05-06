@@ -408,10 +408,20 @@ public class GUI extends JPanel {
             inventoryButton.setEnabled(gameRunning); // Always allow viewing inventory if game is running
             tradeButton.setEnabled(canTrade);
             quitButton.setEnabled(true); // Always allow quitting
+            
+            // Journal button should remain enabled even after game ends
+            journalButton.setEnabled(true);
 
             // Update tooltips based on enabled state
             huntButton.setToolTipText(gameRunning ? (hasAmmo ? "Spend a day hunting for food." : "Spend a day hunting (requires ammunition).") : "Game over.");
             tradeButton.setToolTipText(gameRunning ? (canTrade ? "Trade supplies at this location." : "Trade supplies (only available at forts/trading posts).") : "Game over.");
+            
+            // Update journal tooltip based on game state
+            if (gameRunning) {
+                journalButton.setToolTipText("View your journal entries and historical information.");
+            } else {
+                journalButton.setToolTipText("View your journey's historical record.");
+            }
 
             // Force repaint of components that might have changed visually
             // Revalidate might be needed if component sizes/visibility changed drastically
@@ -656,7 +666,17 @@ public class GUI extends JPanel {
     }
 
     private void showJournalPopup() {
-        JDialog journalDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Player's Journal", Dialog.ModalityType.APPLICATION_MODAL);
+        // Create a dialog title that reflects the game state
+        String dialogTitle = "Trail Journal";
+        if (!gameController.isGameRunning()) {
+            if (gameController.getPlayer() != null && gameController.getPlayer().isDead()) {
+                dialogTitle += " - Journey Ended";
+            } else {
+                dialogTitle += " - Journey Complete";
+            }
+        }
+        
+        JDialog journalDialog = new JDialog(SwingUtilities.getWindowAncestor(this), dialogTitle, Dialog.ModalityType.APPLICATION_MODAL);
         journalDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
         JPanel journalPanel = new JPanel(new BorderLayout(10, 10));
@@ -679,7 +699,7 @@ public class GUI extends JPanel {
         journalTextArea.setBackground(BACKGROUND_COLOR);
         journalTextArea.setLineWrap(true);
         journalTextArea.setWrapStyleWord(true);
-        journalTextArea.setCaretPosition(journalTextArea.getDocument().getLength());
+        journalTextArea.setCaretPosition(0); // Start at the top of the journal
         journalTextArea.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(ACCENT_COLOR, 1),
                 new EmptyBorder(10, 10, 10, 10)
