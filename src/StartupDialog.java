@@ -599,7 +599,7 @@ public class StartupDialog extends JDialog {
         button.setFocusPainted(false);
         button.setBorder(new CompoundBorder(
             new LineBorder(ACCENT_COLOR, 2),
-            new EmptyBorder(5, 10, 5, 10)
+            new EmptyBorder(5, 25, 5, 25)
         ));
         return button;
     }

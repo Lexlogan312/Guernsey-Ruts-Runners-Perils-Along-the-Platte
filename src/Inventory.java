@@ -116,6 +116,21 @@ public class Inventory {
     }
 
     /**
+     * Consumes food from the inventory.
+     * Reduces the food supply by the specified amount, ensuring it never goes below zero.
+     * This method is called during daily food consumption and special events.
+     *
+     * @param amount The amount of food to consume in pounds
+     */
+    public void consumeFood(String foodName, int amount) {
+        for(int i = 0; i < items.size(); i++){
+            if(items.get(i).equals(foodName)){
+                items.get(i).reduceWeight(amount);
+            }
+        }
+    }
+
+    /**
      * Gets the current number of oxen in the team.
      * This value represents the total number of oxen available
      * for pulling the wagon, regardless of their condition.
@@ -339,6 +354,7 @@ public class Inventory {
                 return WAGON_PARTS_BREAKPERCENTAGE[i];
             }
         }
+        return 0;
     }
     
     /**
@@ -714,6 +730,7 @@ public class Inventory {
                 return WAGON_PARTS_BROKEN[i];
             }
         }
+        return false;
     }
     
     /**

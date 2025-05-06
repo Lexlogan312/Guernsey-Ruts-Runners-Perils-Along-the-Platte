@@ -67,4 +67,8 @@ public class Item {
     public int getWeight() {
         return weight;
     }
+
+    public int reduceWeight(int amount){
+        return weight - amount;
+    }
 }

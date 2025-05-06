@@ -73,7 +73,8 @@ public class Main {
         // Initialize game resources and components
         FontManager.loadCustomFonts();
         GameController gameController = new GameController();
-        GUI gameGUI = new GUI(gameController);
+        TrailLogManager trailLogManager = new TrailLogManager(null);
+        GUI gameGUI = new GUI(gameController, trailLogManager);
         frame.getContentPane().add(gameGUI);
 
         // Configure window properties
