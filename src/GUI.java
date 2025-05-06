@@ -31,6 +31,7 @@ import java.util.List;
 public class GUI extends JPanel {
     // The game controller that manages game state and logic.
     private final GameController gameController;
+    private final TrailLogManager trailLog;
 
     // Map panel components for displaying the trail and landmarks.
     private MapPanel mapPanel;
@@ -48,6 +49,7 @@ public class GUI extends JPanel {
     private JButton inventoryButton;
     private JButton tradeButton;
     private JButton quitButton;
+    private JButton journalButton;
 
     // Output panel components for game messages.
     private JPanel outputPanel;
@@ -66,8 +68,9 @@ public class GUI extends JPanel {
      *
      * @param controller The game controller that manages game state and logic
      */
-    public GUI(GameController controller) {
+    public GUI(GameController controller, TrailLogManager trailLog) {
         this.gameController = controller;
+        this.trailLog = trailLog;
         initializeUI();
         setupEventListeners();
     }
@@ -247,6 +250,7 @@ public class GUI extends JPanel {
         inventoryButton = createStyledButton("Inventory");
         tradeButton = createStyledButton("Trade");
         quitButton = createStyledButton("Quit");
+        journalButton = createStyledButton("Journal");
 
         // Add buttons horizontally
         controlPanel.add(travelButton);
@@ -255,6 +259,7 @@ public class GUI extends JPanel {
         controlPanel.add(healthButton);
         controlPanel.add(inventoryButton);
         controlPanel.add(tradeButton);
+        controlPanel.add(journalButton);
         controlPanel.add(quitButton);
     }
 
@@ -284,6 +289,7 @@ public class GUI extends JPanel {
             case "Inventory": button.setToolTipText("View your current supplies."); break;
             case "Trade": button.setToolTipText("Trade supplies (only available at forts/trading posts)."); break;
             case "Quit": button.setToolTipText("Exit the game."); break;
+            case "Journal": button.setToolTipText("Exit the journal."); break;
         }
         return button;
     }
@@ -319,7 +325,7 @@ public class GUI extends JPanel {
         // Add text area to a scroll pane
         JScrollPane outputScrollPane = new JScrollPane(outputTextArea);
         outputScrollPane.setBorder(titledBorder);
-        
+
         outputPanel.add(outputScrollPane, BorderLayout.CENTER);
     }
 
@@ -340,6 +346,7 @@ public class GUI extends JPanel {
         inventoryButton.addActionListener(e -> showInventoryDialog());
         tradeButton.addActionListener(e -> showTradeDialog());
         quitButton.addActionListener(e -> confirmQuit());
+        journalButton.addActionListener(e -> showJournalPopup());
     }
 
     /**
@@ -382,7 +389,7 @@ public class GUI extends JPanel {
                 System.err.println("GUI Update skipped: GameController components not fully initialized.");
                 return;
             }
-            
+
             // Update status labels
             updateStatusLabels();
 
@@ -472,7 +479,7 @@ public class GUI extends JPanel {
         statusLabels.get("Health").setText(player.getHealthStatus());
         statusLabels.get("Food").setText(inventory.getFood() + " lbs");
         statusLabels.get("Oxen Health").setText(inventory.getOxenHealth() + "%");
-        
+
         // Add job information without prefix or bonus descriptions
         Job playerJob = player.getJob();
         if (playerJob != null) {
@@ -547,11 +554,11 @@ public class GUI extends JPanel {
         // Money info panel
         JPanel moneyPanel = new JPanel(new GridLayout(2, 1, 0, 5));
         moneyPanel.setBackground(PANEL_COLOR);
-        
+
         JLabel moneyLabel = new JLabel("Money: $" + player.getMoney(), JLabel.CENTER);
         moneyLabel.setFont(FontManager.getBoldWesternFont(16));
         moneyLabel.setForeground(TEXT_COLOR);
-        
+
         // Add job information with bonus
         Job playerJob = player.getJob();
         String jobDisplayText = "Job: ";
@@ -559,7 +566,7 @@ public class GUI extends JPanel {
             // Convert UPPERCASE to Regular Case
             String jobName = playerJob.toString();
             jobName = jobName.charAt(0) + jobName.substring(1).toLowerCase();
-            
+
             // Add job name without special symbols
             String jobBonusText = getJobBonusDescription(playerJob);
             if (jobBonusText != null && !jobBonusText.isEmpty()) {
@@ -570,14 +577,14 @@ public class GUI extends JPanel {
         } else {
             jobDisplayText += "None";
         }
-        
+
         JLabel jobLabel = new JLabel(jobDisplayText, JLabel.CENTER);
         jobLabel.setFont(FontManager.getBoldWesternFont(14));
         jobLabel.setForeground(TEXT_COLOR);
-        
+
         moneyPanel.add(moneyLabel);
         moneyPanel.add(jobLabel);
-        
+
         contentPanel.add(moneyPanel, BorderLayout.NORTH);
 
         // Inventory items panel (using GridLayout for organization)
@@ -648,6 +655,59 @@ public class GUI extends JPanel {
         return label;
     }
 
+    private void showJournalPopup() {
+        JDialog journalDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Player's Journal", Dialog.ModalityType.APPLICATION_MODAL);
+        journalDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        JPanel journalPanel = new JPanel(new BorderLayout(10, 10));
+        journalPanel.setBackground(PANEL_COLOR);
+        journalPanel.setBorder(new CompoundBorder(
+                new LineBorder(ACCENT_COLOR, 2),
+                new EmptyBorder(15, 15, 15, 15)
+        ));
+
+        JLabel titleLabel = new JLabel("Journal Entries", SwingConstants.CENTER);
+        titleLabel.setFont(FontManager.WESTERN_FONT_BOLD.deriveFont(16f));
+        titleLabel.setForeground(TEXT_COLOR);
+        journalPanel.add(titleLabel, BorderLayout.NORTH);
+
+        JTextArea journalTextArea = new JTextArea(15, 40);
+        journalTextArea.setText(gameController.displayJournal("all", null));
+        journalTextArea.setEditable(false);
+        journalTextArea.setFont(FontManager.getWesternFont(12f));
+        journalTextArea.setForeground(TEXT_COLOR);
+        journalTextArea.setBackground(BACKGROUND_COLOR);
+        //journalTextArea.setLineWrap(true);
+        journalTextArea.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(ACCENT_COLOR, 1),
+                new EmptyBorder(10, 10, 10, 10)
+        ));
+
+        JScrollPane scrollPane = new JScrollPane(journalTextArea);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        journalPanel.add(scrollPane, BorderLayout.CENTER);
+
+        JButton closeButton = new JButton("Close");
+        closeButton.setFont(FontManager.WESTERN_FONT_BOLD);
+        closeButton.setBackground(PANEL_COLOR);
+        closeButton.setForeground(TEXT_COLOR);
+        closeButton.setBorder(new CompoundBorder(
+                new LineBorder(ACCENT_COLOR, 2),
+                new EmptyBorder(5, 20, 5, 20)
+        ));
+        closeButton.addActionListener(e -> journalDialog.dispose());
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(PANEL_COLOR);
+        buttonPanel.add(closeButton);
+        journalPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        journalDialog.getContentPane().add(journalPanel);
+        journalDialog.pack();
+        journalDialog.setLocationRelativeTo(this);
+        journalDialog.setVisible(true);
+    }
+
     /**
      * Displays the trading dialog when at a trading post.
      * Shows available items and their prices.
@@ -677,9 +737,9 @@ public class GUI extends JPanel {
      */
     private void showHealthDialog() {
         HealthDialog healthDialog = new HealthDialog(
-            (Frame) SwingUtilities.getWindowAncestor(this),
-            gameController.getPlayer(),
-            gameController.getInventory()
+                (Frame) SwingUtilities.getWindowAncestor(this),
+                gameController.getPlayer(),
+                gameController.getInventory()
         );
         healthDialog.setVisible(true);
     }
@@ -758,7 +818,7 @@ public class GUI extends JPanel {
             try {
                 // Use ResourceLoader to load the map image
                 ImageIcon icon = ResourceLoader.loadImage("images/Pixel Map.png");
-                
+
                 if (icon != null && icon.getImageLoadStatus() == MediaTracker.COMPLETE && icon.getIconWidth() > 0) {
                     mapImage = icon.getImage();
                     originalMapWidth = icon.getIconWidth();
@@ -950,13 +1010,13 @@ public class GUI extends JPanel {
                 // Center the map drawing area within the panel
                 int x = (panelWidth - drawWidth) / 2;
                 int y = (panelHeight - drawHeight) / 2;
-                
+
                 // Ensure consistent pixel positioning
                 x = Math.max(0, x);
                 y = Math.max(0, y);
-                
+
                 mapDrawArea.setBounds(x, y, drawWidth, drawHeight);
-                
+
                 // After calculating a new draw area, ensure we recalculate landmark positions
                 updateLandmarkScreenPositions();
             }
@@ -1092,7 +1152,7 @@ public class GUI extends JPanel {
 
             g2d.setStroke(TRAIL_STROKE);
             g2d.setColor(TRAIL_COLOR);
-            
+
             Point prevPoint = null;
             List<Landmark> landmarks = map.getLandmarks();
             boolean foundStart = false; // Flag to indicate if we've found Fort Kearny or later
@@ -1231,9 +1291,9 @@ public class GUI extends JPanel {
             int textHeight = fm.getHeight();
             int ascent = fm.getAscent();
             int padding = 4; // Padding around text
-            
+
             int textX, textY;
-            
+
             // Use custom position if provided
             Point customLabelPos = scaleImagePointToScreen(new Point(landmark.getLabelX(), landmark.getLabelY()));
             textX = customLabelPos.x;
@@ -1278,7 +1338,7 @@ public class GUI extends JPanel {
 
                 if (icon != null && icon.getImageLoadStatus() == MediaTracker.COMPLETE && icon.getIconWidth() > 0) {
                     Image wagonImage = icon.getImage();
-                    
+
                     // Scale the wagon icon
                     int wagonSize = 75; // Smaller icon size
 
