@@ -130,9 +130,21 @@ public class HistoricalData {
     }
 
     // Method to track when a fact is presented to the user
+    // Modified method to track when a fact is presented to the user
+    // Modified method to track when a fact is presented to the user
     private void trackFactPresentation(String content, String type, String location, String activity) {
-        // Create and add the journal entry
-        JournalEntry entry = new JournalEntry(content, location, activity, type, time);
+        // Create a new Time object representing the current time
+        // Using the constructor that takes year and month
+        Time currentTime = new Time(
+                time.getYear(),
+                time.getMonth()
+        );
+
+        // Set the day after creation
+        currentTime.setDay(time.getDay());
+
+        // Create and add the journal entry with the current time
+        JournalEntry entry = new JournalEntry(content, location, activity, type, currentTime);
         journalEntries.add(entry);
 
         // Mark as viewed in the appropriate map
