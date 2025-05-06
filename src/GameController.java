@@ -20,6 +20,7 @@
  */
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.function.Consumer;
 import java.awt.Frame;
@@ -49,6 +50,12 @@ public class GameController {
     //The selected trail for the journey.
     private String trail;
 
+    private HistoricalData historicalDataManager;
+
+    private TrailLogManager trailLog;
+
+    private HistoricalDisplayManager historicalDisplayManager;
+
     private boolean gameStarted = false;
     private boolean isGameRunning = true;
 
@@ -58,6 +65,7 @@ public class GameController {
     private int initialPartsUsed = 0;
     private int initialMedicineUsed = 0;
     private int initialAmmoUsed = 0;
+    private static double currentSpeedMultiplier = 1.0; //Full Speed
 
     // List of available food items
     private static final String[] FOOD_TYPES = {
@@ -85,6 +93,9 @@ public class GameController {
      * before player customization.
      */
     public GameController() {
+        Calendar startDate = Calendar.getInstance();
+        startDate.set(1848, Calendar.APRIL, 1);
+
         player = new Player("Player", "Male", job);
         inventory = new Inventory();
         time = new Time(1848, 3);
@@ -92,6 +103,9 @@ public class GameController {
         weather = new Weather(time.getMonth(), map.getStartingLocation());
         perils = new Perils(player, inventory, weather, time);
         perils.setMessageListener(this::notifyListeners);
+        historicalDataManager = new HistoricalData(time);
+        trailLog = new TrailLogManager(startDate);
+        historicalDisplayManager = new HistoricalDisplayManager(historicalDataManager, trailLog);
     }
 
     /**
@@ -226,6 +240,14 @@ public class GameController {
             perils = new Perils(player, inventory, weather, time);
             perils.setMessageListener(this::notifyListeners);
         }
+
+        Calendar actualStartDate = Calendar.getInstance();
+        actualStartDate.set(Calendar.YEAR, 1848);
+        actualStartDate.set(Calendar.MONTH, monthNumber - 1); // Calendar months are 0-based
+        actualStartDate.set(Calendar.DAY_OF_MONTH, 1);
+
+        trailLog.updateGameDate(actualStartDate);
+
     }
 
     /**
@@ -558,6 +580,7 @@ public class GameController {
 
         // 🛠 TRAVEL happens first
         map.travel(adjustedDistance);
+        addTravelJournalEntry();
 
         String breakageResult = inventory.checkForPartBreakage(this);
         if (breakageResult != null) {
@@ -622,6 +645,8 @@ public class GameController {
         notifyListeners("You traveled " + adjustedDistance + " miles today.\n" +
                 "Food consumed: " + foodConsumedToday + " pounds.");
 
+        addTrailUpdate("Traveled " + adjustedDistance + " miles.", TrailLogManager.LogCategory.TRAVEL);
+
         // 🛠 Advance Day
         advanceDay(true);
 
@@ -640,6 +665,26 @@ public class GameController {
         if (inventory.getOxenHealth() <= 30) {
             addTrailUpdate("Your oxen are in poor health and need rest.");
         }
+
+        //Update Calendar for Journal
+        Calendar actualStartDate = Calendar.getInstance();
+        actualStartDate.set(Calendar.YEAR, 1848);
+        actualStartDate.set(Calendar.MONTH, time.getMonth());
+        actualStartDate.set(Calendar.DAY_OF_MONTH, time.getDay());
+
+        // Random chance to display historical data (30% chance)
+        if (Math.random() < 0.7) {
+            String historicalNote = historicalDataManager.getContextualHistoricalData("travel", map.getCurrentLocation());
+            addTrailUpdate("TRAIL NOTE: " + historicalNote);
+        }
+        else if(Math.random() > 0.5) {
+            String travelingHistoricalData = historicalDataManager.getContextualHistoricalData("travel", map.getCurrentLocation());
+            notifyListeners("\nTraveling Historical Information: \n" + travelingHistoricalData);
+        } else if (Math.random() > 0.3){
+            notifyListeners(historicalDataManager.getRandomHistoricalData());
+        } else {
+            notifyListeners(this.getContextualHistoricalFact());
+        }
     }
 
     /** Rest action for one day. */
@@ -647,10 +692,12 @@ public class GameController {
         if (!isGameRunning || !validateGameComponents()) return;
 
         notifyListeners("You decide to rest for the day.");
+        addTrailUpdate("The party rested for the day.", TrailLogManager.LogCategory.REST);
 
         int healthRecovered = 5 + (int)(Math.random() * 11);
         // Doctor Bonus
         if (player.getJob() == Job.DOCTOR) {
+            notifyListeners(player.getName() + " is a doctor, your recovered 25% more health");
             healthRecovered = (int)(healthRecovered * 1.25); // Heal 25% more
         }
         player.increaseHealth(healthRecovered);
@@ -666,11 +713,13 @@ public class GameController {
 
         int moraleHealthRecovered = 5 + (int)(Math.random() * 11 + 2);
         if(player.getJob() == Job.PREACHER){
+            notifyListeners(player.getName() + " is a preacher, your morale recovered by 10%.");
             moraleHealthRecovered += 10;
         }
 
         // Teacher Bonus
         if (player.getJob() == Job.TEACHER) {
+            notifyListeners(player.getName() + " is a teacher, your morale recovered by 5%.");
             moraleHealthRecovered += 5;
         }
 
@@ -683,6 +732,7 @@ public class GameController {
         }
 
         if (player.getJob() == Job.CARPENTER) {
+            notifyListeners(player.getName() + " is a carpender, you have a 40% chance of repairing your part.");
             if (Math.random() < 0.4) { // 40% chance to repair a broken part
                 String repairedPart = inventory.repairRandomBrokenPart();
                 if (repairedPart != null) {
@@ -693,7 +743,19 @@ public class GameController {
 
         // Rest the oxen
         inventory.restOxen();
-        addTrailUpdate("Your oxen have rested and recovered some strength.");
+        addTrailUpdate("Your oxen have rested and recovered some strength.", TrailLogManager.LogCategory.REST);
+
+        // Random chance to display historical data (40% chance, higher when resting)
+        if (Math.random() < 0.4) {
+            String historicalNote = historicalDataManager.getContextualHistoricalData("rest", map.getCurrentLocation());
+            addTrailUpdate("CAMPFIRE STORY: " + historicalNote);
+        }
+        else if(Math.random() > 0.7){
+            String restingHistoricalData = historicalDataManager.getContextualHistoricalData("rest", map.getCurrentLocation());
+            notifyListeners(restingHistoricalData);
+        } else if (Math.random() > 0.3){
+            notifyListeners(historicalDataManager.getRandomHistoricalData());
+        }
 
         advanceDay(true); // Advance time and check for events/crossings
     }
@@ -720,6 +782,7 @@ public class GameController {
 
         // 🛠 Apply Hunter bonus to success chance
         if (player.getJob() == Job.HUNTER) {
+            notifyListeners(player.getName() + " is a hunter, there is 15% higher chance you get a kill shot.");
             baseSuccessChance += 0.15; // 15% bonus to success
         }
 
@@ -746,22 +809,382 @@ public class GameController {
 
             // 🛠 Apply Hunter bonus to food gained
             if (player.getJob() == Job.HUNTER) {
-                foodGained = (int)(foodGained * 1.25); // 25% more food
+                notifyListeners(player.getName() + " is a hunter, you gained 15% more food.");
+                foodGained = (int)(foodGained * 1.15); // 15% more food
             }
 
             notifyListeners("Great shot! You got a " + animal + "!\n" +
                     "Gained " + foodGained + " lbs food. Used " + ammoUsed + " ammo.");
+            addTrailUpdate("Hunting successful: Shot a " + animal + " for " + foodGained + " pounds of food.",
+                    TrailLogManager.LogCategory.HUNT);
             inventory.addFood(foodGained);
+
+            // Random chance to display hunting-related historical data (35% chance when hunting successfully)
+            if (Math.random() < 0.35) {
+                String historicalNote = historicalDataManager.getRandomSurvivalTip();
+                addTrailUpdate(historicalNote, TrailLogManager.LogCategory.SURVIVAL_TIP);
+            }
         } else {
             notifyListeners("You missed your shot! The animal got away.\n" +
                     "Used " + ammoUsed + " ammo.");
+            addTrailUpdate("Hunting unsuccessful. Used " + ammoUsed + " ammunition.",
+                    TrailLogManager.LogCategory.HUNT);
+
+            // Small chance to still get a tip even when unsuccessful (15% chance)
+            if (Math.random() < 0.15) {
+                String historicalNote = historicalDataManager.getRandomSurvivalTip();
+                addTrailUpdate(historicalNote, TrailLogManager.LogCategory.SURVIVAL_TIP);
+            }
+        }
+        if(Math.random() > 0.3){
+            String huntingHistoricalData = historicalDataManager.getContextualHistoricalData("hunt", map.getCurrentLocation());
+            notifyListeners("\nHunting history: \n" + huntingHistoricalData);
         }
 
         advanceDay(true);
     }
 
-    // --- Daily Update and Event Handling ---
+    /**
+     * Handles the display of the player's journal when the journal button is clicked.
+     * This method compiles information from the historical data tracking system
+     * and presents it in a formatted display.
+     *
+     * @param displayMode The display mode for the journal ("all", "location", "today", "type", "summary")
+     * @param factType Optional parameter for when displayMode is "type" (e.g., "Pioneer Fact", "Trail Fact")
+     * @return Formatted journal content as a string, ready for display in the UI
+     */
+    public String displayJournal(String displayMode, String factType) {
+        if (!isGameRunning || !validateGameComponents()) return "Journal unavailable.";
 
+        // Update the historical display manager with current context
+        // Map.getCurrentLocation() and the current activity should be methods in your game
+        String currentLocation = map.getCurrentLocation();
+        historicalDisplayManager.updateContext(currentLocation);
+
+        // Determine which journal view to display based on mode
+        String journalContent;
+        switch (displayMode.toLowerCase()) {
+            case "all":
+                journalContent = historicalDisplayManager.getCompleteJournal();
+                break;
+            case "location":
+                journalContent = historicalDisplayManager.getLocationJournal();
+                break;
+            case "today":
+                journalContent = historicalDisplayManager.getTodaysJournal();
+                break;
+            case "type":
+                // If factType is provided, show that type, otherwise default to pioneer facts
+                String type = (factType != null && !factType.isEmpty()) ? factType : "Pioneer Fact";
+                journalContent = historicalDisplayManager.getJournalByType(type);
+                break;
+            case "summary":
+                journalContent = historicalDisplayManager.getHistoricalKnowledgeSummary();
+                break;
+            default:
+                // Default to complete journal
+                journalContent = historicalDisplayManager.getCompleteJournal();
+        }
+
+        // Log this journal viewing in the trail log
+        trailLog.addLogEntry("Viewed journal (" + displayMode + ") at " + currentLocation,
+                TrailLogManager.LogCategory.JOURNAL);
+
+        return journalContent;
+    }
+
+    /**
+     * Helper method to get a random historical fact based on the current context.
+     * This can be used for displaying facts during travel, rest, or other activities.
+     *
+     * @return A formatted historical fact
+     */
+    public String getContextualHistoricalFact() {
+        if (!isGameRunning || !validateGameComponents()) return "";
+
+        // Update the historical display manager with current context
+        String currentLocation = map.getCurrentLocation();
+        historicalDisplayManager.updateContext(currentLocation);
+
+        // Get a contextual fact based on current activity
+        return historicalDisplayManager.getContextualHistoricalFact();
+    }
+
+    /**
+     * Helper method to get a location-specific historical fact.
+     * This is useful when arriving at a new landmark or important location.
+     *
+     * @return A formatted historical fact about the current location
+     */
+    public String getLocationHistoricalFact() {
+        if (!isGameRunning || !validateGameComponents()) return "";
+
+        // Update the historical display manager with current context
+        String currentLocation = map.getCurrentLocation();
+        historicalDisplayManager.updateContext(currentLocation);
+
+        // Get a fact specific to the current location
+        return historicalDisplayManager.getLocationSpecificFact();
+    }
+
+    /**
+     * Creates and shows a journal popup in the UI when new historical information is discovered.
+     * This can be called when passing landmarks, during special events, etc.
+     *
+     * @param factType The type of fact to display ("pioneer", "trail", "survival", "location")
+     * @return The formatted fact for display in a popup
+     */
+    public String showHistoricalPopup(String factType) {
+        if (!isGameRunning || !validateGameComponents()) return "";
+
+        // Update context
+        String currentLocation = map.getCurrentLocation();
+        historicalDisplayManager.updateContext(currentLocation);
+
+        String fact;
+        if ("location".equals(factType.toLowerCase())) {
+            fact = historicalDisplayManager.getLocationSpecificFact();
+        } else {
+            fact = historicalDisplayManager.getRandomFactByType(factType);
+        }
+
+        // Return the formatted popup content
+        return historicalDisplayManager.createHistoricalFactPopup(fact);
+    }
+
+    /**
+     * Method to be called during travel to add historical facts to the journal.
+     * This should be called from your travel() method.
+     */
+    public void addTravelJournalEntry() {
+        if (!isGameRunning || !validateGameComponents()) return;
+
+        // Update context
+        String currentLocation = map.getCurrentLocation();
+        historicalDisplayManager.updateContext(currentLocation);
+
+        // 15% chance to learn a new fact during travel
+        if (Math.random() < 0.15) {
+            String fact = historicalDisplayManager.getContextualHistoricalFact();
+            // The fact is already logged in the history by getContextualHistoricalFact()
+
+            // Notify the player about the new journal entry
+            notifyListeners("You learned something new! Check your journal for details.");
+        }
+    }
+
+    /**
+     * Method to be called when arriving at a landmark to add a location-specific entry.
+     * This should be called when the map.travel() method reaches a landmark.
+     *
+     * @param landmarkName The name of the landmark
+     */
+    public void addLandmarkJournalEntry(String landmarkName) {
+        if (!isGameRunning || !validateGameComponents()) return;
+
+        // Update context to the landmark
+        historicalDisplayManager.updateContext(landmarkName);
+
+        // Get location-specific information
+        String fact = historicalDisplayManager.getLocationSpecificFact();
+
+        // Notify the player about the new journal entry
+        notifyListeners("You've reached " + landmarkName + "! New information added to your journal.");
+
+        // Create a popup with the landmark information
+        String popupContent = historicalDisplayManager.createHistoricalFactPopup(fact);
+    }
+    /**
+     * Handles food spoilage events in the game.
+     * This method is called when food items spoil based on weather conditions.
+     * It updates inventory, creates an event log entry, and notifies the player.
+     *
+     * @param foodName The name of the food item that spoiled
+     */
+    public void handleFoodSpoilage(String foodName) {
+        // Log the event
+        trailLog.addLogEntry(
+                "Some of your " + foodName + " has spoiled." + "\n Time: " + time.getDay(),
+                TrailLogManager.LogCategory.FOOD_SPOILAGE
+        );
+
+        // Remove the spoiled food from inventory or reduce quantity
+        inventory.consumeFood(foodName, 1);
+
+        // Notify the player
+        notifyListeners(
+                "Food Spoilage\n" +
+                "Some of your " + foodName + " has spoiled due to weather conditions."
+        );
+
+        // Update UI elements if needed
+        updateGameState();
+    }
+
+    /**
+     * Handles wagon part breakage events in the game.
+     * This method is called when a wagon part breaks during travel.
+     * It updates inventory, creates an event log, notifies the player, and applies gameplay effects.
+     *
+     * @param partName The name of the wagon part that broke
+     */
+    public void handlePartBreakage(String partName) {
+        // Log the event
+        trailLog.addLogEntry(
+                "Your wagon's " + partName + " has broken." + "\nTime: " +
+                time.getDay(), TrailLogManager.LogCategory.PART_BREAKAGE
+        );
+
+        // Apply gameplay effects
+        if (partName.equals("Wheel")) {
+            reduceSpeed(0.5); // Reduce travel speed by 50%
+        } else if (partName.equals("Axle")) {
+            reduceSpeed(0.1); // Cannot travel until fixed
+        } else if (partName.equals("Tongue")) {
+            reduceSpeed(0.7); // Reduce travel speed by 30%
+        } else if (partName.equals("Bow")) {
+            reduceSpeed(0.8); // Reduce travel speed by 80%
+        }
+
+        // Notify the player
+        notifyListeners(
+                "Part Breakage: \n" +
+                "Your wagon's " + partName + " has broken and needs repair."
+        );
+
+        // Update UI
+        updateGameState();
+
+        boolean hasSparePart = true;
+        // Check if the player has spare parts
+        switch(partName){
+            case "Wheel": if(inventory.getWheels() == 0){
+                hasSparePart = false;
+            }
+            else {
+                hasSparePart = true;
+            }
+             break;
+            case "Bow": if(inventory.getWagonBows() == 0){
+                hasSparePart = false;
+            }
+            else {
+                hasSparePart = true;
+            }
+            break;
+            case "Tongue": if(inventory.getTongues() == 0){
+                hasSparePart = false;
+            }
+            else {
+                hasSparePart = true;
+            }
+            break;
+            case "Axle": if(inventory.getAxles() == 0){
+                hasSparePart = false;
+            }
+            else {
+                hasSparePart = true;
+            }
+            break;
+        }
+
+        // Provide player guidance based on situation
+        if (hasSparePart) {
+            notifyListeners(
+                    "Repair Option: \n" +
+                    "You have a spare " + partName + ". Would you like to repair now?"
+            );
+            showRepairDialog(partName);
+        } else {
+            notifyListeners(
+                    "No Spare Parts: \n" +
+                    "You don't have a spare " + partName + ". You should trade for one at the next landmark."
+            );
+        }
+    }
+
+    /**
+     * Helper method to show repair dialog
+     *
+     * @param partName The name of the part that needs repair
+     */
+    private void showRepairDialog(String partName) {
+        RepairDialog dialog = new RepairDialog("Engine", this, inventory);
+        dialog.showDialog();
+    }
+
+    /**
+     * Helper method to handle the actual repair process
+     *
+     * @param partName The name of the part to repair
+     */
+    public void repairPart(String partName) {
+        // Find the index of the part in the WAGON_PARTS array
+        int partIndex = -1;
+        for (int i = 0; i < WAGON_PARTS.length; i++) {
+            if (WAGON_PARTS[i].equals(partName)) {
+                partIndex = i;
+                break;
+            }
+        }
+
+        if (partIndex != -1) {
+            // Use the spare part
+            switch(partName){
+                case "Wheel": inventory.useWheels(1); break;
+                case "Bow": inventory.useWagonBows(1);break;
+                case "Tongue": inventory.useTongues(1);break;
+                case "Axle": inventory.useAxles(1);break;
+            }
+            inventory.repairPart(partName);
+
+            // Restore travel capabilities
+            if (partName.equals("Wheel")) {
+                restoreSpeed();
+            } else if (partName.equals("Axle")) {
+                restoreSpeed();
+            } else if (partName.equals("Tongue")) {
+                restoreSpeed();
+            } else if (partName.equals("Bow")) {
+                restoreSpeed();
+            }
+
+            // Log and notify
+            trailLog.addLogEntry(
+                    "You've successfully repaired your wagon's " + partName + "." + "\nTime:" +
+                    time.getDay(), TrailLogManager.LogCategory.REPAIR
+            );
+
+            notifyListeners(
+                    "Repair Complete" +
+                    "You've successfully repaired your wagon's " + partName + "." + "\nTime: " + time.getDay()
+            );
+
+            // Update UI
+            updateGameState();
+        }
+    }
+
+    public static void reduceSpeed(double multiplier) {
+        // Validate input
+        if (multiplier < 0.0) {
+            multiplier = 0.0; // Minimum allowed is 0 (no movement)
+        } else if (multiplier > 1.0) {
+            multiplier = 1.0; // Maximum allowed is 1 (full speed)
+        }
+
+        // Apply the multiplier
+        currentSpeedMultiplier = multiplier;
+
+        // Log the speed change
+        String speedPercentage = String.format("%.0f", multiplier * 100);
+    }
+
+    public static void restoreSpeed() {
+        currentSpeedMultiplier = 1.0;
+    }
+
+    // --- Daily Update and Event Handling ---
     /**
      * Advances game time by one day and handles end-of-day events.
      * @param checkEvents If true, check for perils and river crossings.
@@ -836,12 +1259,21 @@ public class GameController {
 
     /** Handles arriving at a landmark (update location, show info/trade). */
     private void handleLandmarkArrival() {
+        String currentLocation = map.getCurrentLocation();
         map.advanceToNextLandmark(); // Advance map state
         Landmark currentLandmark = map.getLandmarks().get(map.getCurrentLandmarkIndex());
         String landmarkName = currentLandmark.getName();
 
-        notifyListeners("\n=== ARRIVED AT " + landmarkName.toUpperCase() + " ===\n" +
-                currentLandmark.getDescription());
+        try {
+            String landmarkHistoricalInformation = historicalDataManager.getLocationSpecificData(landmarkName);
+            notifyListeners("\n=== ARRIVED AT " + landmarkName.toUpperCase() + " ===\n" +
+                    currentLandmark.getDescription() + "\n === Historical Information: " +
+                    landmarkHistoricalInformation + "\n ===\n");
+        }
+        catch (Exception e) {
+            notifyListeners("\n=== ARRIVED AT " + landmarkName.toUpperCase() + " ===\n" +
+                    currentLandmark.getDescription());
+        }
 
         if (landmarkName.contains("Fort") || landmarkName.contains("Trading Post")) {
             SwingUtilities.invokeLater(() -> { // Show dialog on EDT
@@ -851,6 +1283,16 @@ public class GameController {
                 notifyGameStateChanged(); // Update after trade dialog closes
             });
         }
+
+        if (currentLocation != null && !currentLocation.isEmpty()) {
+                String historicalFact = historicalDataManager.getLocationSpecificData(currentLocation);
+                notifyListeners("You've reached " + currentLocation + "!" +
+                        "Information: " + this.showHistoricalPopup(this.getLocationHistoricalFact())
+                );
+                addLandmarkJournalEntry(currentLocation);
+                addTrailUpdate("Arrived at " + currentLocation + ".", TrailLogManager.LogCategory.LANDMARK);
+                addTrailUpdate(historicalFact, TrailLogManager.LogCategory.HISTORICAL_FACT);
+        }
     }
 
     /** Initiates the river crossing process by showing the dialog. */
@@ -859,9 +1301,12 @@ public class GameController {
         String riverName = map.getCurrentRiverCrossingName();
         String riverDescription = map.getCurrentRiverCrossingDescription();
 
+        String riverCrossingHistoricalInformation = historicalDataManager.getLocationSpecificData("river crossing");
+
         notifyListeners("\n=== " + riverName.toUpperCase() + " ===\n" +
                 riverDescription + "\n\n" +
                 "You must cross the river.");
+        notifyListeners("Historical Information: \n" + riverCrossingHistoricalInformation);
 
         SwingUtilities.invokeLater(() -> { // Show dialog on EDT
             Frame owner = findVisibleFrame();
@@ -1065,5 +1510,14 @@ public class GameController {
      */
     public void addTrailUpdate(String update) {
         notifyListeners(update);
+    }
+
+    private void addTrailUpdate(String message, TrailLogManager.LogCategory category) {
+        trailLog.addLogEntry(message, category);
+        notifyListeners(message);
+    }
+
+    public String reviewTrailJournal() {
+        return trailLog.exportTrailJournal();
     }
 }

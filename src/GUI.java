@@ -5,6 +5,8 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -30,6 +32,7 @@ import java.util.List;
 public class GUI extends JPanel {
     // The game controller that manages game state and logic.
     private final GameController gameController;
+    private final TrailLogManager trailLog;
 
     // Map panel components for displaying the trail and landmarks.
     private MapPanel mapPanel;
@@ -47,6 +50,7 @@ public class GUI extends JPanel {
     private JButton inventoryButton;
     private JButton tradeButton;
     private JButton quitButton;
+    private JButton journalButton;
 
     // Output panel components for game messages.
     private JPanel outputPanel;
@@ -64,8 +68,9 @@ public class GUI extends JPanel {
      *
      * @param controller The game controller that manages game state and logic
      */
-    public GUI(GameController controller) {
+    public GUI(GameController controller, TrailLogManager trailLog) {
         this.gameController = controller;
+        this.trailLog = trailLog;
         initializeUI();
         setupEventListeners();
     }
@@ -245,6 +250,7 @@ public class GUI extends JPanel {
         inventoryButton = createStyledButton("Inventory");
         tradeButton = createStyledButton("Trade");
         quitButton = createStyledButton("Quit");
+        journalButton = createStyledButton("Journal");
 
         // Add buttons horizontally
         controlPanel.add(travelButton);
@@ -253,6 +259,7 @@ public class GUI extends JPanel {
         controlPanel.add(healthButton);
         controlPanel.add(inventoryButton);
         controlPanel.add(tradeButton);
+        controlPanel.add(journalButton);
         controlPanel.add(quitButton);
     }
 
@@ -282,6 +289,7 @@ public class GUI extends JPanel {
             case "Inventory": button.setToolTipText("View your current supplies."); break;
             case "Trade": button.setToolTipText("Trade supplies (only available at forts/trading posts)."); break;
             case "Quit": button.setToolTipText("Exit the game."); break;
+            case "Journal": button.setToolTipText("Exit the journal."); break;
         }
         return button;
     }
@@ -338,6 +346,7 @@ public class GUI extends JPanel {
         inventoryButton.addActionListener(e -> showInventoryDialog());
         tradeButton.addActionListener(e -> showTradeDialog());
         quitButton.addActionListener(e -> confirmQuit());
+        journalButton.addActionListener(e -> showJournalPopup());
     }
 
     /**
@@ -644,6 +653,59 @@ public class GUI extends JPanel {
                 new EmptyBorder(8, 10, 8, 10)
         ));
         return label;
+    }
+
+    private void showJournalPopup() {
+        JDialog journalDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Player's Journal", Dialog.ModalityType.APPLICATION_MODAL);
+        journalDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        JPanel journalPanel = new JPanel(new BorderLayout(10, 10));
+        journalPanel.setBackground(PANEL_COLOR);
+        journalPanel.setBorder(new CompoundBorder(
+                new LineBorder(ACCENT_COLOR, 2),
+                new EmptyBorder(15, 15, 15, 15)
+        ));
+
+        JLabel titleLabel = new JLabel("Journal Entries", SwingConstants.CENTER);
+        titleLabel.setFont(FontManager.WESTERN_FONT_BOLD.deriveFont(16f));
+        titleLabel.setForeground(TEXT_COLOR);
+        journalPanel.add(titleLabel, BorderLayout.NORTH);
+
+        JTextArea journalTextArea = new JTextArea(15, 40);
+        journalTextArea.setText(gameController.displayJournal("all", null));
+        journalTextArea.setEditable(false);
+        journalTextArea.setFont(FontManager.getWesternFont(12f));
+        journalTextArea.setForeground(TEXT_COLOR);
+        journalTextArea.setBackground(BACKGROUND_COLOR);
+        //journalTextArea.setLineWrap(true);
+        journalTextArea.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(ACCENT_COLOR, 1),
+                new EmptyBorder(10, 10, 10, 10)
+        ));
+
+        JScrollPane scrollPane = new JScrollPane(journalTextArea);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        journalPanel.add(scrollPane, BorderLayout.CENTER);
+
+        JButton closeButton = new JButton("Close");
+        closeButton.setFont(FontManager.WESTERN_FONT_BOLD);
+        closeButton.setBackground(PANEL_COLOR);
+        closeButton.setForeground(TEXT_COLOR);
+        closeButton.setBorder(new CompoundBorder(
+                new LineBorder(ACCENT_COLOR, 2),
+                new EmptyBorder(5, 20, 5, 20)
+        ));
+        closeButton.addActionListener(e -> journalDialog.dispose());
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(PANEL_COLOR);
+        buttonPanel.add(closeButton);
+        journalPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        journalDialog.getContentPane().add(journalPanel);
+        journalDialog.pack();
+        journalDialog.setLocationRelativeTo(this);
+        journalDialog.setVisible(true);
     }
 
     /**

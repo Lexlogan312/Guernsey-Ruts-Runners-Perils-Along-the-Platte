@@ -122,7 +122,7 @@ public class Time {
     /**
      * Gets the current month in the game.
      * Returns the month number (1-12).
-     * 
+     *
      * @return The current month (1-12)
      */
     public int getMonth() {
