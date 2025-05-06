@@ -452,4 +452,26 @@ public class Map {
         }
         System.err.println("Map: Landmark not found: " + landmarkName);
     }
+
+    /**
+     * Gets the distance remaining to reach the next landmark on the trail.
+     *
+     * @return The distance in miles to the next landmark, or -1 if there are no more landmarks
+     */
+    public int getDistanceToNextLandmark() {
+        int nextIndex = currentLandmarkIndex + 1;
+
+        if (nextIndex < landmarks.size()) {
+            // Next landmark exists, calculate distance between current position and next landmark
+            int nextLandmarkDistance = landmarks.get(nextIndex).getDistance();
+            int remainingDistance = nextLandmarkDistance - this.distanceTraveled;
+
+            // Ensure we don't return a negative distance if we've technically passed it
+            // but haven't called advanceToNextLandmark() yet
+            return Math.max(0, remainingDistance);
+        } else {
+            // No more landmarks ahead
+            return -1;
+        }
+    }
 }

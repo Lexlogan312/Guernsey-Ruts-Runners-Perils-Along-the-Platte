@@ -551,11 +551,21 @@ public class GameController {
             return;
         }
 
-        // Check for broken parts
+        // Check for broken parts and apply currentSpeedMultiplier
         if (inventory.hasBrokenParts()) {
-            // Reduce travel speed by 50% if any parts are broken
-            adjustedDistance = (int)(adjustedDistance * 0.5);
+            // Apply the current speed multiplier (which would have been set by reduceSpeed)
+            adjustedDistance = (int)(adjustedDistance * currentSpeedMultiplier);
             result.append("Travel is slowed due to broken wagon parts.\n");
+
+            // Get the specific broken part to show appropriate message
+            String brokenPart = inventory.checkForPartBreakage(this);
+            if (brokenPart != null) {
+                result.append("Your broken " + brokenPart + " is reducing your travel speed to " +
+                        String.format("%.0f", currentSpeedMultiplier * 100) + "% of normal.\n");
+            }
+        } else {
+            // If no parts are broken, ensure speed is restored to normal
+            restoreSpeed();
         }
 
         String currentWeather = weather.getCurrentWeather();
@@ -577,9 +587,34 @@ public class GameController {
         map.travel(adjustedDistance);
         addTravelJournalEntry();
 
+        // Check for part breakage and handle it properly
         String breakageResult = inventory.checkForPartBreakage(this);
         if (breakageResult != null) {
             result.append(breakageResult).append("\n");
+
+            // Parse the breakage result to get the part name
+            // Assuming breakageResult format is "Your [part] has broken!"
+            String partName = null;
+            if (breakageResult.contains("Wheel")) partName = "Wheel";
+            else if (breakageResult.contains("Axle")) partName = "Axle";
+            else if (breakageResult.contains("Tongue")) partName = "Tongue";
+            else if (breakageResult.contains("Bow")) partName = "Bow";
+
+            // Apply appropriate speed reduction based on part
+            if (partName != null) {
+                if (partName.equals("Wheel")) {
+                    reduceSpeed(0.5); // Reduce travel speed by 50%
+                } else if (partName.equals("Axle")) {
+                    reduceSpeed(0.1); // Almost no travel until fixed
+                } else if (partName.equals("Tongue")) {
+                    reduceSpeed(0.7); // Reduce travel speed by 30%
+                } else if (partName.equals("Bow")) {
+                    reduceSpeed(0.8); // Reduce travel speed by 20%
+                }
+
+                // Call handlePartBreakage to show repair options and update game state
+                handlePartBreakage(partName);
+            }
         }
 
         // Apply food spoilage
@@ -631,14 +666,17 @@ public class GameController {
             }
         }
 
-        // Small random injury chance
-        if (Math.random() < 0.1) {
-            player.decreaseHealth(2);
-            notifyListeners("The rough trail caused some minor injuries and fatigue.");
-        }
-
+        // Display travel and next landmark information
         notifyListeners("You traveled " + adjustedDistance + " miles today.\n" +
                 "Food consumed: " + foodConsumedToday + " pounds.");
+
+        // Add information about distance to next landmark if available
+        int distanceToNext = map.getDistanceToNextLandmark();
+        if (distanceToNext > 0) {
+            notifyListeners("Distance to next landmark: " + distanceToNext + " miles.");
+        } else if (distanceToNext == 0) {
+            notifyListeners("You've reached the next landmark!");
+        }
 
         addTrailUpdate("Traveled " + adjustedDistance + " miles.", TrailLogManager.LogCategory.TRAVEL);
 
@@ -661,24 +699,19 @@ public class GameController {
             addTrailUpdate("Your oxen are in poor health and need rest.");
         }
 
-        //Update Calendar for Journal
-        Calendar actualStartDate = Calendar.getInstance();
-        actualStartDate.set(Calendar.YEAR, 1848);
-        actualStartDate.set(Calendar.MONTH, time.getMonth());
-        actualStartDate.set(Calendar.DAY_OF_MONTH, time.getDay());
-
-        // Random chance to display historical data (30% chance)
-        if (Math.random() < 0.7) {
-            String historicalNote = historicalDataManager.getContextualHistoricalData("travel", map.getCurrentLocation());
-            addTrailUpdate("TRAIL NOTE: " + historicalNote);
-        }
-        else if(Math.random() > 0.5) {
-            String travelingHistoricalData = historicalDataManager.getContextualHistoricalData("travel", map.getCurrentLocation());
-            notifyListeners("\nTraveling Historical Information: \n" + travelingHistoricalData);
-        } else if (Math.random() > 0.3){
-            notifyListeners(historicalDataManager.getRandomHistoricalData());
-        } else {
-            notifyListeners(this.getContextualHistoricalFact());
+        if(!(map.getDistanceToNextLandmark() < 10)) {
+            // Random chance to display historical data (30% chance)
+            if (Math.random() < 0.5) {
+                String historicalNote = historicalDataManager.getContextualHistoricalData("travel", map.getCurrentLocation());
+                addTrailUpdate("TRAIL NOTE: " + historicalNote);
+            } else if (Math.random() > 0.6) {
+                String travelingHistoricalData = historicalDataManager.getContextualHistoricalData("travel", map.getCurrentLocation());
+                notifyListeners("\nTraveling Historical Information: \n" + travelingHistoricalData);
+            } else if (Math.random() > 0.5) {
+                notifyListeners(historicalDataManager.getRandomHistoricalData());
+            } else {
+                notifyListeners(this.getContextualHistoricalFact());
+            }
         }
     }
 
@@ -727,7 +760,7 @@ public class GameController {
         }
 
         if (player.getJob() == Job.CARPENTER) {
-            notifyListeners(player.getName() + " is a carpender, you have a 40% chance of repairing your part.");
+            notifyListeners(player.getName() + " is a carpender, you have a 40% chance of repairing an wagon part.");
             if (Math.random() < 0.4) { // 40% chance to repair a broken part
                 String repairedPart = inventory.repairRandomBrokenPart();
                 if (repairedPart != null) {
@@ -743,12 +776,13 @@ public class GameController {
         // Random chance to display historical data (40% chance, higher when resting)
         if (Math.random() < 0.4) {
             String historicalNote = historicalDataManager.getContextualHistoricalData("rest", map.getCurrentLocation());
+            historicalNote = historicalNote.substring(16);
             addTrailUpdate("CAMPFIRE STORY: " + historicalNote);
         }
         else if(Math.random() > 0.7){
             String restingHistoricalData = historicalDataManager.getContextualHistoricalData("rest", map.getCurrentLocation());
             notifyListeners(restingHistoricalData);
-        } else if (Math.random() > 0.3){
+        } else if (Math.random() > 0.5){
             notifyListeners(historicalDataManager.getRandomHistoricalData());
         }
 
@@ -831,8 +865,9 @@ public class GameController {
                 addTrailUpdate(historicalNote, TrailLogManager.LogCategory.SURVIVAL_TIP);
             }
         }
-        if(Math.random() > 0.3){
+        if(Math.random() > 0.6){
             String huntingHistoricalData = historicalDataManager.getContextualHistoricalData("hunt", map.getCurrentLocation());
+            huntingHistoricalData = huntingHistoricalData.substring(16);
             notifyListeners("\nHunting history: \n" + huntingHistoricalData);
         }
 
@@ -981,14 +1016,8 @@ public class GameController {
         // Update context to the landmark
         historicalDisplayManager.updateContext(landmarkName);
 
-        // Get location-specific information
-        String fact = historicalDisplayManager.getLocationSpecificFact();
-
         // Notify the player about the new journal entry
-        notifyListeners("You've reached " + landmarkName + "! New information added to your journal.");
-
-        // Create a popup with the landmark information
-        String popupContent = historicalDisplayManager.createHistoricalFactPopup(fact);
+        notifyListeners("New information added to your journal.");
     }
     /**
      * Handles food spoilage events in the game.
@@ -1113,54 +1142,6 @@ public class GameController {
         healthDialog.setVisible(true);
     }
 
-    /**
-     * Helper method to handle the actual repair process
-     *
-     * @param partName The name of the part to repair
-     */
-    public void repairPart(String partName) {
-        // Check if we have the part in inventory first
-        boolean hasPart = false;
-        switch(partName) {
-            case "Wheel": hasPart = inventory.getWheels() > 0; break;
-            case "Bow": hasPart = inventory.getWagonBows() > 0; break;
-            case "Tongue": hasPart = inventory.getTongues() > 0; break;
-            case "Axle": hasPart = inventory.getAxles() > 0; break;
-        }
-
-        if (!hasPart) {
-            notifyListeners("Cannot repair: No spare " + partName + " available in inventory.");
-            return;
-        }
-
-        // Use the spare part
-        switch(partName) {
-            case "Wheel": inventory.useWheels(1); break;
-            case "Bow": inventory.useWagonBows(1); break;
-            case "Tongue": inventory.useTongues(1); break;
-            case "Axle": inventory.useAxles(1); break;
-        }
-
-        inventory.repairPart(partName);
-        restoreSpeed();
-
-        // Log and notify
-        trailLog.addLogEntry(
-                "You've successfully repaired your wagon's " + partName + "." + "\nTime:" +
-                time.getDay(),
-                map.getCurrentLocation(),
-                TrailLogManager.LogCategory.REPAIR
-        );
-
-        notifyListeners(
-                "Repair Complete\n" +
-                "You've successfully repaired your wagon's " + partName + "." + "\nTime: " + time.getDay()
-        );
-
-        // Update UI
-        updateGameState();
-    }
-
     public static void reduceSpeed(double multiplier) {
         // Validate input
         if (multiplier < 0.0) {
@@ -1255,39 +1236,39 @@ public class GameController {
 
     /** Handles arriving at a landmark (update location, show info/trade). */
     private void handleLandmarkArrival() {
-        String currentLocation = map.getCurrentLocation();
-        map.advanceToNextLandmark(); // Advance map state
+        map.advanceToNextLandmark(); // Advance map state first
+        String currentLocation = map.getCurrentLocation(); // Get the CURRENT location after advancing
         Landmark currentLandmark = map.getLandmarks().get(map.getCurrentLandmarkIndex());
         String landmarkName = currentLandmark.getName();
 
+        // Display landmark information
+        String message = "\n=== ARRIVED AT " + landmarkName.toUpperCase() + " ===\n" +
+                currentLandmark.getDescription();
+
         try {
             String landmarkHistoricalInformation = historicalDataManager.getLocationSpecificData(landmarkName);
-            notifyListeners("\n=== ARRIVED AT " + landmarkName.toUpperCase() + " ===\n" +
-                    currentLandmark.getDescription() + "\n === Historical Information: " +
-                    landmarkHistoricalInformation + "\n ===\n");
-        }
-        catch (Exception e) {
-            notifyListeners("\n=== ARRIVED AT " + landmarkName.toUpperCase() + " ===\n" +
-                    currentLandmark.getDescription());
+            message += "\n === Historical Information===\n " + landmarkHistoricalInformation + "\n";
+        } catch (Exception e) {
+            // Just use the basic message without historical info
+            message += "\n";
         }
 
+        notifyListeners(message);
+
+        // Add journal entries and trail updates
+        if (currentLocation != null && !currentLocation.isEmpty()) {
+                addLandmarkJournalEntry(currentLocation);
+                addTrailArrivalUpdate(TrailLogManager.LogCategory.LANDMARK);
+        }
+
+        // Handle trading posts and forts
         if (landmarkName.contains("Fort") || landmarkName.contains("Trading Post")) {
-            SwingUtilities.invokeLater(() -> { // Show dialog on EDT
+            SwingUtilities.invokeLater(() -> {
                 Frame owner = findVisibleFrame();
                 TradingDialog tradingDialog = new TradingDialog(owner, player, inventory);
                 tradingDialog.setVisible(true);
-                notifyGameStateChanged(); // Update after trade dialog closes
+                notifyGameStateChanged();
             });
-        }
-
-        if (currentLocation != null && !currentLocation.isEmpty()) {
-                String historicalFact = historicalDataManager.getLocationSpecificData(currentLocation);
-                notifyListeners("You've reached " + currentLocation + "!" +
-                        "Information: " + this.showHistoricalPopup(this.getLocationHistoricalFact())
-                );
-                addLandmarkJournalEntry(currentLocation);
-                addTrailUpdate("Arrived at " + currentLocation + ".", TrailLogManager.LogCategory.LANDMARK);
-                addTrailUpdate(historicalFact, TrailLogManager.LogCategory.HISTORICAL_FACT);
         }
     }
 
@@ -1546,8 +1527,12 @@ public class GameController {
         notifyListeners(message);
     }
 
-    public String reviewTrailJournal() {
-        return trailLog.exportTrailJournal();
+    private void addTrailArrivalUpdate(TrailLogManager.LogCategory category) {
+        // Get current location
+        String location = map != null ? map.getCurrentLocation() : "Unknown Location";
+
+        // Add the log entry with location
+        trailLog.addLogEntry("", location, category);
     }
 
     /**

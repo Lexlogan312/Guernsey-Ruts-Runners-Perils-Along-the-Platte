@@ -64,13 +64,10 @@ public class HistoricalDisplayManager {
         };
 
         // Log the fact in the trail log
-        trailLog.addLogEntry(fact, TrailLogManager.LogCategory.HISTORICAL_FACT);
+        trailLog.addLogEntry(fact, currentLocation,TrailLogManager.LogCategory.HISTORICAL_FACT);
 
         // Format for display
-        return "<html><div style='width: 300px; padding: 10px; background-color: #f7f3e9; border: 1px solid #d2b48c;'>" +
-                "<h3 style='color: #8b4513; margin-top: 0;'>Did You Know?</h3>" +
-                "<p style='font-style: italic;'>" + fact + "</p>" +
-                "</div></html>";
+        return fact;
     }
 
     /**
@@ -81,12 +78,9 @@ public class HistoricalDisplayManager {
         String fact = historicalData.getLocationSpecificData(currentLocation);
 
         // Log the fact in the trail log
-        trailLog.addLogEntry(fact, TrailLogManager.LogCategory.HISTORICAL_FACT);
+        trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
 
-        return "<html><div style='width: 300px; padding: 10px; background-color: #f7f3e9; border: 1px solid #d2b48c;'>" +
-                "<h3 style='color: #8b4513; margin-top: 0;'>About " + currentLocation + "</h3>" +
-                "<p style='font-style: italic;'>" + fact + "</p>" +
-                "</div></html>";
+        return fact;
     }
 
     /**
@@ -97,12 +91,9 @@ public class HistoricalDisplayManager {
         String fact = historicalData.getContextualHistoricalData(currentActivity, currentLocation);
 
         // Log the fact in the trail log
-        trailLog.addLogEntry(fact, TrailLogManager.LogCategory.HISTORICAL_FACT);
+        trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
 
-        return "<html><div style='width: 300px; padding: 10px; background-color: #f7f3e9; border: 1px solid #d2b48c;'>" +
-                "<h3 style='color: #8b4513; margin-top: 0;'>Trail Insight</h3>" +
-                "<p style='font-style: italic;'>" + fact + "</p>" +
-                "</div></html>";
+        return fact;
     }
 
     /**
@@ -136,7 +127,7 @@ public class HistoricalDisplayManager {
      */
     public String createHistoricalFactPopup(String fact) {
         // Log the fact in the trail log
-        trailLog.addLogEntry(fact, TrailLogManager.LogCategory.HISTORICAL_FACT);
+        trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
 
         return fact;
     }
