@@ -1,7 +1,4 @@
 import java.util.ArrayList;
-import java.util.Date;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -11,8 +8,7 @@ import java.util.List;
 public class TrailLogManager {
     private ArrayList<LogEntry> trailLog;
     private int maxEntries;
-    private Calendar gameCalendar;
-    private SimpleDateFormat dateFormat;
+    private Time gameTime;
 
     // Define log entry categories
     public enum LogCategory {
@@ -35,10 +31,10 @@ public class TrailLogManager {
     /**
      * Update the current game date
      *
-     * @param newDate The new game date
+     * @param newTime The new game time
      */
-    public void updateGameDate(Calendar newDate) {
-        this.gameCalendar = (Calendar) newDate.clone();
+    public void updateGameDate(Time newTime) {
+        this.gameTime = newTime;
     }
 
     /**
@@ -80,14 +76,16 @@ public class TrailLogManager {
     /**
      * Get entries from a specific date range
      *
-     * @param startDate Start of date range
-     * @param endDate   End of date range
+     * @param startTime Start of date range
+     * @param endTime   End of date range
      * @return List of log entries within the date range
      */
-    public List<LogEntry> getEntriesInDateRange(Calendar startDate, Calendar endDate) {
+    public List<LogEntry> getEntriesInDateRange(Time startTime, Time endTime) {
         ArrayList<LogEntry> filteredEntries = new ArrayList<>();
         for (LogEntry entry : trailLog) {
-            if (entry.getDate().after(startDate) && entry.getDate().before(endDate)) {
+            Time entryTime = entry.getTime();
+            if (entryTime.getTotalDays() >= startTime.getTotalDays() && 
+                entryTime.getTotalDays() <= endTime.getTotalDays()) {
                 filteredEntries.add(entry);
             }
         }
@@ -101,77 +99,65 @@ public class TrailLogManager {
      */
     public String exportTrailJournal() {
         StringBuilder journal = new StringBuilder();
-        journal.append("======= OREGON TRAIL JOURNAL =======\n\n");
-
-        String currentDate = null;
-
+        journal.append("=== ").append(gameTime.getTrailName()).append(" JOURNEY JOURNAL ===\n");
+        journal.append("Date: ").append(gameTime.getMonthName()).append(" ")
+              .append(gameTime.getDay()).append(", ")
+              .append(gameTime.getYear()).append("\n\n");
+        
         for (LogEntry entry : trailLog) {
-            String entryDate = entry.getFormattedDate();
-
-            // Add date headers when the date changes
-            if (currentDate == null || !currentDate.equals(entryDate)) {
-                currentDate = entryDate;
-                journal.append("\n--- ").append(currentDate).append(" ---\n\n");
-            }
-
-            // Format based on category
-            switch (entry.getCategory()) {
-                case HISTORICAL_FACT:
-                    journal.append("📜 ");
-                    break;
-                case SURVIVAL_TIP:
-                    journal.append("💡 ");
-                    break;
-                case WARNING:
-                    journal.append("⚠️ ");
-                    break;
-                case LANDMARK:
-                    journal.append("🏞️ ");
-                    break;
-                case RIVER_CROSSING:
-                    journal.append("🌊 ");
-                    break;
-                case EVENT:
-                    journal.append("⚡ ");
-                    break;
-                default:
-                    journal.append("• ");
-            }
-
-            journal.append(entry.getMessage()).append("\n");
+            journal.append(entry.getDate().getMonthName())
+                  .append(" ")
+                  .append(entry.getDate().getDay())
+                  .append(", ")
+                  .append(entry.getDate().getYear())
+                  .append(" - ")
+                  .append(entry.getLocation())
+                  .append("\n")
+                  .append(entry.getMessage())
+                  .append("\n\n");
         }
-
+        
         return journal.toString();
     }
 
     /**
      * Represents a single log entry in the trail journal
      */
-    public class LogEntry {
-        private String message;
-        private LogCategory category;
-        private Calendar date;
+    public static class LogEntry {
+        private final Time date;
+        private final String message;
+        private final String location;
+        private final LogCategory category;
 
-        public LogEntry(String message, LogCategory category, Calendar date) {
-            this.message = message;
-            this.category = category;
+        public LogEntry(Time date, String message, String location, LogCategory category) {
             this.date = date;
+            this.message = message;
+            this.location = location;
+            this.category = category;
+        }
+
+        public Time getDate() {
+            return date;
         }
 
         public String getMessage() {
             return message;
         }
 
+        public String getLocation() {
+            return location;
+        }
+
         public LogCategory getCategory() {
             return category;
         }
 
-        public Calendar getDate() {
+        public Time getTime() {
             return date;
         }
 
         public String getFormattedDate() {
-            return dateFormat.format(date.getTime());
+            return date.getMonthName() + " " + date.getDay() + ", " + date.getYear();
         }
 
         @Override
@@ -180,22 +166,21 @@ public class TrailLogManager {
         }
     }
 
-    public TrailLogManager(Calendar startDate) {
+    public TrailLogManager(Time startTime) {
         trailLog = new ArrayList<>();
         maxEntries = 100;
-        gameCalendar = (startDate != null) ? (Calendar) startDate.clone() : Calendar.getInstance(); // Fallback to current date
-        dateFormat = new SimpleDateFormat("MMMM d, yyyy");
+        gameTime = startTime;
     }
-
 
     /**
      * Add a new entry to the trail log
      *
      * @param message  The log message
+     * @param location The location of the log entry
      * @param category The category of message (regular, historical, warning, etc.)
      */
-    public void addLogEntry(String message, LogCategory category) {
-        LogEntry entry = new LogEntry(message, category, (Calendar) gameCalendar.clone());
+    public void addLogEntry(String message, String location, LogCategory category) {
+        LogEntry entry = new LogEntry(gameTime, message, location, category);
         trailLog.add(entry);
 
         // Trim log if it exceeds maximum size

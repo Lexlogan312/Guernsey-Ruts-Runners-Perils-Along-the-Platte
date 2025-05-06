@@ -2,7 +2,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.time.LocalDate;
 import java.util.Random;
 
 public class HistoricalData {
@@ -19,11 +18,14 @@ public class HistoricalData {
     private Map<String, Boolean> viewedSurvivalTips;
     private Map<String, Boolean> viewedLandmarkDescriptions;
 
-    private final Time time;
+    public final Time time;
 
     public HistoricalData(Time time) {
-        random = new Random();
+        if (time == null) {
+            throw new IllegalArgumentException("Time cannot be null");
+        }
         this.time = time;
+        random = new Random();
         initializePioneerFacts();
         initializeTrailFacts();
         initializeSurvivalTips();
@@ -96,51 +98,41 @@ public class HistoricalData {
     }
 
     // Inner class to represent a journal entry
-    public class JournalEntry {
-        private String content;
-        private String type;
-        private LocalDate dateViewed;
-        private String location;
-        private String activity;
+    public static class JournalEntry {
+        private final String content;
+        private final String location;
+        private final String activity;
+        private final String type;
+        private final Time timeViewed;
 
-        public JournalEntry(String content, String type, String location, String activity) {
+        public JournalEntry(String content, String location, String activity, String type, Time time) {
             this.content = content;
-            this.type = type;
-            this.dateViewed = LocalDate.now();
             this.location = location;
             this.activity = activity;
+            this.type = type;
+            this.timeViewed = time;
         }
 
-        public String getContent() {
-            return content;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public LocalDate getDateViewed() {
-            return dateViewed;
-        }
-
-        public String getLocation() {
-            return location;
-        }
-
-        public String getActivity() {
-            return activity;
-        }
+        public String getContent() { return content; }
+        public String getLocation() { return location; }
+        public String getActivity() { return activity; }
+        public String getType() { return type; }
+        public Time getTimeViewed() { return timeViewed; }
 
         @Override
         public String toString() {
-            return dateViewed + " - " + location + " - " + activity + "\n" + content;
+            return String.format("%s - %s - %s\n%s", 
+                timeViewed.getMonthName(), 
+                timeViewed.getDay(), 
+                timeViewed.getYear(),
+                content);
         }
     }
 
     // Method to track when a fact is presented to the user
     private void trackFactPresentation(String content, String type, String location, String activity) {
         // Create and add the journal entry
-        JournalEntry entry = new JournalEntry(content, type, location, activity);
+        JournalEntry entry = new JournalEntry(content, location, activity, type, time);
         journalEntries.add(entry);
 
         // Mark as viewed in the appropriate map
@@ -337,10 +329,13 @@ public class HistoricalData {
     }
 
     // Get entries by date
-    public ArrayList<JournalEntry> getEntriesByDate(LocalDate date) {
+    public ArrayList<JournalEntry> getEntriesByDate(Time date) {
         ArrayList<JournalEntry> filteredEntries = new ArrayList<>();
         for (JournalEntry entry : journalEntries) {
-            if (entry.getDateViewed().equals(date)) {
+            Time entryTime = entry.getTimeViewed();
+            if (entryTime.getYear() == date.getYear() && 
+                entryTime.getMonth() == date.getMonth() && 
+                entryTime.getDay() == date.getDay()) {
                 filteredEntries.add(entry);
             }
         }
@@ -366,12 +361,14 @@ public class HistoricalData {
     // Export journal to formatted string
     public String exportJournalToString() {
         StringBuilder journalText = new StringBuilder();
-        journalText.append("OREGON TRAIL JOURNEY JOURNAL\n");
+        journalText.append(time.getTrailName()).append(" JOURNEY JOURNAL\n");
         journalText.append("==========================\n\n");
 
         for (JournalEntry entry : journalEntries) {
-            Time time = null;
-            journalText.append("Date: ").append(time.getMonthName() + time.getDay() + ","  + time.getYear()).append("\n");
+            Time entryTime = entry.getTimeViewed();
+            journalText.append("Date: ").append(entryTime.getMonthName() + " " + 
+                                              entryTime.getDay() + ", " + 
+                                              entryTime.getYear()).append("\n");
             journalText.append("Location: ").append(entry.getLocation()).append("\n");
             journalText.append("Activity: ").append(entry.getActivity()).append("\n");
             journalText.append("Type: ").append(entry.getType()).append("\n\n");

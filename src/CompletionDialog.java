@@ -5,7 +5,6 @@
  * - Journey completion message
  * - Travel statistics (days, distance, arrival date)
  * - Historical context about life after the journey
- * - Visual elements (custom image or drawn wagon scene)
  *
  * @author Alex Randall and Chase McCluskey
  * @version 1.0
@@ -57,8 +56,6 @@ public class CompletionDialog extends JDialog {
      * - Title display with success message
      * - Journey statistics (days, distance, date)
      * - Historical context about pioneer life
-     * - Victory image (custom or drawn)
-     * - Close button
      *
      * @param destination The final destination reached
      * @param days The number of days traveled

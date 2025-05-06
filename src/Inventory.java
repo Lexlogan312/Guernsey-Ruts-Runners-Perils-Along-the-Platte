@@ -23,7 +23,7 @@ public class Inventory {
     private int ammunition;
 
     // Oxen condition
-    private int oxenHealth;
+    private int oxenHealth = 100;
     private int oxenFatigue;
 
     //List of items
@@ -77,7 +77,6 @@ public class Inventory {
         this.wagonBows = 0;
         this.medicine = 0;
         this.ammunition = 0;
-        this.oxenHealth = 100;
         this.oxenFatigue = 0;
         this.items = new ArrayList<>();
     }
@@ -340,6 +339,7 @@ public class Inventory {
                 return WAGON_PARTS_BREAKPERCENTAGE[i];
             }
         }
+        return 100;
     }
     
     /**
@@ -715,6 +715,7 @@ public class Inventory {
                 return WAGON_PARTS_BROKEN[i];
             }
         }
+        return false;
     }
     
     /**
@@ -748,5 +749,9 @@ public class Inventory {
             }
         }
         return false;
+    }
+
+    public void setOxenHealth(int health) {
+        this.oxenHealth = Math.max(0, Math.min(100, health));
     }
 }

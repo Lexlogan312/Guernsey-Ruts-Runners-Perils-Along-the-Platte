@@ -5,7 +5,6 @@
  * - Cause of death with historical context
  * - Journey statistics (days traveled, distance covered)
  * - Historical context about the specific cause of death
- * - Visual elements (custom image or drawn tombstone)
  *
  * @author Alex Randall and Chase McCluskey
  * @version 1.0
@@ -154,7 +153,6 @@ public class DeathDialog extends JDialog {
      * - Death announcement with cause of death
      * - Journey statistics (days, distance, location)
      * - Historical context about the specific cause of death
-     * - Death image (custom or drawn)
      * - Close button
      *
      * @param causeOfDeath The specific cause of death

@@ -193,7 +193,8 @@ public class HealthDialog extends JDialog {
         JTextArea oxenTextArea = new JTextArea(oxenStatus.toString());
         oxenTextArea.setEditable(false);
         oxenTextArea.setBackground(PANEL_COLOR);
-        oxenTextArea.setFont(new Font("Serif", Font.PLAIN, 14));
+        oxenTextArea.setFont(FontManager.getWesternFont(14f));
+        oxenTextArea.setForeground(TEXT_COLOR);
         oxenHealthPanel.add(oxenTextArea, BorderLayout.CENTER);
 
         // Add the health sections panel to a scroll pane
@@ -351,7 +352,17 @@ public class HealthDialog extends JDialog {
         ));
         
         button.addActionListener(e -> {
+            // Consume the spare part first
+            switch(partName) {
+                case "Wheel": inventory.useWheels(1); break;
+                case "Axle": inventory.useAxles(1); break;
+                case "Tongue": inventory.useTongues(1); break;
+                case "Bow": inventory.useWagonBows(1); break;
+            }
+            
+            // Then repair the part
             inventory.repairPart(partName);
+            
             // Update the dialog
             dispose();
             new HealthDialog(parent, player, inventory).setVisible(true);

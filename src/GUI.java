@@ -68,9 +68,9 @@ public class GUI extends JPanel {
      *
      * @param controller The game controller that manages game state and logic
      */
-    public GUI(GameController controller, TrailLogManager trailLog) {
+    public GUI(GameController controller) {
         this.gameController = controller;
-        this.trailLog = trailLog;
+        this.trailLog = controller.getTrailLog();
         initializeUI();
         setupEventListeners();
     }
@@ -677,7 +677,9 @@ public class GUI extends JPanel {
         journalTextArea.setFont(FontManager.getWesternFont(12f));
         journalTextArea.setForeground(TEXT_COLOR);
         journalTextArea.setBackground(BACKGROUND_COLOR);
-        //journalTextArea.setLineWrap(true);
+        journalTextArea.setLineWrap(true);
+        journalTextArea.setWrapStyleWord(true);
+        journalTextArea.setCaretPosition(journalTextArea.getDocument().getLength());
         journalTextArea.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(ACCENT_COLOR, 1),
                 new EmptyBorder(10, 10, 10, 10)

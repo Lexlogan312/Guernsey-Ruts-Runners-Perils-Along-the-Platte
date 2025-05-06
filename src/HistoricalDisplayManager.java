@@ -1,6 +1,4 @@
 import java.util.List;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 /**
  * A utility class to manage the display of historical data in the game UI.
@@ -166,7 +164,8 @@ public class HistoricalDisplayManager {
         report.append("==== Journal Entries for ").append(currentLocation).append(" ====\n\n");
 
         for (HistoricalData.JournalEntry entry : entries) {
-            report.append("Date: ").append(entry.getDateViewed()).append("\n");
+            Time time = entry.getTimeViewed();
+            report.append("Date: ").append(time.getMonthName()).append(" ").append(time.getDay()).append(", ").append(time.getYear()).append("\n");
             report.append("Activity: ").append(entry.getActivity()).append("\n");
             report.append("Type: ").append(entry.getType()).append("\n\n");
             report.append(entry.getContent()).append("\n\n");
@@ -192,7 +191,8 @@ public class HistoricalDisplayManager {
         report.append("==== Journal Entries: ").append(type).append(" ====\n\n");
 
         for (HistoricalData.JournalEntry entry : entries) {
-            report.append("Date: ").append(entry.getDateViewed()).append("\n");
+            Time time = entry.getTimeViewed();
+            report.append("Date: ").append(time.getMonthName()).append(" ").append(time.getDay()).append(", ").append(time.getYear()).append("\n");
             report.append("Location: ").append(entry.getLocation()).append("\n");
             report.append("Activity: ").append(entry.getActivity()).append("\n\n");
             report.append(entry.getContent()).append("\n\n");
@@ -207,7 +207,7 @@ public class HistoricalDisplayManager {
      * @return A formatted string of today's journal entries
      */
     public String getTodaysJournal() {
-        List<HistoricalData.JournalEntry> entries = historicalData.getEntriesByDate(LocalDate.now());
+        List<HistoricalData.JournalEntry> entries = historicalData.getEntriesByDate(historicalData.time);
 
         if (entries.isEmpty()) {
             return "No historical information has been recorded today.";
@@ -215,6 +215,32 @@ public class HistoricalDisplayManager {
 
         StringBuilder report = new StringBuilder();
         report.append("==== Today's Journal Entries ====\n\n");
+
+        for (HistoricalData.JournalEntry entry : entries) {
+            report.append("Location: ").append(entry.getLocation()).append("\n");
+            report.append("Activity: ").append(entry.getActivity()).append("\n");
+            report.append("Type: ").append(entry.getType()).append("\n\n");
+            report.append(entry.getContent()).append("\n\n");
+            report.append("----------------------------\n\n");
+        }
+
+        return report.toString();
+    }
+
+    /**
+     * Get journal entries for a specific date
+     * @param date The date to retrieve journal entries for
+     * @return A formatted string of journal entries for the specified date
+     */
+    public String getJournalByDate(Time date) {
+        List<HistoricalData.JournalEntry> entries = historicalData.getEntriesByDate(date);
+
+        if (entries.isEmpty()) {
+            return "No historical information has been recorded for this date.";
+        }
+
+        StringBuilder report = new StringBuilder();
+        report.append("==== Journal Entries for ").append(date.getMonthName()).append(" ").append(date.getDay()).append(", ").append(date.getYear()).append(" ====\n\n");
 
         for (HistoricalData.JournalEntry entry : entries) {
             report.append("Location: ").append(entry.getLocation()).append("\n");

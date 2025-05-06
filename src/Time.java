@@ -22,6 +22,8 @@ public class Time {
     // The total number of days that have passed since the start of the game
     private int totalDays;
 
+    private String trailName;
+
     /**
      * Constructs a new Time object starting at the beginning of the specified month.
      * Initializes the time system with:
@@ -37,6 +39,7 @@ public class Time {
         this.month = month;
         this.day = 1;
         this.totalDays = 0;
+        this.trailName = "OREGON TRAIL";
     }
 
     /**
@@ -176,5 +179,13 @@ public class Time {
      */
     public int getTotalDays() {
         return totalDays;
+    }
+
+    public String getTrailName() {
+        return trailName;
+    }
+
+    public void setTrailName(String trailName) {
+        this.trailName = trailName;
     }
 }
