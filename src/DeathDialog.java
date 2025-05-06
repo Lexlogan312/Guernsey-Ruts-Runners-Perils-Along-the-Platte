@@ -1,11 +1,3 @@
-import javax.swing.*;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * DeathDialog Class of the Perils Along the Platte Game
  * A dialog that appears when the player dies during their journey west.
@@ -20,6 +12,15 @@ import java.util.Map;
  * @date 05/06/2025
  * @file DeathDialog.java
  */
+
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
+
 public class DeathDialog extends JDialog {
     
     // UI Colors for western theme
@@ -31,19 +32,9 @@ public class DeathDialog extends JDialog {
     // Path to custom death image
     private static final String CUSTOM_IMAGE_PATH = "images/Death Screen.png";
     
-    /**
-     * Map of historical death descriptions for different causes of death.
-     * Contains detailed historical context about each type of death that
-     * pioneers might have experienced on the trail. The descriptions are
-     * based on historical records and pioneer diaries.
-     */
+    // Map of historical death descriptions for different causes of death
     private static final Map<String, String> DEATH_DETAILS = new HashMap<>();
-    
-    /**
-     * Static initializer block that populates the DEATH_DETAILS map with
-     * historical descriptions for various causes of death. Each entry includes
-     * information about the cause, its effects, and historical context.
-     */
+
     static {
         // Initialize detailed death messages
         DEATH_DETAILS.put("cholera", "Cholera was one of the most feared diseases on the trail. " +

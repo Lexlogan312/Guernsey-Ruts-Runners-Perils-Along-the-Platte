@@ -8,6 +8,7 @@
  * @date 05/06/2025
  * @file Inventory.java
  */
+
 import java.util.ArrayList;
 
 public class Inventory {

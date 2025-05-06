@@ -18,6 +18,7 @@
  * @date 05/06/2025
  * @file GameController.java
  */
+
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -515,7 +516,7 @@ public class GameController {
         });
     }
 
-    // --- Main Game Loop Actions (Called by GUI Buttons) ---
+    // Main Game Loop Actions (Called by GUI Buttons)
 
     /** Travel action for one day. */
     public void travel() {
@@ -556,7 +557,7 @@ public class GameController {
         double oxenFatigueFactor = 1.0 - (inventory.getOxenFatigue() / 200.0); // Fatigue reduces speed up to 50%
         adjustedDistance = (int)(adjustedDistance * oxenHealthFactor * oxenFatigueFactor);
 
-        // 🛠 TRAVEL happens first
+        // Travel happens first
         map.travel(adjustedDistance);
 
         String breakageResult = inventory.checkForPartBreakage(this);
@@ -567,15 +568,15 @@ public class GameController {
         // Apply food spoilage
         inventory.applyFoodSpoilage(weather, this);
 
-        // 🛠 Fatigue, Health decrease from normal trail wear
+        // Fatigue, Health decrease from normal trail wear
         player.decreaseHealth(5); // Base fatigue damage per day of travel
 
-        // 🛠 Health-based Risk Warning
+        // Health-based Risk Warning
         if (player.getHealth() <= 30) {
             notifyListeners("Your party is severely weakened. It is recommended to rest soon or risk breakdowns and deaths.");
         }
 
-        // 🛠 Blacksmith Wagon Part Check
+        // Blacksmith Wagon Part Check
         if (player.getJob() == Job.BLACKSMITH) {
             for (int i = 0; i < WAGON_PARTS.length; i++) {
                 int partHealth = inventory.getWagonPartBreakpercentage(WAGON_PARTS[i]);
@@ -585,17 +586,17 @@ public class GameController {
             }
         }
 
-        // 🛠 Random Injury Chance
+        // Random Injury Chance
         if (Math.random() < 0.1) {
             player.decreaseHealth(2);
             notifyListeners("The rough trail caused some minor injuries and fatigue.");
         }
 
-        // 🛠 Daily food consumption
+        // Daily food consumption
         int foodConsumedToday = player.getFamilySize() * 2;
         consumeDailyFood(time.getTotalDays() + 1);
 
-        // 🛠 Spoilage check on random food item
+        // Spoilage check on random food item
         int randomFood = (int)(Math.random() * FOOD_TYPES.length);
         String itemName = inventory.getItem(FOOD_TYPES[randomFood]);
 
@@ -613,7 +614,7 @@ public class GameController {
             }
         }
 
-        // 🛠 Small random injury chance
+        // Small random injury chance
         if (Math.random() < 0.1) {
             player.decreaseHealth(2);
             notifyListeners("The rough trail caused some minor injuries and fatigue.");
@@ -622,7 +623,7 @@ public class GameController {
         notifyListeners("You traveled " + adjustedDistance + " miles today.\n" +
                 "Food consumed: " + foodConsumedToday + " pounds.");
 
-        // 🛠 Advance Day
+        // Advance Day
         advanceDay(true);
 
         // Notify listeners of travel results
@@ -718,7 +719,7 @@ public class GameController {
 
         double baseSuccessChance = 0.6;
 
-        // 🛠 Apply Hunter bonus to success chance
+        // Apply Hunter bonus to success chance
         if (player.getJob() == Job.HUNTER) {
             baseSuccessChance += 0.15; // 15% bonus to success
         }
@@ -744,7 +745,7 @@ public class GameController {
                 foodGained = 2 + (int)(Math.random() * 4);
             }
 
-            // 🛠 Apply Hunter bonus to food gained
+            // Apply Hunter bonus to food gained
             if (player.getJob() == Job.HUNTER) {
                 foodGained = (int)(foodGained * 1.25); // 25% more food
             }
@@ -760,7 +761,7 @@ public class GameController {
         advanceDay(true);
     }
 
-    // --- Daily Update and Event Handling ---
+    // Daily Update and Event Handling
 
     /**
      * Advances game time by one day and handles end-of-day events.

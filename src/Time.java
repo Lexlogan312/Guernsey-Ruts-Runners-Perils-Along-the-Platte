@@ -8,6 +8,7 @@
  * @date 05/06/2025
  * @file Time.java
  */
+
 public class Time {
     // The current year in the game
     private int year;

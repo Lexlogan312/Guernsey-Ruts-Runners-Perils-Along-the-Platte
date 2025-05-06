@@ -1,3 +1,17 @@
+/**
+ * TradingDialog Class of the Perils Along the Platte Game
+ *
+ * A dialog that manages trading interactions at landmarks, including:
+ * - Buying supplies from local traders
+ * - Selling excess supplies for money
+ * - Bartering with other travelers
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file TradingDialog.java
+ */
+
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -7,19 +21,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Random;
 
-/**
- * TradingDialog Class of the Perils Along the Platte Game
- * 
- * A dialog that manages trading interactions at landmarks, including:
- * - Buying supplies from local traders
- * - Selling excess supplies for money
- * - Bartering with other travelers
- * 
- * @author Alex Randall and Chase McCluskey
- * @version 1.0
- * @date 05/06/2025
- * @file TradingDialog.java
- */
 public class TradingDialog extends JDialog {
     private final Player player;
     private final Inventory inventory;
@@ -31,13 +32,13 @@ public class TradingDialog extends JDialog {
     
     // Price modifiers
     private double priceFactor;
-    
-    // Colors - match EnhancedGUI
-    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
-    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
-    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
-    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
+
+    // UI Colors for western theme
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown for borders
+    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown for headers
 
     /**
      * Constructs a new TradingDialog.

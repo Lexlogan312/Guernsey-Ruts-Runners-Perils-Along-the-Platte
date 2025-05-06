@@ -1,3 +1,18 @@
+/**
+ * RiverCrossingDialog Class of the Perils Along the Platte Game
+ *
+ * A dialog that presents river crossing options to the player, including:
+ * - Ford the river (wade across)
+ * - Caulk the wagon and float across
+ * - Use a ferry (if available)
+ * - Wait for better conditions
+ *
+ * @author Alex Randall and Chase McCluskey
+ * @version 1.0
+ * @date 05/06/2025
+ * @file RiverCrossingDialog.java
+ */
+
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -9,20 +24,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
 
-/**
- * RiverCrossingDialog Class of the Perils Along the Platte Game
- * 
- * A dialog that presents river crossing options to the player, including:
- * - Ford the river (wade across)
- * - Caulk the wagon and float across
- * - Use a ferry (if available)
- * - Wait for better conditions
- * 
- * @author Alex Randall and Chase McCluskey
- * @version 1.0
- * @date 05/06/2025
- * @file RiverCrossingDialog.java
- */
 public class RiverCrossingDialog extends JDialog {
     private final Player player;
     private final Inventory inventory;
@@ -40,12 +41,11 @@ public class RiverCrossingDialog extends JDialog {
     // GUI components
     private JPanel optionsPanel; // To disable buttons
 
-    // Colors - match EnhancedGUI
-    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
-    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
-    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
-    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
+    // UI Colors for western theme
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown for borders
 
     /**
      * Constructs a new RiverCrossingDialog.

@@ -1,17 +1,3 @@
-import javax.swing.*;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.text.DefaultCaret;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 /**
  * GUI Class of the Perils Along the Platte Game
  * Implements the user interface for the Oregon Trail game, providing a visual representation
@@ -27,6 +13,21 @@ import java.util.List;
  * @date 05/06/2025
  * @file GUI.java
  */
+
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.text.DefaultCaret;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 public class GUI extends JPanel {
     // The game controller that manages game state and logic.
     private final GameController gameController;
@@ -52,11 +53,12 @@ public class GUI extends JPanel {
     private JPanel outputPanel;
     private JTextArea outputTextArea;
 
-    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia
-    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment
-    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown
-    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown
-    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown
+    // UI Colors for western theme
+    private final Color BACKGROUND_COLOR = new Color(240, 220, 180); // Parchment/sepia background
+    private final Color PANEL_COLOR = new Color(200, 170, 130);      // Darker parchment for panels
+    private final Color TEXT_COLOR = new Color(80, 30, 0);           // Dark brown for text
+    private final Color ACCENT_COLOR = new Color(160, 100, 40);      // Light brown for borders
+    private final Color HEADER_COLOR = new Color(120, 60, 0);        // Medium brown for headers
 
     /**
      * Constructs a new GUI instance with the specified game controller.
@@ -1286,13 +1288,7 @@ public class GUI extends JPanel {
                     throw new Exception("Failed to load wagon icon using ResourceLoader");
                 }
             } catch (Exception e) {
-                // Fallback to simple wagon shape if image fails to load
-                System.err.println("Error loading wagon icon, drawing fallback: " + e.getMessage());
-                g.setColor(new Color(139, 69, 19)); // Brown
-                g.fillRect(x - 10, y - 4, 20, 8); // Wagon body
-                g.setColor(Color.BLACK);
-                g.fillOval(x - 8, y + 4, 6, 6); // Left wheel
-                g.fillOval(x + 2, y + 4, 6, 6); // Right wheel
+                System.err.println("Error loading wagon icon: " + e.getMessage());
             }
         }
 
@@ -1382,10 +1378,7 @@ public class GUI extends JPanel {
          * @param position The screen position for the tooltip
          */
         private void drawTooltip(Graphics2D g2d, String text, Point position) {
-            // (Keep the existing drawTooltip logic from the previous version)
-            // ... (text wrapping, bounds calculation, drawing background/text) ...
-            // Enable antialiasing
-            setupGraphics2D(g2d); // Use helper for rendering hints
+            setupGraphics2D(g2d);
 
             g2d.setFont(TOOLTIP_FONT);
             FontMetrics fm = g2d.getFontMetrics();

@@ -9,6 +9,7 @@
  * @date 05/06/2025
  * @file Weather.java
  */
+
 public class Weather {
     // The current weather condition description
     private String currentWeather;

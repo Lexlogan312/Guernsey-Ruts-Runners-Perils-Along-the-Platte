@@ -8,6 +8,7 @@
  * @date 05/06/2025
  * @file Landmark.java
  */
+
 public class Landmark {
     //The name of the landmark
     private final String name;

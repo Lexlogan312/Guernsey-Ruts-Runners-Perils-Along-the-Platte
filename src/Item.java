@@ -8,6 +8,7 @@
  * @date 05/06/2025
  * @file Item.java
  */
+
 public class Item {
     private final String name;
 
