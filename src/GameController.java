@@ -224,7 +224,7 @@ public class GameController {
      * Sets the departure month and initializes related game components.
      * Configures the starting season and initial weather conditions
      * based on the chosen departure month.
-     * 
+     *
      * @param month The selected departure month (1-5, representing March-July)
      */
     public void selectDepartureMonth(int month) {
@@ -242,7 +242,23 @@ public class GameController {
             perils.setMessageListener(this::notifyListeners);
         }
 
-        trailLog.updateGameDate(time);
+        this.historicalDataManager = new HistoricalData(this.time);
+
+        // Initialize or update TrailLogManager with the correct Time object
+        if (this.trailLog == null) {
+            this.trailLog = new TrailLogManager(this.time);
+        } else {
+            this.trailLog.updateGameDate(this.time); // Update existing log manager's time
+        }
+
+        // Re-initialize HistoricalDisplayManager to link to the updated data managers
+        this.historicalDisplayManager = new HistoricalDisplayManager(this.historicalDataManager, this.trailLog);
+
+        // Update the trail name in the time object after the trail has been selected
+        if(map != null && this.time != null){
+            this.time.setTrailName(map.getTrailName().toUpperCase());
+        }
+        notifyGameStateChanged();
     }
 
     /**
@@ -708,7 +724,7 @@ public class GameController {
                 String travelingHistoricalData = historicalDataManager.getContextualHistoricalData("travel", map.getCurrentLocation());
                 notifyListeners("\nTraveling Historical Information: \n" + travelingHistoricalData);
             } else if (Math.random() > 0.5) {
-                notifyListeners(historicalDataManager.getRandomHistoricalData());
+                notifyListeners(historicalDataManager.getRandomHistoricalData(map.getCurrentLocation(), "travel"));
             } else {
                 notifyListeners(this.getContextualHistoricalFact());
             }
@@ -783,7 +799,7 @@ public class GameController {
             String restingHistoricalData = historicalDataManager.getContextualHistoricalData("rest", map.getCurrentLocation());
             notifyListeners(restingHistoricalData);
         } else if (Math.random() > 0.5){
-            notifyListeners(historicalDataManager.getRandomHistoricalData());
+            notifyListeners(historicalDataManager.getRandomHistoricalData(map.getCurrentLocation(), "rest"));
         }
 
         advanceDay(true); // Advance time and check for events/crossings
@@ -850,7 +866,7 @@ public class GameController {
 
             // Random chance to display hunting-related historical data (35% chance when hunting successfully)
             if (Math.random() < 0.35) {
-                String historicalNote = historicalDataManager.getRandomSurvivalTip();
+                String historicalNote = historicalDataManager.getRandomSurvivalTip(map.getCurrentLocation(), "hunt");
                 addTrailUpdate(historicalNote, TrailLogManager.LogCategory.SURVIVAL_TIP);
             }
         } else {
@@ -861,7 +877,7 @@ public class GameController {
 
             // Small chance to still get a tip even when unsuccessful (15% chance)
             if (Math.random() < 0.15) {
-                String historicalNote = historicalDataManager.getRandomSurvivalTip();
+                String historicalNote = historicalDataManager.getRandomSurvivalTip(map.getCurrentLocation(), "hunt");
                 addTrailUpdate(historicalNote, TrailLogManager.LogCategory.SURVIVAL_TIP);
             }
         }
@@ -884,11 +900,16 @@ public class GameController {
      * @return Formatted journal content as a string, ready for display in the UI
      */
     public String displayJournal(String displayMode, String factType) {
-        if (!isGameRunning || !validateGameComponents()) return "Journal unavailable.";
+        // Allow journal access even after game completion or death
+        // Only check if the journal-related components are available
+        if (historicalDataManager == null || trailLog == null || historicalDisplayManager == null) {
+            return "Journal unavailable: Historical data tracking system not initialized.";
+        }
 
+        // Get current location for context - safely handle if map is null
+        String currentLocation = (map != null) ? map.getCurrentLocation() : "Unknown";
+        
         // Update the historical display manager with current context
-        // Map.getCurrentLocation() and the current activity should be methods in your game
-        String currentLocation = map.getCurrentLocation();
         historicalDisplayManager.updateContext(currentLocation);
 
         // Determine which journal view to display based on mode
@@ -916,10 +937,13 @@ public class GameController {
                 journalContent = historicalDisplayManager.getCompleteJournal();
         }
 
-        // Log this journal viewing in the trail log
-        trailLog.addLogEntry("Viewed journal (" + displayMode + ") at " + currentLocation,
-                currentLocation,
-                TrailLogManager.LogCategory.JOURNAL);
+        // Only log if game is still running (don't modify journal after death/completion)
+        if (isGameRunning) {
+            // Log this journal viewing in the trail log
+            trailLog.addLogEntry("Viewed journal (" + displayMode + ") at " + currentLocation,
+                    currentLocation,
+                    TrailLogManager.LogCategory.JOURNAL);
+        }
 
         return journalContent;
     }
@@ -935,7 +959,8 @@ public class GameController {
 
         // Update the historical display manager with current context
         String currentLocation = map.getCurrentLocation();
-        historicalDisplayManager.updateContext(currentLocation);
+        String currentActivity = isTraveling ? "travel" : "rest"; // Default activity based on state
+        historicalDisplayManager.updateContext(currentLocation, currentActivity);
 
         // Get a contextual fact based on current activity
         return historicalDisplayManager.getContextualHistoricalFact();
@@ -970,7 +995,8 @@ public class GameController {
 
         // Update context
         String currentLocation = map.getCurrentLocation();
-        historicalDisplayManager.updateContext(currentLocation);
+        String currentActivity = isTraveling ? "travel" : "rest"; // Default activity based on state
+        historicalDisplayManager.updateContext(currentLocation, currentActivity);
 
         String fact;
         if ("location".equals(factType.toLowerCase())) {
@@ -992,7 +1018,7 @@ public class GameController {
 
         // Update context
         String currentLocation = map.getCurrentLocation();
-        historicalDisplayManager.updateContext(currentLocation);
+        historicalDisplayManager.updateContext(currentLocation, "travel");
 
         // 15% chance to learn a new fact during travel
         if (Math.random() < 0.15) {
@@ -1014,7 +1040,7 @@ public class GameController {
         if (!isGameRunning || !validateGameComponents()) return;
 
         // Update context to the landmark
-        historicalDisplayManager.updateContext(landmarkName);
+        historicalDisplayManager.updateContext(landmarkName, "landmark");
 
         // Notify the player about the new journal entry
         notifyListeners("New information added to your journal.");

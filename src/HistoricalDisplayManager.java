@@ -14,16 +14,43 @@ public class HistoricalDisplayManager {
     public HistoricalDisplayManager(HistoricalData historicalData, TrailLogManager trailLog) {
         this.historicalData = historicalData;
         this.trailLog = trailLog;
-        this.currentLocation = "Unknown";
-        this.currentActivity = "Unknown";
+        this.currentLocation = "Starting Point";
+        this.currentActivity = "setup";
     }
 
     /**
      * Update the current location and activity for contextual historical data
      * @param location Current location on the trail
+     * @param activity Current activity (e.g., "travel", "rest", "hunt", etc.)
+     */
+    public void updateContext(String location, String activity) {
+        if (location != null && !location.isEmpty()) {
+            this.currentLocation = location;
+        }
+        
+        if (activity != null && !activity.isEmpty()) {
+            this.currentActivity = activity;
+        }
+    }
+
+    /**
+     * Update just the current location, keeping the current activity
+     * @param location Current location on the trail
      */
     public void updateContext(String location) {
-        this.currentLocation = location;
+        if (location != null && !location.isEmpty()) {
+            this.currentLocation = location;
+        }
+    }
+
+    /**
+     * Update just the current activity, keeping the current location
+     * @param activity Current activity (e.g., "travel", "rest", "hunt", etc.)
+     */
+    public void updateActivity(String activity) {
+        if (activity != null && !activity.isEmpty()) {
+            this.currentActivity = activity;
+        }
     }
 
     /**
@@ -64,7 +91,7 @@ public class HistoricalDisplayManager {
         };
 
         // Log the fact in the trail log
-        trailLog.addLogEntry(fact, currentLocation,TrailLogManager.LogCategory.HISTORICAL_FACT);
+        trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
 
         // Format for display
         return fact;
@@ -77,7 +104,7 @@ public class HistoricalDisplayManager {
     public String getLocationSpecificFact() {
         String fact = historicalData.getLocationSpecificData(currentLocation);
 
-        // Log the fact in the trail log
+        // Log the fact in the trail log with the current activity
         trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
 
         return fact;
@@ -88,7 +115,11 @@ public class HistoricalDisplayManager {
      * @return A formatted contextual historical fact
      */
     public String getContextualHistoricalFact() {
-        String fact = historicalData.getContextualHistoricalData(currentActivity, currentLocation);
+        // Make sure we're using a valid activity value
+        String activity = (currentActivity != null && !currentActivity.isEmpty()) ? 
+                          currentActivity : "general";
+                          
+        String fact = historicalData.getContextualHistoricalData(activity, currentLocation);
 
         // Log the fact in the trail log
         trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
@@ -126,7 +157,11 @@ public class HistoricalDisplayManager {
      * @return A formatted notification for display in a popup
      */
     public String createHistoricalFactPopup(String fact) {
-        // Log the fact in the trail log
+        // Make sure we're using a valid activity value
+        String activity = (currentActivity != null && !currentActivity.isEmpty()) ? 
+                         currentActivity : "general";
+                         
+        // Log the fact in the trail log with proper location and activity
         trailLog.addLogEntry(fact, currentLocation, TrailLogManager.LogCategory.HISTORICAL_FACT);
 
         return fact;
@@ -155,8 +190,7 @@ public class HistoricalDisplayManager {
         report.append("==== Journal Entries for ").append(currentLocation).append(" ====\n\n");
 
         for (HistoricalData.JournalEntry entry : entries) {
-            Time time = entry.getTimeViewed();
-            report.append("Date: ").append(time.getMonthName()).append(" ").append(time.getDay()).append(", ").append(time.getYear()).append("\n");
+            report.append("Date: ").append(entry.getMonthName()).append(" ").append(entry.getDay()).append(", ").append(entry.getYear()).append("\n");
             report.append("Activity: ").append(entry.getActivity()).append("\n");
             report.append("Type: ").append(entry.getType()).append("\n\n");
             report.append(entry.getContent()).append("\n\n");
@@ -182,8 +216,7 @@ public class HistoricalDisplayManager {
         report.append("==== Journal Entries: ").append(type).append(" ====\n\n");
 
         for (HistoricalData.JournalEntry entry : entries) {
-            Time time = entry.getTimeViewed();
-            report.append("Date: ").append(time.getMonthName()).append(" ").append(time.getDay()).append(", ").append(time.getYear()).append("\n");
+            report.append("Date: ").append(entry.getMonthName()).append(" ").append(entry.getDay()).append(", ").append(entry.getYear()).append("\n");
             report.append("Location: ").append(entry.getLocation()).append("\n");
             report.append("Activity: ").append(entry.getActivity()).append("\n\n");
             report.append(entry.getContent()).append("\n\n");

@@ -103,48 +103,64 @@ public class HistoricalData {
         private final String location;
         private final String activity;
         private final String type;
-        private final Time timeViewed;
+        private final int year;
+        private final int month;
+        private final int day;
+        private final String trailName;
 
         public JournalEntry(String content, String location, String activity, String type, Time time) {
             this.content = content;
             this.location = location;
             this.activity = activity;
             this.type = type;
-            this.timeViewed = time;
+            this.year = time.getYear();
+            this.month = time.getMonth();
+            this.day = time.getDay();
+            this.trailName = time.getTrailName();
         }
 
         public String getContent() { return content; }
         public String getLocation() { return location; }
         public String getActivity() { return activity; }
         public String getType() { return type; }
-        public Time getTimeViewed() { return timeViewed; }
+        
+        public String getMonthName() {
+            switch (this.month) {
+                case 1: return "January";
+                case 2: return "February";
+                case 3: return "March";
+                case 4: return "April";
+                case 5: return "May";
+                case 6: return "June";
+                case 7: return "July";
+                case 8: return "August";
+                case 9: return "September";
+                case 10: return "October";
+                case 11: return "November";
+                case 12: return "December";
+                default: return "Unknown";
+            }
+        }
+        
+        public int getYear() { return year; }
+        public int getMonth() { return month; }
+        public int getDay() { return day; }
+        public String getTrailName() { return trailName; }
 
         @Override
         public String toString() {
             return String.format("%s - %s - %s\n%s", 
-                timeViewed.getMonthName(), 
-                timeViewed.getDay(), 
-                timeViewed.getYear(),
+                getMonthName(), 
+                day, 
+                year,
                 content);
         }
     }
 
     // Method to track when a fact is presented to the user
-    // Modified method to track when a fact is presented to the user
-    // Modified method to track when a fact is presented to the user
     private void trackFactPresentation(String content, String type, String location, String activity) {
-        // Create a new Time object representing the current time
-        // Using the constructor that takes year and month
-        Time currentTime = new Time(
-                time.getYear(),
-                time.getMonth()
-        );
-
-        // Set the day after creation
-        currentTime.setDay(time.getDay());
-
         // Create and add the journal entry with the current time
-        JournalEntry entry = new JournalEntry(content, location, activity, type, currentTime);
+        JournalEntry entry = new JournalEntry(content, location, activity, type, time);
         journalEntries.add(entry);
 
         // Mark as viewed in the appropriate map
@@ -344,10 +360,9 @@ public class HistoricalData {
     public ArrayList<JournalEntry> getEntriesByDate(Time date) {
         ArrayList<JournalEntry> filteredEntries = new ArrayList<>();
         for (JournalEntry entry : journalEntries) {
-            Time entryTime = entry.getTimeViewed();
-            if (entryTime.getYear() == date.getYear() && 
-                entryTime.getMonth() == date.getMonth() && 
-                entryTime.getDay() == date.getDay()) {
+            if (entry.getYear() == date.getYear() && 
+                entry.getMonth() == date.getMonth() && 
+                entry.getDay() == date.getDay()) {
                 filteredEntries.add(entry);
             }
         }
@@ -374,13 +389,15 @@ public class HistoricalData {
     public String exportJournalToString() {
         StringBuilder journalText = new StringBuilder();
         journalText.append(time.getTrailName()).append(" JOURNEY JOURNAL\n");
+        journalText.append("Date: ").append(time.getMonthName()).append(" ")
+                  .append(time.getDay()).append(", ")
+                  .append(time.getYear()).append("\n");
         journalText.append("==========================\n\n");
 
         for (JournalEntry entry : journalEntries) {
-            Time entryTime = entry.getTimeViewed();
-            journalText.append("Date: ").append(entryTime.getMonthName() + " " + 
-                                              entryTime.getDay() + ", " + 
-                                              entryTime.getYear()).append("\n");
+            journalText.append("Date: ").append(entry.getMonthName() + " " + 
+                                              entry.getDay() + ", " + 
+                                              entry.getYear()).append("\n");
             journalText.append("Location: ").append(entry.getLocation()).append("\n");
             journalText.append("Activity: ").append(entry.getActivity()).append("\n");
             journalText.append("Type: ").append(entry.getType()).append("\n\n");
